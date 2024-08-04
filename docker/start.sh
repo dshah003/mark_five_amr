@@ -1,8 +1,10 @@
 #!/usr/bin/env bash
 
+DOCKER_NAME=mark_five_robot
+
 echo "Stopping exisitng containers if any. . ."
-docker stop mark_five &> /dev/null
-docker rm mark_five &> /dev/null
+docker stop ${DOCKER_NAME} &> /dev/null
+docker rm ${DOCKER_NAME} &> /dev/null
 
 # Edit this as per your dir structure.
 MARKY_ROOT="${HOME}/mark_five_amr/"
@@ -15,5 +17,7 @@ docker run \
     -v ${MARKY_ROOT}:${HOME}:rw \
     --privileged \
     --network=host \
-    -h mark_five_robot \
-    --name mark_five mark_five:0.1 sleep infinity
+    -h ${DOCKER_NAME} \
+    --name ${DOCKER_NAME} mark_five:0.1 sleep infinity
+
+docker exec -u root ${DOCKER_NAME} sh -c "echo 127.0.0.1 ${DOCKER_NAME} >> /etc/hosts"
