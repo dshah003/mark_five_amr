@@ -17,8 +17,6 @@ void Motor::setupPins() {
     pinMode(_pwmPin, OUTPUT);
     pinMode(_encoderPinA, INPUT);
     pinMode(_encoderPinB, INPUT);
-
-    attachInterrupt(_encoderPinA, readEncoder, RISING);
 }
 
 int Motor::getEncoderAValue() {

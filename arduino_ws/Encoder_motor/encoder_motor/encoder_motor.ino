@@ -97,6 +97,8 @@ int getEncoderCountsForAngle(float angle) {
 
 void goStraight(float distance) {
     int counts = getEncoderCountsForDistance(abs(distance));
+    Serial.print(counts)
+    Serial.println();
     // Reset encoders
     leftEncoder.write(0);
     rightEncoder.write(0);

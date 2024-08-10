@@ -10,12 +10,12 @@ class Motor {
          *
          * @param motorPin1 pin number for the first motor input pin
          * @param motorPin2 pin number for the second motor input pin
-         * @param enablePin pin number for the enable pin
+         * @param pwmPin pin number for the enable pin
          * @param encoderPinA pin number for Encoder A pin
          * @param encoderPinB pin number for Encoder B pin
          */
         Motor(int motorPin1, int motorPin2, 
-            int enablePin, int encoderPinA, int encoderPinB);
+            int pwmPin, int encoderPinA, int encoderPinB);
         
         /**
          * @brief Actuates the Motor to set the speed and direction.
@@ -48,7 +48,7 @@ class Motor {
     private:
         int _motorPin1;
         int _motorPin2;
-        int _enablePin;
+        int _pwmPin;
         int _encoderPinA;
         int _encoderPinB;
 

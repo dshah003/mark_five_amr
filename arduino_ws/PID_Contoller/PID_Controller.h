@@ -1,6 +1,8 @@
 #ifndef PID_Controllerh_h
 #define PID_Controllerh_h
 
+#include <math.h>
+
 class PID_Controller {
    private:
     float kp, kd, ki, umax; // Parameters
