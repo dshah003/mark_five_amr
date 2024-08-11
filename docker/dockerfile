@@ -10,7 +10,9 @@ RUN apt-get update && \
 
 RUN apt-get update && \
     apt-get install -y ros-melodic-rosbridge-server \
-    ros-melodic-joy
+    ros-melodic-joy \
+    ros-melodic-rosserial-arduino \
+    ros-melodic-rosserial
 
 # Add ros sourcing to bashrc
 RUN echo ". /opt/ros/melodic/setup.bash" >> ~/.bashrc
