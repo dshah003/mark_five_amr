@@ -1,0 +1,7 @@
+{
+    "configuration": "cpu=atmega2560",
+    "board": "arduino:avr:mega",
+    "programmer": "arduino:avrispmkii",
+    "sketch": "arduino_ws/Robot_Controller/Robot_Controller.ino",
+    "port": "/dev/ttyACM0"
+}

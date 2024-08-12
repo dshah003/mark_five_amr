@@ -17,6 +17,8 @@ void Motor::setupPins() {
     pinMode(_pwmPin, OUTPUT);
     pinMode(_encoderPinA, INPUT);
     pinMode(_encoderPinB, INPUT);
+
+    Encoder encoder(_encoderPinA, _encoderPinB);
 }
 
 int Motor::getEncoderAValue() {
@@ -28,6 +30,13 @@ int Motor::getEncoderBValue() {
 }
 
 void Motor::setMotor(int direction, int pwmValue) {
+    // constrain pwm value between 0 and 255
+    if (pwmValue > 255) {
+        pwmValue = 255;
+    } else if (pwmValue < 0) {
+        pwmValue = 0;
+    }
+    
     analogWrite(_pwmPin, pwmValue);
     if (direction == 1) {
         digitalWrite(_motorPin1, HIGH);

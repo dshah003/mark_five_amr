@@ -2,6 +2,7 @@
 #define Motor_h
 
 #include "Arduino.h"
+#include "Encoder.h"
 
 class Motor {
     public:
@@ -44,6 +45,8 @@ class Motor {
          * @return int 
          */
         int getEncoderBValue();
+
+        void setMotorSpeed(int speed);
 
     private:
         int _motorPin1;
