@@ -1,105 +1,199 @@
-#include <ros.h>
-#include <geometry_msgs/Twist.h>
-#include <Encoder.h>
-#include <PID_v1.h>
+#include "Motor.h"
 
-// Define motor and encoder pins
-const int leftMotorPin1 = 22;
-const int leftMotorPin2 = 23;
-const int rightMotorPin1 = 24;
-const int rightMotorPin2 = 25;
+// Define right and left encoder channels
+#define RCHA 3
+#define RCHB 2
+#define LCHA 21
+#define LCHB 20
 
-const int leftEncoderPinA = 21;
-const int leftEncoderPinB = 20;
-const int rightEncoderPinA = 3;
-const int rightEncoderPinB = 2;
+// Configure the cytron motor driver
 
-// Motor and encoder parameters
-const float wheel_diameter = 0.055; // meters
-const float wheel_base = 0.0145;     // meters
-const int encoder_counts_per_revolution = 540;
+// Left motors
+Motor motorFL(PWM_DIR, 3, 2);  // PWM 1 = Pin 3, DIR 1 = Pin 2
+Motor motorRL(PWM_DIR, 5, 4); // PWM 2 = Pin 4, DIR 2 = Pin 5
 
-// Encoder objects
-Encoder leftEncoder(leftEncoderPinA, leftEncoderPinB);
-Encoder rightEncoder(rightEncoderPinA, rightEncoderPinB);
+// Right motors
+Motor motorFR(PWM_DIR, 9, 8);  // PWM 1 = Pin 9, DIR 1 = Pin 8
+Motor motorRR(PWM_DIR, 11, 10); // PWM 2 = Pin 11, DIR 2 = Pin 10
 
-// PID parameters
-double leftSetpoint, rightSetpoint;
-double leftInput, rightInput;
-double leftOutput, rightOutput;
+// Max reverse and forward speed
+int cytronMin = -255;
+int cytronMax = 255; 
 
-// Initialize PID control
-PID leftPID(&leftInput, &leftOutput, &leftSetpoint, 2, 5, 1, DIRECT);
-PID rightPID(&rightInput, &rightOutput, &rightSetpoint, 2, 5, 1, DIRECT);
 
-// ROS node handle
-ros::NodeHandle nh;
+// Variables for serial communication
+const byte numChars = 32;
+char receivedChars[numChars];
+char tempChars[numChars]; // temporary array for use by strtok() function
+boolean newData = false;
 
-// Velocity command callback
-void cmdVelCallback(const geometry_msgs::Twist& cmd_msg) {
-  float linear_x = cmd_msg.linear.x;  // m/s
-  float angular_z = cmd_msg.angular.z;  // rad/s
+// Variables to hold the parsed data
+float linearVelocity = 0.0;
+float angularVelocity = 0.0;
 
-  // Calculate wheel speeds
-  leftSetpoint = linear_x - (angular_z * wheel_base / 2.0);
-  rightSetpoint = linear_x + (angular_z * wheel_base / 2.0);
+// Encoder variables
+volatile int right_count = 0; //right encoder count
+volatile int left_count = 0; //left encoder count
+volatile byte INTFLAG1 = 0; //interrupt status flag
+volatile byte INTFLAG2 = 0; //second interrupt status flag
 
-//   // Update PID targets
-//   leftPID.SetPoint(leftSetpoint);
-//   rightPID.SetPoint(rightSetpoint);
-}
 
-ros::Subscriber<geometry_msgs::Twist> sub("cmd_vel", &cmdVelCallback);
-
-// Function to set motor speeds using PWM
-void setMotorSpeeds() {
-  analogWrite(leftMotorPin1, leftOutput);
-  analogWrite(leftMotorPin2, 0);
-  analogWrite(rightMotorPin1, rightOutput);
-  analogWrite(rightMotorPin2, 0);
-}
+//============
 
 void setup() {
-  // Initialize ROS
-  nh.initNode();
-  nh.subscribe(sub);
+    pinMode(RCHA, INPUT);
+    pinMode(RCHB, INPUT);
+    pinMode(LCHA, INPUT);
+    pinMode(RCHA, INPUT);
 
-  // Set motor pins as outputs
-  pinMode(leftMotorPin1, OUTPUT);
-  pinMode(leftMotorPin2, OUTPUT);
-  pinMode(rightMotorPin1, OUTPUT);
-  pinMode(rightMotorPin2, OUTPUT);
+    attachInterrupt(2, flag1, RISING);
+    attachInterrupt(4, flag2, RISING);
+    
+    Serial.begin(115200);
 
-  // Initialize PID controllers
-  leftPID.SetMode(AUTOMATIC);
-  rightPID.SetMode(AUTOMATIC);
-
-  // Set PID output limits (adjust as necessary)
-  leftPID.SetOutputLimits(50, 255);
-  rightPID.SetOutputLimits(50, 255);
+    //Send initial encoder values
+    Serial.print(left_count);
+    Serial.print(",");
+    Serial.println(right_count);
+    Serial.print(left_count);
+    Serial.print(",");
+    Serial.println(right_count);  
 }
 
+
+//============
+
 void loop() {
-  // Read encoder values
-  long leftCounts = leftEncoder.read();
-  long rightCounts = rightEncoder.read();
+    
+    recvWithStartEndMarkers(); //look for serial data
+    
+    if (newData == true) {
+        strcpy(tempChars, receivedChars);
+            // this temporary copy is necessary to protect the original data
+            //   because strtok() replaces the commas with \0
+        
+        parseData();
+        
+        runMotors();
+        
+        newData = false;
+    }
 
-  // Convert encoder counts to speed (you need to adjust this based on your encoder specs)
-  leftInput = (float)leftCounts / encoder_counts_per_revolution; // wheel revolutions per second
-  rightInput = (float)rightCounts / encoder_counts_per_revolution;
+    //check if the encoder flags have been raised by the hardware interrupts
+    if(INTFLAG1) {
+      Serial.print(left_count);
+      Serial.print(",");
+      Serial.println(right_count);       
+      delay(50);
+      INTFLAG1 = 0; //clear flag
+      
+    }
+    if(INTFLAG2) {      
+      Serial.print(left_count);
+      Serial.print(",");
+      Serial.println(right_count);
+      delay(50);
+      INTFLAG2 = 0; //clear flag
+      
+  }
+}
 
-  // Compute PID output
-  leftPID.Compute();
-  rightPID.Compute();
 
-  // Set motor speeds
-  setMotorSpeeds();
+//============
 
-  // Reset encoders after each loop (if necessary)
-  leftEncoder.write(0);
-  rightEncoder.write(0);
+void recvWithStartEndMarkers() {
+    static boolean recvInProgress = false;
+    static byte ndx = 0;
+    char startMarker = '<';
+    char endMarker = '>';
+    char rc;
 
-  // Spin ROS
-  nh.spinOnce();
-  delay(5);  // Adjust the delay as needed
+    while (Serial.available() > 0 && newData == false) {
+        rc = Serial.read();
+
+        if (recvInProgress == true) {
+            if (rc != endMarker) {
+                receivedChars[ndx] = rc;
+                ndx++;
+                if (ndx >= numChars) {
+                    ndx = numChars - 1;
+                }
+            }
+            else {
+                receivedChars[ndx] = '\0'; // terminate the string
+                recvInProgress = false;
+                ndx = 0;
+                newData = true;
+            }
+        }
+
+        else if (rc == startMarker) {
+            recvInProgress = true;
+        }
+    }
+}
+
+
+//============
+
+void parseData() {
+
+    // split the data into its parts
+    char * strtokIndx; // this is used by strtok() as an index
+   
+    strtokIndx = strtok(tempChars, ",");   
+    linearVelocity = atof(strtokIndx);     // convert to float
+
+    strtokIndx = strtok(NULL, ",");
+    angularVelocity = atof(strtokIndx);    // convert to float
+
+}
+
+//============
+
+void runMotors () {
+  
+  
+  // Convert float values to an integer for left and right wheels
+  int leftSpeed = (linearVelocity + angularVelocity) * 100;
+  int rightSpeed = (linearVelocity - angularVelocity) * 100;
+
+
+  // Map speed to left motors
+  motorFL.setSpeed(map(leftSpeed, 100, -100, cytronMin, cytronMax));
+  motorRL.setSpeed(map(leftSpeed, 100, -100, cytronMin, cytronMax));
+
+  // Map speed to right motors
+  motorFR.setSpeed(map(rightSpeed, 100, -100, cytronMin, cytronMax));
+  motorRR.setSpeed(map(rightSpeed, 100, -100, cytronMin, cytronMax));
+  
+}
+
+//flag for the right encoder; CCW is forward
+void flag1() {
+  INTFLAG1 = 1;
+  //add 1 to count for CCW rotation
+  if(digitalRead(RCHA) && digitalRead(RCHB)) {
+    right_count++;
+
+  }
+  //subtract 1 from count for CW rotation
+  if(digitalRead(RCHA) && !digitalRead(RCHB)){
+    right_count--;
+
+  }
+}
+//flag for the left encoder; CW is forward
+void flag2() {
+  INTFLAG2 = 1;
+  //add 1 to count for CW rotation
+  if(digitalRead(LCHA) && !digitalRead(LCHB)) {
+    left_count++;
+
+  }
+  //subtract 1 from count for CCW rotation
+  if(digitalRead(LCHA) && digitalRead(LCHB)){
+    left_count--;
+
+  }
 }
