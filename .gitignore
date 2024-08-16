@@ -4,7 +4,8 @@ build/
 bin/
 lib/
 
-.vscode/
+.vscode/*
+.vscode
 
 # Emacs
 .#*

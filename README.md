@@ -1,6 +1,19 @@
 # mark_five_amr
 Jetson nano based mobile robot with SLAM capability
 
+### To Run ROS Serial  
+
+```sh
+rosrun rosserial_python serial_node.py _port:=/dev/ttyACM0 _baud:=115200
+```
+
+### To Publish cmd_vel from terminal
+```sh
+rostopic pub /cmd_vel geometry_msgs/Twist "linear:
+  x: 0.3
+angular:
+  z: -0.1" --once
+```
 
 ## Notes 
 

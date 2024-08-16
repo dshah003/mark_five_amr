@@ -19,13 +19,13 @@ ros::NodeHandle nh;
 ////////////////// Tick Data Publishing Variables and Constants ///////////////
  
 // Encoder output to Arduino Interrupt pin. Tracks the tick count.
-#define ENC_IN_LEFT_A 2
+#define ENC_IN_LEFT_A 21
 #define ENC_IN_RIGHT_A 3
  
 // Other encoder output to Arduino to keep track of wheel direction
 // Tracks the direction of rotation.
-#define ENC_IN_LEFT_B 4
-#define ENC_IN_RIGHT_B 11
+#define ENC_IN_LEFT_B 20
+#define ENC_IN_RIGHT_B 2
  
 // True = Forward; False = Reverse
 boolean Direction_left = true;
@@ -50,15 +50,15 @@ long currentMillis = 0;
  
 ////////////////// Motor Controller Variables and Constants ///////////////////
  
-// Motor A connections
-const int enA = 9;
-const int in1 = 5;
-const int in2 = 6;
+// Left Motor connections
+const int enA = 7;
+const int in1 = 22;
+const int in2 = 23;
   
-// Motor B connections
-const int enB = 10; 
-const int in3 = 7;
-const int in4 = 8;
+// Right Motor connections
+const int enB = 6; 
+const int in3 = 24;
+const int in4 = 25;
  
 // How much the PWM value can change each cycle
 const int PWM_INCREMENT = 1;
