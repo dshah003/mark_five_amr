@@ -2,6 +2,9 @@
 #define Motor_h
 
 #include "Arduino.h"
+#include "Encoder.h"
+#include <PID_Controller.h>
+#include <util/atomic.h>
 
 class Motor {
     public:
@@ -23,7 +26,18 @@ class Motor {
          * @param direction 
          * @param pwm 
          */
-        void setMotor(int direction, int pwm);
+        void setMotorSpeed(int direction, int pwm);
+
+        void setMotorSpeed(int pwmValue);
+
+        /**
+         * @brief Setter function to set the PID parameters
+         * 
+         * @param kp 
+         * @param ki 
+         * @param kd 
+         */
+        void setPIDParams(float kp, float ki, float kd);
         
         /**
          * @brief Stop the motors.
@@ -45,12 +59,36 @@ class Motor {
          */
         int getEncoderBValue();
 
+        /**
+         * @brief Get the Encoder Count object
+         * 
+         * @return int 
+         */
+        int getEncoderCount();
+      
+        /**
+         * @brief Set the Motor Speed using PID controller feedback.
+         * 
+         * @param motorSpeed 
+         */
+        void setMotorSpeedWithPID(int motorSpeed);
+
+        float getCurrentVelocity();
+
+
     private:
+        long _prevTime = 0;
+        int _prevPosition = 0;
+        const int _MAX_PWM = 255;
+        PID_Controller _pid;
+
         int _motorPin1;
         int _motorPin2;
         int _pwmPin;
         int _encoderPinA;
         int _encoderPinB;
+        float _current_velocity;
+        Encoder _encoder;
 
         /**
          * @brief Sets up the pins for the motor appropriately.
