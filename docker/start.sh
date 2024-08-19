@@ -17,6 +17,7 @@ docker run \
     -v ${MARKY_ROOT}:${HOME}:rw \
     --privileged \
     --network=host \
+    --device /dev/ttyACM0 \
     -h ${DOCKER_NAME} \
     --name ${DOCKER_NAME} mark_five:0.1 sleep infinity
 

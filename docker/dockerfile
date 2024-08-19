@@ -1,4 +1,4 @@
-from ros:melodic
+FROM ros:melodic
 
 ENV DEBIAN_FRONTEND=noninteractive
 ENV TZ=America/New_York
@@ -12,12 +12,16 @@ RUN apt-get update && \
     apt-get install -y ros-melodic-rosbridge-server \
     ros-melodic-joy \
     ros-melodic-rosserial-arduino \
-    ros-melodic-rosserial
+    ros-melodic-rosserial \
+    ros-melodic-teleop-twist-keyboard
 
 # Add ros sourcing to bashrc
 RUN echo ". /opt/ros/melodic/setup.bash" >> ~/.bashrc
 
+ARG HOME
 ENV MARKY_ROOT="${HOME}/mark_five_amr/"
+
+WORKDIR ${HOME}
 
 HEALTHCHECK --interval=5m --timeout=3s CMD echo "Mark Five: I'm alive!" || exit 1
 CMD ["/bin/bash"]
