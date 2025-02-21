@@ -13,7 +13,8 @@ RUN apt-get update && \
     ros-melodic-joy \
     ros-melodic-rosserial-arduino \
     ros-melodic-rosserial \
-    ros-melodic-teleop-twist-keyboard
+    ros-melodic-teleop-twist-keyboard \
+    ros-melodic-navigation
 
 # Add ros sourcing to bashrc
 RUN echo ". /opt/ros/melodic/setup.bash" >> ~/.bashrc

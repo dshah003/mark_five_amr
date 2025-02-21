@@ -5,6 +5,26 @@ Jetson nano based mobile robot with SLAM capability
 The Mark Five AMR runs on Jetson Nano as it's main computer. An Arduino Mega is used to  control motors via motor driver and read encoder data. 
 The robot environment is setup on a docker container based on ROS Melodic. 
 
+### Pre-requisites
+
+#### Install docker 
+
+Follow instructions at https://docs.docker.com/engine/install/ubuntu/ to install docker on your host OS.  
+
+#### Post Installation
+
+```sh 
+sudo groupadd docker 
+sudo usermod -aG docker $USER
+## After running this, logout and log back in for changes to take effect. OR run the following command.
+newgrp docker
+```
+
+## Docker container
+
+To run the docker, run the `build.sh` script in `docker/` dir. 
+To start the docker run the `start.sh` script once, and then run `bash.sh` script in new terminal everytime to open bash within the docker.   
+
 ## Arduino Node
 The arduino_ws/Robot_Node/Robot_Node.ino code runs on the arduino Mega. 
 The code is referenced from https://automaticaddison.com/how-to-control-a-robots-velocity-remotely-using-ros/ and tweaked specific to my robot.
