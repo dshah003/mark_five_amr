@@ -1,13 +1,12 @@
 #!/usr/bin/env bash
 
 DOCKER_NAME=mark_five_robot
-
 echo "Stopping exisitng containers if any. . ."
 docker stop ${DOCKER_NAME} &> /dev/null
 docker rm ${DOCKER_NAME} &> /dev/null
 
 # Edit this as per your dir structure.
-MARKY_ROOT="${HOME}/mark_five_amr/"
+MARKY_ROOT=$(dirname "$(pwd)")
 echo "Setting Marky Root as ${MARKY_ROOT}"
 
 echo "Starting docker container"

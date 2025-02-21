@@ -32,7 +32,19 @@ The code is referenced from https://automaticaddison.com/how-to-control-a-robots
 ### To Run ROS Serial  
 
 ```sh
-rosrun rosserial_python serial_node.py _port:=/dev/ttyACM0 _baud:=115200
+catkin_make
+source devel/setup.bash
+# Assuming you have roscore running on another terminal.
+rosrun rosserial_python serial_node.py _port:=/dev/ttyACM0 _baud:=115200  
+
+# OR run using roslaunch
+roslaunch mark_five_bot launch_rosserial.launch
+``` 
+
+### For Running the robot via tele-op 
+
+```sh
+roslaunch mark_five_bot launch_rosserial_keyboard_teleop.launch 
 ```
 
 ### To Publish cmd_vel from terminal
