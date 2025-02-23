@@ -55,6 +55,14 @@ angular:
   z: -0.1" --once
 ```
 
+### Run Joystick node.  
+This only runs the joystick node. it is currently not connected to any other nodes. 
+
+```sh
+roslaunch mark_five_bot launch_joystick.launch  
+```
+
+
 ## Notes 
 
 - One Revolution = 540 Encoder ticks. 

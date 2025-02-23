@@ -17,6 +17,7 @@ docker run \
     --privileged \
     --network=host \
     --device /dev/ttyACM0 \
+    --device /dev/input/js0 \
     -h ${DOCKER_NAME} \
     --name ${DOCKER_NAME} mark_five:0.1 sleep infinity
 

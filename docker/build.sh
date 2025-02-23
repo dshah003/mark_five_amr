@@ -5,4 +5,5 @@ echo "Using HOME=${HOME}"
 
 docker build \
 	--build-arg HOME=${HOME} \
+	--no-cache \
 	-t mark_five:0.1 .
