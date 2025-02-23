@@ -55,11 +55,10 @@ angular:
   z: -0.1" --once
 ```
 
-### Run Joystick node.  
-This only runs the joystick node. it is currently not connected to any other nodes. 
-
+### Run Teleop + Joystick node.  
+This publishes to /cmd_vel based on joystick movements. Move the left joystick axis to move the robot. The robot will move while the enable button is pressed. (The Button marked "2" on the controller")
 ```sh
-roslaunch mark_five_bot launch_joystick.launch  
+roslaunch mark_five_bot launch_joystick_teleop.launch  
 ```
 
 

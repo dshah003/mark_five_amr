@@ -1,0 +1,17 @@
+<launch>
+    <!-- Start the joystick driver -->
+    <node pkg="joy" type="joy_node" name="joystick_node" output="screen">
+        <param name="dev" value="/dev/input/js0"/>
+        <param name="deadzone" value="0.05"/> 
+        <param name="autorepeat_rate" value="20.0"/> 
+    </node>
+
+    <!-- Convert joystick input to cmd_vel -->
+    <node pkg="teleop_twist_joy" type="teleop_node" name="teleop_joy_node" output="screen">
+        <param name="axis_linear.x" value="1"/> <!-- Left joystick Y-axis controls linear speed -->
+        <param name="axis_angular.yaw" value="0"/> <!-- Left joystick X-axis controls angular speed -->
+        <param name="scale_linear.x" value="0.5"/> <!-- Adjust speed scaling -->
+        <param name="scale_angular.yaw" value="0.5"/>
+        <param name="enable_button" value="1"/> <!-- Button 2 must be pressed to enable movement -->
+    </node>
+</launch>
