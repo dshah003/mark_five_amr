@@ -14,6 +14,9 @@ echo "Starting docker container"
 docker run \
     -d \
     -v ${MARKY_ROOT}:${HOME}:rw \
+    --env="QT_X11_NO_MITSHM=1" \
+    --env="DISPLAY" \
+    --volume="/tmp/.X11-unix:/tmp/.X11-unix:rw" \
     --privileged \
     --network=host \
     --device /dev/ttyACM0 \

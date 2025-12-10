@@ -15,7 +15,13 @@ RUN apt-get update && \
     ros-melodic-rosserial \
     ros-melodic-teleop-twist-keyboard \
     ros-melodic-teleop-twist-joy \
+    ros-melodic-rviz \
+    ros-melodic-urdf \
+    ros-melodic-xacro \
     ros-melodic-navigation
+
+RUN apt-get update && \
+    apt-get install liburdfdom-tools
 
 # Add ros sourcing to bashrc
 RUN echo ". /opt/ros/melodic/setup.bash" >> ~/.bashrc
