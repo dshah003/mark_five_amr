@@ -55,12 +55,50 @@ angular:
   z: -0.1" --once
 ```
 
-### Run Teleop + Joystick node.  
+### Run Teleop + Joystick node.
 This publishes to /cmd_vel based on joystick movements. Move the left joystick axis to move the robot. The robot will move while the enable button is pressed. (The Button marked "2" on the controller")
 ```sh
-roslaunch mark_five_bot launch_joystick_teleop.launch  
+roslaunch mark_five_bot launch_joystick_teleop.launch
 ```
 
+## Odometry
+
+The odometry node computes robot position from encoder ticks using differential drive kinematics.
+
+### Run odometry with full robot bringup
+```sh
+roslaunch mark_five_bot bringup.launch
+```
+
+This launches:
+- rosserial (Arduino communication)
+- robot_state_publisher (URDF TF)
+- odometry_node (encoder -> /odom)
+
+### Run odometry standalone
+```sh
+roslaunch mark_five_bot odometry.launch
+```
+
+### Verify odometry
+```sh
+# Check odometry topic
+rostopic echo /odom
+
+# Visualize TF tree
+rosrun tf view_frames
+evince frames.pdf
+
+# Check TF
+rosrun tf tf_echo odom base_footprint
+```
+
+## URDF Visualization
+
+To visualize the robot model in RViz:
+```sh
+roslaunch mark_five_description robot.launch
+```
 
 ## Notes 
 

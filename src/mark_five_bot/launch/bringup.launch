@@ -1,0 +1,19 @@
+<launch>
+  <!-- Mark Five AMR Bringup -->
+  <!-- Launches all core nodes: rosserial, odometry, and robot_state_publisher -->
+
+  <!-- Serial communication with Arduino -->
+  <node pkg="rosserial_python" type="serial_node.py" name="serial_node">
+    <param name="port" value="/dev/ttyACM0"/>
+    <param name="baud" value="115200"/>
+  </node>
+
+  <!-- Load robot URDF -->
+  <param name="robot_description" textfile="$(find mark_five_description)/urdf/robot.urdf"/>
+
+  <!-- Robot state publisher for TF from URDF -->
+  <node pkg="robot_state_publisher" type="robot_state_publisher" name="robot_state_publisher"/>
+
+  <!-- Odometry from encoder ticks -->
+  <include file="$(find mark_five_bot)/launch/odometry.launch"/>
+</launch>
