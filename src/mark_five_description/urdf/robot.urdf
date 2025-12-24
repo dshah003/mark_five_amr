@@ -1,77 +1,764 @@
 <?xml version="1.0"?>
 <robot name="mark_five_robot">
-  
-  <!-- Base Link (Main Body) -->
+
+  <!--
+    Mark Five AMR - Differential Drive Tank Tread Robot
+
+    Dimensions (from measurements):
+    - Platform: 220mm x 200mm x 3mm
+    - Outer width: 185mm
+    - Inner width (between tracks): 100mm
+    - Track width: 40mm each
+    - Wheel diameter: 57mm
+    - Track length: 185mm
+    - Ground clearance: 15mm
+    - Platform height from ground: 60mm
+
+    Coordinate System (REP 103):
+    - X: Forward
+    - Y: Left
+    - Z: Up
+  -->
+
+  <!-- ==================== BASE FOOTPRINT ==================== -->
+  <link name="base_footprint"/>
+
+  <joint name="base_footprint_joint" type="fixed">
+    <parent link="base_footprint"/>
+    <child link="base_link"/>
+    <origin xyz="0 0 0.0285" rpy="0 0 0"/>
+  </joint>
+
+  <!-- ==================== BASE LINK ==================== -->
   <link name="base_link">
     <visual>
-      <origin rpy="0 0 0" xyz="0 0 0"/> 
+      <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
-        <box size="0.5 0.3 0.1"/> <!-- Update with your robot's dimensions -->
+        <box size="0.185 0.100 0.030"/>
       </geometry>
-      <material name="blue">
-        <color rgba="0.0 0.0 1.0 1.0"/>
+      <material name="aluminum">
+        <color rgba="0.75 0.75 0.75 1.0"/>
       </material>
     </visual>
-    <inertial>
-      <mass value="5.0"/>
+    <collision>
       <origin xyz="0 0 0" rpy="0 0 0"/>
-      <inertia ixx="0.1" ixy="0.0" ixz="0.0" iyy="0.1" iyz="0.0" izz="0.1"/>
+      <geometry>
+        <box size="0.185 0.100 0.030"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <mass value="2.0"/>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <inertia ixx="0.01" ixy="0.0" ixz="0.0" iyy="0.01" iyz="0.0" izz="0.01"/>
     </inertial>
   </link>
 
-  <!-- Left Track -->
+  <!-- ==================== LEFT TRACK ASSEMBLY ==================== -->
   <link name="left_track">
+    <!-- Track top surface -->
     <visual>
+      <origin xyz="0 0 0.020" rpy="0 0 0"/>
       <geometry>
-        <box size="0.5 0.05 0.1"/> <!-- Track dimensions -->
+        <box size="0.130 0.038 0.006"/>
       </geometry>
-      <material name="black">
-        <color rgba="0.0 0.0 0.0 1.0"/>
+      <material name="track_rubber">
+        <color rgba="0.12 0.12 0.12 1.0"/>
       </material>
     </visual>
-  </link>
-
-  <!-- Right Track -->
-  <link name="right_track">
+    <!-- Track bottom surface -->
     <visual>
+      <origin xyz="0 0 -0.020" rpy="0 0 0"/>
       <geometry>
-        <box size="0.5 0.05 0.1"/>
+        <box size="0.130 0.038 0.006"/>
       </geometry>
-      <material name="black">
-        <color rgba="0.0 0.0 0.0 1.0"/>
+      <material name="track_rubber">
+        <color rgba="0.12 0.12 0.12 1.0"/>
       </material>
     </visual>
+    <!-- Track front curve (cylinder) -->
+    <visual>
+      <origin xyz="0.065 0 0" rpy="1.5708 0 0"/>
+      <geometry>
+        <cylinder radius="0.023" length="0.038"/>
+      </geometry>
+      <material name="track_rubber">
+        <color rgba="0.12 0.12 0.12 1.0"/>
+      </material>
+    </visual>
+    <!-- Track rear curve (cylinder) -->
+    <visual>
+      <origin xyz="-0.065 0 0" rpy="1.5708 0 0"/>
+      <geometry>
+        <cylinder radius="0.023" length="0.038"/>
+      </geometry>
+      <material name="track_rubber">
+        <color rgba="0.12 0.12 0.12 1.0"/>
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.185 0.040 0.057"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <mass value="0.5"/>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <inertia ixx="0.001" ixy="0.0" ixz="0.0" iyy="0.001" iyz="0.0" izz="0.001"/>
+    </inertial>
   </link>
 
-  <!-- Encoded Motors (as fixed joints for simplicity) -->
-  <joint name="left_motor_joint" type="fixed">
+  <joint name="left_track_joint" type="fixed">
     <parent link="base_link"/>
     <child link="left_track"/>
-    <origin xyz="0 0.15 0"/> <!-- Adjust based on your design -->
+    <origin xyz="0 0.070 0" rpy="0 0 0"/>
   </joint>
 
-  <joint name="right_motor_joint" type="fixed">
-    <parent link="base_link"/>
-    <child link="right_track"/>
-    <origin xyz="0 -0.15 0"/>
-  </joint>
-
-  <!-- Lidar or Camera (if applicable) -->
-  <link name="lidar">
+  <!-- Left front sprocket (drive wheel) -->
+  <link name="left_front_sprocket">
+    <!-- Main wheel -->
     <visual>
+      <origin xyz="0 0 0" rpy="1.5708 0 0"/>
       <geometry>
-        <cylinder radius="0.05" length="0.1"/>
+        <cylinder radius="0.026" length="0.035"/>
       </geometry>
-      <material name="gray">
+      <material name="sprocket_gray">
+        <color rgba="0.35 0.35 0.35 1.0"/>
+      </material>
+    </visual>
+    <!-- Sprocket teeth ring -->
+    <visual>
+      <origin xyz="0 0.016 0" rpy="1.5708 0 0"/>
+      <geometry>
+        <cylinder radius="0.028" length="0.004"/>
+      </geometry>
+      <material name="sprocket_dark">
+        <color rgba="0.25 0.25 0.25 1.0"/>
+      </material>
+    </visual>
+    <visual>
+      <origin xyz="0 -0.016 0" rpy="1.5708 0 0"/>
+      <geometry>
+        <cylinder radius="0.028" length="0.004"/>
+      </geometry>
+      <material name="sprocket_dark">
+        <color rgba="0.25 0.25 0.25 1.0"/>
+      </material>
+    </visual>
+    <!-- Hub -->
+    <visual>
+      <origin xyz="0 0 0" rpy="1.5708 0 0"/>
+      <geometry>
+        <cylinder radius="0.010" length="0.040"/>
+      </geometry>
+      <material name="hub_metal">
         <color rgba="0.5 0.5 0.5 1.0"/>
       </material>
     </visual>
   </link>
 
-  <joint name="lidar_joint" type="fixed">
+  <joint name="left_front_sprocket_joint" type="fixed">
+    <parent link="left_track"/>
+    <child link="left_front_sprocket"/>
+    <origin xyz="0.065 0 0" rpy="0 0 0"/>
+  </joint>
+
+  <!-- Left rear sprocket -->
+  <link name="left_rear_sprocket">
+    <visual>
+      <origin xyz="0 0 0" rpy="1.5708 0 0"/>
+      <geometry>
+        <cylinder radius="0.026" length="0.035"/>
+      </geometry>
+      <material name="sprocket_gray">
+        <color rgba="0.35 0.35 0.35 1.0"/>
+      </material>
+    </visual>
+    <visual>
+      <origin xyz="0 0.016 0" rpy="1.5708 0 0"/>
+      <geometry>
+        <cylinder radius="0.028" length="0.004"/>
+      </geometry>
+      <material name="sprocket_dark">
+        <color rgba="0.25 0.25 0.25 1.0"/>
+      </material>
+    </visual>
+    <visual>
+      <origin xyz="0 -0.016 0" rpy="1.5708 0 0"/>
+      <geometry>
+        <cylinder radius="0.028" length="0.004"/>
+      </geometry>
+      <material name="sprocket_dark">
+        <color rgba="0.25 0.25 0.25 1.0"/>
+      </material>
+    </visual>
+    <visual>
+      <origin xyz="0 0 0" rpy="1.5708 0 0"/>
+      <geometry>
+        <cylinder radius="0.010" length="0.040"/>
+      </geometry>
+      <material name="hub_metal">
+        <color rgba="0.5 0.5 0.5 1.0"/>
+      </material>
+    </visual>
+  </link>
+
+  <joint name="left_rear_sprocket_joint" type="fixed">
+    <parent link="left_track"/>
+    <child link="left_rear_sprocket"/>
+    <origin xyz="-0.065 0 0" rpy="0 0 0"/>
+  </joint>
+
+  <!-- Left middle idler wheel -->
+  <link name="left_idler">
+    <visual>
+      <origin xyz="0 0 0" rpy="1.5708 0 0"/>
+      <geometry>
+        <cylinder radius="0.018" length="0.030"/>
+      </geometry>
+      <material name="idler_gray">
+        <color rgba="0.4 0.4 0.4 1.0"/>
+      </material>
+    </visual>
+    <visual>
+      <origin xyz="0 0 0" rpy="1.5708 0 0"/>
+      <geometry>
+        <cylinder radius="0.008" length="0.035"/>
+      </geometry>
+      <material name="hub_metal">
+        <color rgba="0.5 0.5 0.5 1.0"/>
+      </material>
+    </visual>
+  </link>
+
+  <joint name="left_idler_joint" type="fixed">
+    <parent link="left_track"/>
+    <child link="left_idler"/>
+    <origin xyz="0 0 -0.008" rpy="0 0 0"/>
+  </joint>
+
+  <!-- ==================== RIGHT TRACK ASSEMBLY ==================== -->
+  <link name="right_track">
+    <!-- Track top surface -->
+    <visual>
+      <origin xyz="0 0 0.020" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.130 0.038 0.006"/>
+      </geometry>
+      <material name="track_rubber">
+        <color rgba="0.12 0.12 0.12 1.0"/>
+      </material>
+    </visual>
+    <!-- Track bottom surface -->
+    <visual>
+      <origin xyz="0 0 -0.020" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.130 0.038 0.006"/>
+      </geometry>
+      <material name="track_rubber">
+        <color rgba="0.12 0.12 0.12 1.0"/>
+      </material>
+    </visual>
+    <!-- Track front curve -->
+    <visual>
+      <origin xyz="0.065 0 0" rpy="1.5708 0 0"/>
+      <geometry>
+        <cylinder radius="0.023" length="0.038"/>
+      </geometry>
+      <material name="track_rubber">
+        <color rgba="0.12 0.12 0.12 1.0"/>
+      </material>
+    </visual>
+    <!-- Track rear curve -->
+    <visual>
+      <origin xyz="-0.065 0 0" rpy="1.5708 0 0"/>
+      <geometry>
+        <cylinder radius="0.023" length="0.038"/>
+      </geometry>
+      <material name="track_rubber">
+        <color rgba="0.12 0.12 0.12 1.0"/>
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.185 0.040 0.057"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <mass value="0.5"/>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <inertia ixx="0.001" ixy="0.0" ixz="0.0" iyy="0.001" iyz="0.0" izz="0.001"/>
+    </inertial>
+  </link>
+
+  <joint name="right_track_joint" type="fixed">
     <parent link="base_link"/>
-    <child link="lidar"/>
-    <origin xyz="0 0 0.1"/>
+    <child link="right_track"/>
+    <origin xyz="0 -0.070 0" rpy="0 0 0"/>
+  </joint>
+
+  <!-- Right front sprocket -->
+  <link name="right_front_sprocket">
+    <visual>
+      <origin xyz="0 0 0" rpy="1.5708 0 0"/>
+      <geometry>
+        <cylinder radius="0.026" length="0.035"/>
+      </geometry>
+      <material name="sprocket_gray">
+        <color rgba="0.35 0.35 0.35 1.0"/>
+      </material>
+    </visual>
+    <visual>
+      <origin xyz="0 0.016 0" rpy="1.5708 0 0"/>
+      <geometry>
+        <cylinder radius="0.028" length="0.004"/>
+      </geometry>
+      <material name="sprocket_dark">
+        <color rgba="0.25 0.25 0.25 1.0"/>
+      </material>
+    </visual>
+    <visual>
+      <origin xyz="0 -0.016 0" rpy="1.5708 0 0"/>
+      <geometry>
+        <cylinder radius="0.028" length="0.004"/>
+      </geometry>
+      <material name="sprocket_dark">
+        <color rgba="0.25 0.25 0.25 1.0"/>
+      </material>
+    </visual>
+    <visual>
+      <origin xyz="0 0 0" rpy="1.5708 0 0"/>
+      <geometry>
+        <cylinder radius="0.010" length="0.040"/>
+      </geometry>
+      <material name="hub_metal">
+        <color rgba="0.5 0.5 0.5 1.0"/>
+      </material>
+    </visual>
+  </link>
+
+  <joint name="right_front_sprocket_joint" type="fixed">
+    <parent link="right_track"/>
+    <child link="right_front_sprocket"/>
+    <origin xyz="0.065 0 0" rpy="0 0 0"/>
+  </joint>
+
+  <!-- Right rear sprocket -->
+  <link name="right_rear_sprocket">
+    <visual>
+      <origin xyz="0 0 0" rpy="1.5708 0 0"/>
+      <geometry>
+        <cylinder radius="0.026" length="0.035"/>
+      </geometry>
+      <material name="sprocket_gray">
+        <color rgba="0.35 0.35 0.35 1.0"/>
+      </material>
+    </visual>
+    <visual>
+      <origin xyz="0 0.016 0" rpy="1.5708 0 0"/>
+      <geometry>
+        <cylinder radius="0.028" length="0.004"/>
+      </geometry>
+      <material name="sprocket_dark">
+        <color rgba="0.25 0.25 0.25 1.0"/>
+      </material>
+    </visual>
+    <visual>
+      <origin xyz="0 -0.016 0" rpy="1.5708 0 0"/>
+      <geometry>
+        <cylinder radius="0.028" length="0.004"/>
+      </geometry>
+      <material name="sprocket_dark">
+        <color rgba="0.25 0.25 0.25 1.0"/>
+      </material>
+    </visual>
+    <visual>
+      <origin xyz="0 0 0" rpy="1.5708 0 0"/>
+      <geometry>
+        <cylinder radius="0.010" length="0.040"/>
+      </geometry>
+      <material name="hub_metal">
+        <color rgba="0.5 0.5 0.5 1.0"/>
+      </material>
+    </visual>
+  </link>
+
+  <joint name="right_rear_sprocket_joint" type="fixed">
+    <parent link="right_track"/>
+    <child link="right_rear_sprocket"/>
+    <origin xyz="-0.065 0 0" rpy="0 0 0"/>
+  </joint>
+
+  <!-- Right middle idler -->
+  <link name="right_idler">
+    <visual>
+      <origin xyz="0 0 0" rpy="1.5708 0 0"/>
+      <geometry>
+        <cylinder radius="0.018" length="0.030"/>
+      </geometry>
+      <material name="idler_gray">
+        <color rgba="0.4 0.4 0.4 1.0"/>
+      </material>
+    </visual>
+    <visual>
+      <origin xyz="0 0 0" rpy="1.5708 0 0"/>
+      <geometry>
+        <cylinder radius="0.008" length="0.035"/>
+      </geometry>
+      <material name="hub_metal">
+        <color rgba="0.5 0.5 0.5 1.0"/>
+      </material>
+    </visual>
+  </link>
+
+  <joint name="right_idler_joint" type="fixed">
+    <parent link="right_track"/>
+    <child link="right_idler"/>
+    <origin xyz="0 0 -0.008" rpy="0 0 0"/>
+  </joint>
+
+  <!-- ==================== PLATFORM ==================== -->
+  <link name="platform_link">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.220 0.200 0.003"/>
+      </geometry>
+      <material name="acrylic">
+        <color rgba="0.85 0.9 0.95 0.6"/>
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.220 0.200 0.003"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <mass value="0.3"/>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <inertia ixx="0.001" ixy="0.0" ixz="0.0" iyy="0.001" iyz="0.0" izz="0.001"/>
+    </inertial>
+  </link>
+
+  <joint name="platform_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="platform_link"/>
+    <origin xyz="0 0 0.0315" rpy="0 0 0"/>
+  </joint>
+
+  <!-- Platform standoffs (4 corners) -->
+  <link name="standoff_fl">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <cylinder radius="0.004" length="0.030"/>
+      </geometry>
+      <material name="standoff_metal">
+        <color rgba="0.6 0.6 0.6 1.0"/>
+      </material>
+    </visual>
+  </link>
+  <joint name="standoff_fl_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="standoff_fl"/>
+    <origin xyz="0.080 0.070 0.015" rpy="0 0 0"/>
+  </joint>
+
+  <link name="standoff_fr">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <cylinder radius="0.004" length="0.030"/>
+      </geometry>
+      <material name="standoff_metal">
+        <color rgba="0.6 0.6 0.6 1.0"/>
+      </material>
+    </visual>
+  </link>
+  <joint name="standoff_fr_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="standoff_fr"/>
+    <origin xyz="0.080 -0.070 0.015" rpy="0 0 0"/>
+  </joint>
+
+  <link name="standoff_rl">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <cylinder radius="0.004" length="0.030"/>
+      </geometry>
+      <material name="standoff_metal">
+        <color rgba="0.6 0.6 0.6 1.0"/>
+      </material>
+    </visual>
+  </link>
+  <joint name="standoff_rl_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="standoff_rl"/>
+    <origin xyz="-0.080 0.070 0.015" rpy="0 0 0"/>
+  </joint>
+
+  <link name="standoff_rr">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <cylinder radius="0.004" length="0.030"/>
+      </geometry>
+      <material name="standoff_metal">
+        <color rgba="0.6 0.6 0.6 1.0"/>
+      </material>
+    </visual>
+  </link>
+  <joint name="standoff_rr_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="standoff_rr"/>
+    <origin xyz="-0.080 -0.070 0.015" rpy="0 0 0"/>
+  </joint>
+
+  <!-- ==================== JETSON NANO ==================== -->
+  <link name="jetson_nano_link">
+    <!-- Main case with heatsink -->
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.100 0.080 0.045"/>
+      </geometry>
+      <material name="jetson_case">
+        <color rgba="0.25 0.25 0.25 1.0"/>
+      </material>
+    </visual>
+    <!-- Heatsink fins (top) -->
+    <visual>
+      <origin xyz="0 0 0.026" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.090 0.070 0.008"/>
+      </geometry>
+      <material name="heatsink">
+        <color rgba="0.2 0.2 0.2 1.0"/>
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.100 0.080 0.050"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <mass value="0.3"/>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <inertia ixx="0.0005" ixy="0.0" ixz="0.0" iyy="0.0005" iyz="0.0" izz="0.0005"/>
+    </inertial>
+  </link>
+
+  <joint name="jetson_nano_joint" type="fixed">
+    <parent link="platform_link"/>
+    <child link="jetson_nano_link"/>
+    <origin xyz="-0.040 0.030 0.0265" rpy="0 0 0"/>
+  </joint>
+
+  <!-- ==================== ARDUINO MEGA ==================== -->
+  <link name="arduino_mega_link">
+    <!-- PCB -->
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.101 0.053 0.002"/>
+      </geometry>
+      <material name="arduino_blue">
+        <color rgba="0.0 0.35 0.55 1.0"/>
+      </material>
+    </visual>
+    <!-- USB port -->
+    <visual>
+      <origin xyz="0.045 0 0.005" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.012 0.010 0.008"/>
+      </geometry>
+      <material name="usb_silver">
+        <color rgba="0.7 0.7 0.7 1.0"/>
+      </material>
+    </visual>
+    <!-- Power jack -->
+    <visual>
+      <origin xyz="0.045 -0.020 0.005" rpy="0 0 0"/>
+      <geometry>
+        <cylinder radius="0.004" length="0.012"/>
+      </geometry>
+      <material name="jack_black">
+        <color rgba="0.1 0.1 0.1 1.0"/>
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.101 0.053 0.015"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <mass value="0.05"/>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <inertia ixx="0.0001" ixy="0.0" ixz="0.0" iyy="0.0001" iyz="0.0" izz="0.0001"/>
+    </inertial>
+  </link>
+
+  <joint name="arduino_mega_joint" type="fixed">
+    <parent link="platform_link"/>
+    <child link="arduino_mega_link"/>
+    <origin xyz="0.040 -0.050 0.009" rpy="0 0 0"/>
+  </joint>
+
+  <!-- ==================== WIFI ANTENNAS ==================== -->
+  <link name="antenna_left_link">
+    <!-- Base -->
+    <visual>
+      <origin xyz="0 0 0.008" rpy="0 0 0"/>
+      <geometry>
+        <cylinder radius="0.006" length="0.016"/>
+      </geometry>
+      <material name="antenna_base">
+        <color rgba="0.2 0.2 0.2 1.0"/>
+      </material>
+    </visual>
+    <!-- Antenna rod -->
+    <visual>
+      <origin xyz="0 0 0.090" rpy="0 0.18 0"/>
+      <geometry>
+        <cylinder radius="0.004" length="0.150"/>
+      </geometry>
+      <material name="antenna_black">
+        <color rgba="0.08 0.08 0.08 1.0"/>
+      </material>
+    </visual>
+    <!-- Antenna tip -->
+    <visual>
+      <origin xyz="0.014 0 0.163" rpy="0 0.18 0"/>
+      <geometry>
+        <sphere radius="0.005"/>
+      </geometry>
+      <material name="antenna_black">
+        <color rgba="0.08 0.08 0.08 1.0"/>
+      </material>
+    </visual>
+  </link>
+
+  <joint name="antenna_left_joint" type="fixed">
+    <parent link="jetson_nano_link"/>
+    <child link="antenna_left_link"/>
+    <origin xyz="-0.040 0.025 0.030" rpy="0 0 0"/>
+  </joint>
+
+  <link name="antenna_right_link">
+    <visual>
+      <origin xyz="0 0 0.008" rpy="0 0 0"/>
+      <geometry>
+        <cylinder radius="0.006" length="0.016"/>
+      </geometry>
+      <material name="antenna_base">
+        <color rgba="0.2 0.2 0.2 1.0"/>
+      </material>
+    </visual>
+    <visual>
+      <origin xyz="0 0 0.090" rpy="0 0.12 0"/>
+      <geometry>
+        <cylinder radius="0.004" length="0.150"/>
+      </geometry>
+      <material name="antenna_black">
+        <color rgba="0.08 0.08 0.08 1.0"/>
+      </material>
+    </visual>
+    <visual>
+      <origin xyz="0.009 0 0.163" rpy="0 0.12 0"/>
+      <geometry>
+        <sphere radius="0.005"/>
+      </geometry>
+      <material name="antenna_black">
+        <color rgba="0.08 0.08 0.08 1.0"/>
+      </material>
+    </visual>
+  </link>
+
+  <joint name="antenna_right_joint" type="fixed">
+    <parent link="jetson_nano_link"/>
+    <child link="antenna_right_link"/>
+    <origin xyz="-0.040 -0.025 0.030" rpy="0 0 0"/>
+  </joint>
+
+  <!-- ==================== DC MOTORS ==================== -->
+  <link name="left_motor_link">
+    <!-- Motor body -->
+    <visual>
+      <origin xyz="0 0.015 0" rpy="1.5708 0 0"/>
+      <geometry>
+        <cylinder radius="0.018" length="0.045"/>
+      </geometry>
+      <material name="motor_silver">
+        <color rgba="0.65 0.65 0.65 1.0"/>
+      </material>
+    </visual>
+    <!-- Gearbox -->
+    <visual>
+      <origin xyz="0 0.045 0" rpy="1.5708 0 0"/>
+      <geometry>
+        <box size="0.024 0.024 0.020"/>
+      </geometry>
+      <material name="gearbox_metal">
+        <color rgba="0.55 0.55 0.55 1.0"/>
+      </material>
+    </visual>
+    <!-- Shaft -->
+    <visual>
+      <origin xyz="0 0.060 0" rpy="1.5708 0 0"/>
+      <geometry>
+        <cylinder radius="0.003" length="0.012"/>
+      </geometry>
+      <material name="shaft_steel">
+        <color rgba="0.7 0.7 0.7 1.0"/>
+      </material>
+    </visual>
+  </link>
+
+  <joint name="left_motor_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="left_motor_link"/>
+    <origin xyz="0 0.020 0" rpy="0 0 0"/>
+  </joint>
+
+  <link name="right_motor_link">
+    <visual>
+      <origin xyz="0 -0.015 0" rpy="1.5708 0 0"/>
+      <geometry>
+        <cylinder radius="0.018" length="0.045"/>
+      </geometry>
+      <material name="motor_silver">
+        <color rgba="0.65 0.65 0.65 1.0"/>
+      </material>
+    </visual>
+    <visual>
+      <origin xyz="0 -0.045 0" rpy="1.5708 0 0"/>
+      <geometry>
+        <box size="0.024 0.024 0.020"/>
+      </geometry>
+      <material name="gearbox_metal">
+        <color rgba="0.55 0.55 0.55 1.0"/>
+      </material>
+    </visual>
+    <visual>
+      <origin xyz="0 -0.060 0" rpy="1.5708 0 0"/>
+      <geometry>
+        <cylinder radius="0.003" length="0.012"/>
+      </geometry>
+      <material name="shaft_steel">
+        <color rgba="0.7 0.7 0.7 1.0"/>
+      </material>
+    </visual>
+  </link>
+
+  <joint name="right_motor_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="right_motor_link"/>
+    <origin xyz="0 -0.020 0" rpy="0 0 0"/>
   </joint>
 
 </robot>

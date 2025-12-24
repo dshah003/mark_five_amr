@@ -9,7 +9,7 @@ The robot environment is setup on a docker container based on ROS Melodic.
 
 #### Install docker 
 
-Follow instructions at https://docs.docker.com/engine/install/ubuntu/ to install docker on your host OS.  
+Follow instructions at https://docs.docker.com/engine/install/ubuntu/ to install docker on your host OS.
 
 #### Post Installation
 
@@ -23,7 +23,7 @@ newgrp docker
 ## Docker container
 
 To run the docker, run the `build.sh` script in `docker/` dir. 
-To start the docker run the `start.sh` script once, and then run `bash.sh` script in new terminal everytime to open bash within the docker.   
+To start the docker run the `start.sh` script once, and then run `bash.sh` script in new terminal everytime to open bash within the docker. 
 
 ## Arduino Node
 The arduino_ws/Robot_Node/Robot_Node.ino code runs on the arduino Mega. 
