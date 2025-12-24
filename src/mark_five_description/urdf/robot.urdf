@@ -1,0 +1,77 @@
+<?xml version="1.0"?>
+<robot name="mark_five_robot">
+  
+  <!-- Base Link (Main Body) -->
+  <link name="base_link">
+    <visual>
+      <origin rpy="0 0 0" xyz="0 0 0"/> 
+      <geometry>
+        <box size="0.5 0.3 0.1"/> <!-- Update with your robot's dimensions -->
+      </geometry>
+      <material name="blue">
+        <color rgba="0.0 0.0 1.0 1.0"/>
+      </material>
+    </visual>
+    <inertial>
+      <mass value="5.0"/>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <inertia ixx="0.1" ixy="0.0" ixz="0.0" iyy="0.1" iyz="0.0" izz="0.1"/>
+    </inertial>
+  </link>
+
+  <!-- Left Track -->
+  <link name="left_track">
+    <visual>
+      <geometry>
+        <box size="0.5 0.05 0.1"/> <!-- Track dimensions -->
+      </geometry>
+      <material name="black">
+        <color rgba="0.0 0.0 0.0 1.0"/>
+      </material>
+    </visual>
+  </link>
+
+  <!-- Right Track -->
+  <link name="right_track">
+    <visual>
+      <geometry>
+        <box size="0.5 0.05 0.1"/>
+      </geometry>
+      <material name="black">
+        <color rgba="0.0 0.0 0.0 1.0"/>
+      </material>
+    </visual>
+  </link>
+
+  <!-- Encoded Motors (as fixed joints for simplicity) -->
+  <joint name="left_motor_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="left_track"/>
+    <origin xyz="0 0.15 0"/> <!-- Adjust based on your design -->
+  </joint>
+
+  <joint name="right_motor_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="right_track"/>
+    <origin xyz="0 -0.15 0"/>
+  </joint>
+
+  <!-- Lidar or Camera (if applicable) -->
+  <link name="lidar">
+    <visual>
+      <geometry>
+        <cylinder radius="0.05" length="0.1"/>
+      </geometry>
+      <material name="gray">
+        <color rgba="0.5 0.5 0.5 1.0"/>
+      </material>
+    </visual>
+  </link>
+
+  <joint name="lidar_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="lidar"/>
+    <origin xyz="0 0 0.1"/>
+  </joint>
+
+</robot>

@@ -18,7 +18,10 @@ RUN apt-get update && \
     ros-melodic-rviz \
     ros-melodic-urdf \
     ros-melodic-xacro \
-    ros-melodic-navigation
+    ros-melodic-navigation \
+    ros-melodic-joint-state-publisher \
+    ros-melodic-joint-state-publisher-gui \
+    ros-melodic-robot-state-publisher
 
 RUN apt-get update && \
     apt-get install liburdfdom-tools

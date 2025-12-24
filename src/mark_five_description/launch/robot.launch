@@ -1,0 +1,13 @@
+<launch>
+  <!-- Load URDF to parameter server -->
+  <param name="robot_description" textfile="$(find mark_five_description)/urdf/robot.urdf"/>
+
+  <!-- Publish TF transforms from URDF -->
+  <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher"/>
+
+  <!-- GUI for manually adjusting joint states (useful for non-fixed joints) -->
+  <node name="joint_state_publisher_gui" pkg="joint_state_publisher_gui" type="joint_state_publisher_gui"/>
+
+  <!-- Launch RViz with the robot model -->
+  <node name="rviz" pkg="rviz" type="rviz" args="-d $(find mark_five_description)/rviz/display.rviz" required="true"/>
+</launch>
