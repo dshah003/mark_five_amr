@@ -6,7 +6,7 @@ docker stop ${DOCKER_NAME} &> /dev/null
 docker rm ${DOCKER_NAME} &> /dev/null
 
 # Edit this as per your dir structure.
-MARKY_ROOT=$(dirname "$(pwd)")
+MARKY_ROOT=$(dirname "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)")
 echo "Setting Marky Root as ${MARKY_ROOT}"
 
 echo "Starting docker container"
@@ -25,6 +25,7 @@ docker run \
     --name ${DOCKER_NAME} mark_five:0.1 sleep infinity
 
 docker exec -u root ${DOCKER_NAME} sh -c "echo 127.0.0.1 ${DOCKER_NAME} >> /etc/hosts"
+docker exec ${DOCKER_NAME} sh -c "echo 'force_color_prompt=yes' >> ~/.bashrc"
 
 # docker exec -u root ${DOCKER_NAME} sh -c "source /opt/ros/melodic/setup.bash && roscore &> /dev/null &"
 docker exec -d mark_five_robot bash -c ". /opt/ros/melodic/setup.bash && roscore"

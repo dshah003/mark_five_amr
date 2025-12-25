@@ -2,4 +2,4 @@
 
 echo "Opening Docker bash"
 
-docker exec -it mark_five_robot bash
+docker exec -it mark_five_robot bash -c 'source devel/setup.bash; exec bash'

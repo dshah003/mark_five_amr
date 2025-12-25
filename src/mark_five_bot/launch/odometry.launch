@@ -1,0 +1,17 @@
+<launch>
+  <!-- Odometry Node -->
+  <!-- Computes odometry from encoder ticks and publishes /odom + TF -->
+
+  <node pkg="mark_five_bot" type="odometry_node" name="odometry_node" output="screen">
+    <!-- Robot parameters (from Arduino code) -->
+    <param name="wheel_base" value="0.14"/>
+    <param name="ticks_per_meter" value="3125.0"/>
+
+    <!-- Frame IDs -->
+    <param name="odom_frame" value="odom"/>
+    <param name="base_frame" value="base_footprint"/>
+
+    <!-- Set to false if another node publishes odom->base_footprint TF -->
+    <param name="publish_tf" value="true"/>
+  </node>
+</launch>
