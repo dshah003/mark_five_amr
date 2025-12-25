@@ -86,11 +86,11 @@ const int b = 52;
 const int DRIFT_MULTIPLIER = 120;
 
 // Turning PWM output (Sabertooth uses -127 to 127)
-const int PWM_TURN = 60;
+const int PWM_TURN = 40;
 
 // Set minimum and maximum limits for the PWM values
 const int PWM_MIN = 30;  // Minimum to overcome friction
-const int PWM_MAX = 80;  // Limit max speed
+const int PWM_MAX = 50;  // Limit max speed
 
 // Velocity and PWM variables for each wheel
 double velLeftWheel = 0;

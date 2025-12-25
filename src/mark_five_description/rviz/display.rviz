@@ -1,8 +1,21 @@
 Panels:
   - Class: rviz/Displays
+    Help Height: 70
     Name: Displays
+    Property Tree Widget:
+      Expanded:
+        - /TF1
+      Splitter Ratio: 0.5
+    Tree Height: 450
   - Class: rviz/Views
+    Expanded:
+      - /Current View1
     Name: Views
+    Splitter Ratio: 0.5
+Preferences:
+  PromptSaveOnExit: true
+Toolbars:
+  toolButtonStyle: 2
 Visualization Manager:
   Class: ""
   Displays:
@@ -11,6 +24,9 @@ Visualization Manager:
       Class: rviz/Grid
       Color: 160; 160; 164
       Enabled: true
+      Line Style:
+        Line Width: 0.029999999329447746
+        Value: Lines
       Name: Grid
       Normal Cell Count: 0
       Offset:
@@ -30,6 +46,111 @@ Visualization Manager:
         Expand Joint Details: false
         Expand Link Details: false
         Expand Tree: false
+        Link Tree Style: Links in Alphabetic Order
+        antenna_left_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        antenna_right_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        arduino_mega_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        base_footprint:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        base_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        jetson_nano_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        left_front_sprocket:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        left_idler:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        left_motor_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        left_rear_sprocket:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        left_track:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        platform_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        right_front_sprocket:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        right_idler:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        right_motor_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        right_rear_sprocket:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        right_track:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        standoff_fl:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        standoff_fr:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        standoff_rl:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        standoff_rr:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
       Name: RobotModel
       Robot Description: robot_description
       TF Prefix: ""
@@ -38,19 +159,104 @@ Visualization Manager:
       Visual Enabled: true
     - Class: rviz/TF
       Enabled: true
+      Filter (blacklist): ""
+      Filter (whitelist): ""
       Frame Timeout: 15
       Frames:
         All Enabled: true
-      Marker Scale: 0.3
+        antenna_left_link:
+          Value: true
+        antenna_right_link:
+          Value: true
+        arduino_mega_link:
+          Value: true
+        base_footprint:
+          Value: true
+        base_link:
+          Value: true
+        jetson_nano_link:
+          Value: true
+        left_front_sprocket:
+          Value: true
+        left_idler:
+          Value: true
+        left_motor_link:
+          Value: true
+        left_rear_sprocket:
+          Value: true
+        left_track:
+          Value: true
+        odom:
+          Value: true
+        platform_link:
+          Value: true
+        right_front_sprocket:
+          Value: true
+        right_idler:
+          Value: true
+        right_motor_link:
+          Value: true
+        right_rear_sprocket:
+          Value: true
+        right_track:
+          Value: true
+        standoff_fl:
+          Value: true
+        standoff_fr:
+          Value: true
+        standoff_rl:
+          Value: true
+        standoff_rr:
+          Value: true
+      Marker Scale: 0.30000001192092896
       Name: TF
       Show Arrows: true
       Show Axes: true
       Show Names: true
+      Tree:
+        odom:
+          base_footprint:
+            base_link:
+              left_motor_link:
+                {}
+              left_track:
+                left_front_sprocket:
+                  {}
+                left_idler:
+                  {}
+                left_rear_sprocket:
+                  {}
+              platform_link:
+                arduino_mega_link:
+                  {}
+                jetson_nano_link:
+                  antenna_left_link:
+                    {}
+                  antenna_right_link:
+                    {}
+              right_motor_link:
+                {}
+              right_track:
+                right_front_sprocket:
+                  {}
+                right_idler:
+                  {}
+                right_rear_sprocket:
+                  {}
+              standoff_fl:
+                {}
+              standoff_fr:
+                {}
+              standoff_rl:
+                {}
+              standoff_rr:
+                {}
       Update Interval: 0
       Value: true
   Enabled: true
   Global Options:
     Background Color: 48; 48; 48
+    Default Light: true
     Fixed Frame: base_link
     Frame Rate: 30
   Name: root
@@ -63,28 +269,35 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 2
+      Distance: 0.392190545797348
       Enable Stereo Rendering:
-        Stereo Eye Separation: 0.06
+        Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: 0
-        Y: 0
-        Z: 0
+        X: -1.2993929386138916
+        Y: -1.2735222578048706
+        Z: 0.23180264234542847
       Focal Shape Fixed Size: true
-      Focal Shape Size: 0.05
+      Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
-      Near Clip Distance: 0.01
-      Pitch: 0.5
+      Near Clip Distance: 0.009999999776482582
+      Pitch: 1.5697963237762451
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 0.8
+      Yaw: 1.2299996614456177
     Saved: ~
 Window Geometry:
   Displays:
     collapsed: false
-  Height: 800
-  Width: 1200
+  Height: 1043
+  Hide Left Dock: false
+  Hide Right Dock: false
+  QMainWindow State: 000000ff00000000fd000000010000000000000156000003bdfc0200000002fb000000100044006900730070006c006100790073010000003b00000243000000c700fffffffb0000000a00560069006500770073010000028400000174000000a000ffffff000005f7000003bd00000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
+  Views:
+    collapsed: false
+  Width: 1875
+  X: 45
+  Y: 0
