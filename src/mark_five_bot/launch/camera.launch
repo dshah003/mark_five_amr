@@ -36,11 +36,6 @@
     <!-- Align depth to color for better visualization -->
     <arg name="align_depth" value="true"/>
 
-    <!-- TF frames - must match URDF definitions -->
-    <arg name="base_frame_id" value="camera_link"/>
-    <arg name="depth_optical_frame_id" value="camera_depth_optical_frame"/>
-    <arg name="color_optical_frame_id" value="camera_color_optical_frame"/>
-
     <!-- Depth filters for noise reduction -->
     <arg name="filters" value="decimation,spatial,temporal"/>
   </include>
@@ -49,9 +44,8 @@
   <!--
     Converts depth image to 2D laser scan for move_base navigation.
 
-    With 15-degree downward camera tilt:
-    - Camera height from ground: ~90mm (platform 60mm + mount 30mm)
-    - Floor intersection: ~0.34m ahead (90mm / tan(15deg))
+    Camera facing straight ahead, mounted on clamp:
+    - Camera height from ground: ~85mm (platform 60mm + clamp 25mm)
     - scan_height of 10 pixels provides good averaging
   -->
   <node pkg="depthimage_to_laserscan" type="depthimage_to_laserscan" name="depthimage_to_laserscan" output="screen">
@@ -63,8 +57,8 @@
     <remap from="scan" to="/scan"/>
 
     <!-- Scan parameters -->
-    <!-- output_frame_id: TF frame for laser scan output -->
-    <param name="output_frame_id" value="camera_depth_optical_frame"/>
+    <!-- output_frame_id: TF frame for laser scan output (use camera_link for robot convention) -->
+    <param name="output_frame_id" value="camera_link"/>
 
     <!-- scan_height: Number of pixel rows to use (centered vertically) -->
     <!-- Higher value = more robust but slower processing -->

@@ -29,6 +29,7 @@ docker run \
     --network=host \
     --device /dev/ttyACM0 \
     --device /dev/input/js0 \
+    -v /dev/bus/usb:/dev/bus/usb \
     ${VIDEO_DEVICES} \
     -h ${DOCKER_NAME} \
     --name ${DOCKER_NAME} mark_five:0.1 sleep infinity

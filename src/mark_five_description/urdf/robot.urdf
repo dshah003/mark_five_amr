@@ -763,10 +763,13 @@
 
   <!-- ==================== INTEL REALSENSE D435 CAMERA ==================== -->
   <!--
-    Camera mounted at front center of platform, tilted 15 degrees down
+    Camera mounted on clamp at front of platform, facing straight ahead
     D435 dimensions: 90mm x 25mm x 25mm (width x height x depth)
-    Position: Front center of platform at (0.090, 0, 0.030) relative to platform_link
-    Tilt: 15 degrees downward for better ground obstacle detection
+    Clamp offset: 25mm forward, 25mm up from platform front edge
+    Position: (0.135, 0, 0.025) relative to platform_link
+      - Platform front edge at x=0.110, clamp extends 25mm forward = 0.135m
+      - Clamp raises camera 25mm above platform surface = 0.025m
+    Orientation: Facing straight ahead (no tilt)
   -->
 
   <!-- Camera body/housing link -->
@@ -844,11 +847,11 @@
     </inertial>
   </link>
 
-  <!-- Camera mount joint - 15 degree downward tilt (-0.2618 rad) -->
+  <!-- Camera mount joint - facing straight ahead (no tilt) -->
   <joint name="camera_joint" type="fixed">
     <parent link="platform_link"/>
     <child link="camera_link"/>
-    <origin xyz="0.090 0 0.030" rpy="0 -0.2618 0"/>
+    <origin xyz="0.135 0 0.025" rpy="0 0 0"/>
   </joint>
 
   <!-- Depth optical frame (ROS convention: Z forward, X right, Y down) -->
