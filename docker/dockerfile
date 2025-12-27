@@ -23,6 +23,15 @@ RUN apt-get update && \
     ros-melodic-joint-state-publisher-gui \
     ros-melodic-robot-state-publisher
 
+# Intel RealSense camera and depth-to-laserscan packages
+RUN apt-get update && \
+    apt-get install -y ros-melodic-realsense2-camera \
+    ros-melodic-realsense2-description \
+    ros-melodic-depthimage-to-laserscan \
+    ros-melodic-rgbd-launch \
+    ros-melodic-image-transport \
+    ros-melodic-image-transport-plugins
+
 RUN apt-get update && \
     apt-get install liburdfdom-tools
 
