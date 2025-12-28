@@ -761,4 +761,116 @@
     <origin xyz="0 -0.020 0" rpy="0 0 0"/>
   </joint>
 
+  <!-- ==================== INTEL REALSENSE D435 CAMERA ==================== -->
+  <!--
+    Camera mounted on clamp at front of platform, facing straight ahead
+    D435 dimensions: 90mm x 25mm x 25mm (width x height x depth)
+    Clamp offset: 25mm forward, 25mm up from platform front edge
+    Position: (0.135, 0, 0.025) relative to platform_link
+      - Platform front edge at x=0.110, clamp extends 25mm forward = 0.135m
+      - Clamp raises camera 25mm above platform surface = 0.025m
+    Orientation: Facing straight ahead (no tilt)
+  -->
+
+  <!-- Camera body/housing link -->
+  <link name="camera_link">
+    <!-- Main camera body -->
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.025 0.090 0.025"/>
+      </geometry>
+      <material name="realsense_gray">
+        <color rgba="0.3 0.3 0.3 1.0"/>
+      </material>
+    </visual>
+    <!-- Front face plate (silver) -->
+    <visual>
+      <origin xyz="0.0125 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.002 0.088 0.023"/>
+      </geometry>
+      <material name="realsense_silver">
+        <color rgba="0.7 0.7 0.7 1.0"/>
+      </material>
+    </visual>
+    <!-- Left IR camera lens (depth origin) -->
+    <visual>
+      <origin xyz="0.013 0.035 0" rpy="0 1.5708 0"/>
+      <geometry>
+        <cylinder radius="0.005" length="0.003"/>
+      </geometry>
+      <material name="lens_black">
+        <color rgba="0.05 0.05 0.05 1.0"/>
+      </material>
+    </visual>
+    <!-- RGB camera lens (center) -->
+    <visual>
+      <origin xyz="0.013 0.010 0" rpy="0 1.5708 0"/>
+      <geometry>
+        <cylinder radius="0.004" length="0.003"/>
+      </geometry>
+      <material name="lens_black">
+        <color rgba="0.05 0.05 0.05 1.0"/>
+      </material>
+    </visual>
+    <!-- Right IR camera lens -->
+    <visual>
+      <origin xyz="0.013 -0.015 0" rpy="0 1.5708 0"/>
+      <geometry>
+        <cylinder radius="0.005" length="0.003"/>
+      </geometry>
+      <material name="lens_black">
+        <color rgba="0.05 0.05 0.05 1.0"/>
+      </material>
+    </visual>
+    <!-- IR projector -->
+    <visual>
+      <origin xyz="0.013 -0.035 0" rpy="0 1.5708 0"/>
+      <geometry>
+        <cylinder radius="0.004" length="0.003"/>
+      </geometry>
+      <material name="projector_red">
+        <color rgba="0.4 0.0 0.0 1.0"/>
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.025 0.090 0.025"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <mass value="0.072"/>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <inertia ixx="0.00005" ixy="0.0" ixz="0.0" iyy="0.00002" iyz="0.0" izz="0.00005"/>
+    </inertial>
+  </link>
+
+  <!-- Camera mount joint - facing straight ahead (no tilt) -->
+  <joint name="camera_joint" type="fixed">
+    <parent link="platform_link"/>
+    <child link="camera_link"/>
+    <origin xyz="0.135 0 0.025" rpy="0 0 0"/>
+  </joint>
+
+  <!-- Depth optical frame (ROS convention: Z forward, X right, Y down) -->
+  <link name="camera_depth_optical_frame"/>
+
+  <joint name="camera_depth_optical_joint" type="fixed">
+    <parent link="camera_link"/>
+    <child link="camera_depth_optical_frame"/>
+    <!-- Rotate to optical frame: -90 deg about Z, then -90 deg about X -->
+    <origin xyz="0.0125 0.035 0" rpy="-1.5708 0 -1.5708"/>
+  </joint>
+
+  <!-- RGB optical frame -->
+  <link name="camera_color_optical_frame"/>
+
+  <joint name="camera_color_optical_joint" type="fixed">
+    <parent link="camera_link"/>
+    <child link="camera_color_optical_frame"/>
+    <origin xyz="0.0125 0.010 0" rpy="-1.5708 0 -1.5708"/>
+  </joint>
+
 </robot>

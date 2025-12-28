@@ -1,0 +1,76 @@
+<launch>
+  <!--
+    Intel RealSense D435 Camera Launch File
+
+    Launches:
+    - RealSense camera driver (realsense2_camera)
+    - depthimage_to_laserscan converter for navigation
+
+    Topics published:
+    - /camera/color/image_raw       : RGB image
+    - /camera/depth/image_rect_raw  : Depth image
+    - /camera/depth/points          : Point cloud
+    - /scan                         : 2D laser scan (for move_base navigation)
+  -->
+
+  <!-- ==================== REALSENSE CAMERA NODE ==================== -->
+  <include file="$(find realsense2_camera)/launch/rs_camera.launch">
+    <!-- Camera identification -->
+    <arg name="camera" value="camera"/>
+
+    <!-- Enable streams -->
+    <arg name="enable_color" value="true"/>
+    <arg name="enable_depth" value="true"/>
+    <arg name="enable_infra1" value="false"/>
+    <arg name="enable_infra2" value="false"/>
+    <arg name="enable_pointcloud" value="true"/>
+
+    <!-- Resolution and FPS settings (optimized for Jetson Nano) -->
+    <arg name="color_width" value="640"/>
+    <arg name="color_height" value="480"/>
+    <arg name="color_fps" value="15"/>
+    <arg name="depth_width" value="640"/>
+    <arg name="depth_height" value="480"/>
+    <arg name="depth_fps" value="15"/>
+
+    <!-- Align depth to color for better visualization -->
+    <arg name="align_depth" value="true"/>
+
+    <!-- Depth filters for noise reduction -->
+    <arg name="filters" value="decimation,spatial,temporal"/>
+  </include>
+
+  <!-- ==================== DEPTH TO LASERSCAN CONVERTER ==================== -->
+  <!--
+    Converts depth image to 2D laser scan for move_base navigation.
+
+    Camera facing straight ahead, mounted on clamp:
+    - Camera height from ground: ~85mm (platform 60mm + clamp 25mm)
+    - scan_height of 10 pixels provides good averaging
+  -->
+  <node pkg="depthimage_to_laserscan" type="depthimage_to_laserscan" name="depthimage_to_laserscan" output="screen">
+    <!-- Input: depth image and camera info -->
+    <remap from="image" to="/camera/depth/image_rect_raw"/>
+    <remap from="camera_info" to="/camera/depth/camera_info"/>
+
+    <!-- Output: laser scan topic -->
+    <remap from="scan" to="/scan"/>
+
+    <!-- Scan parameters -->
+    <!-- output_frame_id: TF frame for laser scan output (use camera_link for robot convention) -->
+    <param name="output_frame_id" value="camera_link"/>
+
+    <!-- scan_height: Number of pixel rows to use (centered vertically) -->
+    <!-- Higher value = more robust but slower processing -->
+    <param name="scan_height" value="10"/>
+
+    <!-- range_min/max: Valid depth range in meters -->
+    <!-- D435 effective range: 0.1m to 10m; using conservative values -->
+    <param name="range_min" value="0.15"/>
+    <param name="range_max" value="4.0"/>
+
+    <!-- scan_time: Time between scans (1/15 FPS = 0.0667s) -->
+    <param name="scan_time" value="0.0667"/>
+  </node>
+
+</launch>

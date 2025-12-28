@@ -11,6 +11,14 @@ echo "Setting Marky Root as ${MARKY_ROOT}"
 
 echo "Starting docker container"
 
+# Build video device arguments for RealSense camera
+VIDEO_DEVICES=""
+for dev in /dev/video*; do
+    if [ -e "$dev" ]; then
+        VIDEO_DEVICES="${VIDEO_DEVICES} --device ${dev}"
+    fi
+done
+
 docker run \
     -d \
     -v ${MARKY_ROOT}:${HOME}:rw \
@@ -21,6 +29,8 @@ docker run \
     --network=host \
     --device /dev/ttyACM0 \
     --device /dev/input/js0 \
+    -v /dev/bus/usb:/dev/bus/usb \
+    ${VIDEO_DEVICES} \
     -h ${DOCKER_NAME} \
     --name ${DOCKER_NAME} mark_five:0.1 sleep infinity
 

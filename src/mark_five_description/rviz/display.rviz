@@ -6,7 +6,7 @@ Panels:
       Expanded:
         - /TF1
       Splitter Ratio: 0.5
-    Tree Height: 450
+    Tree Height: 304
   - Class: rviz/Views
     Expanded:
       - /Current View1
@@ -67,6 +67,19 @@ Visualization Manager:
           Show Axes: false
           Show Trail: false
         base_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        camera_color_optical_frame:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        camera_depth_optical_frame:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        camera_link:
           Alpha: 1
           Show Axes: false
           Show Trail: false
@@ -158,100 +171,94 @@ Visualization Manager:
       Value: true
       Visual Enabled: true
     - Class: rviz/TF
-      Enabled: true
+      Enabled: false
       Filter (blacklist): ""
       Filter (whitelist): ""
       Frame Timeout: 15
       Frames:
         All Enabled: true
-        antenna_left_link:
-          Value: true
-        antenna_right_link:
-          Value: true
-        arduino_mega_link:
-          Value: true
-        base_footprint:
-          Value: true
-        base_link:
-          Value: true
-        jetson_nano_link:
-          Value: true
-        left_front_sprocket:
-          Value: true
-        left_idler:
-          Value: true
-        left_motor_link:
-          Value: true
-        left_rear_sprocket:
-          Value: true
-        left_track:
-          Value: true
-        odom:
-          Value: true
-        platform_link:
-          Value: true
-        right_front_sprocket:
-          Value: true
-        right_idler:
-          Value: true
-        right_motor_link:
-          Value: true
-        right_rear_sprocket:
-          Value: true
-        right_track:
-          Value: true
-        standoff_fl:
-          Value: true
-        standoff_fr:
-          Value: true
-        standoff_rl:
-          Value: true
-        standoff_rr:
-          Value: true
       Marker Scale: 0.30000001192092896
       Name: TF
       Show Arrows: true
       Show Axes: true
       Show Names: true
       Tree:
-        odom:
-          base_footprint:
-            base_link:
-              left_motor_link:
-                {}
-              left_track:
-                left_front_sprocket:
-                  {}
-                left_idler:
-                  {}
-                left_rear_sprocket:
-                  {}
-              platform_link:
-                arduino_mega_link:
-                  {}
-                jetson_nano_link:
-                  antenna_left_link:
-                    {}
-                  antenna_right_link:
-                    {}
-              right_motor_link:
-                {}
-              right_track:
-                right_front_sprocket:
-                  {}
-                right_idler:
-                  {}
-                right_rear_sprocket:
-                  {}
-              standoff_fl:
-                {}
-              standoff_fr:
-                {}
-              standoff_rl:
-                {}
-              standoff_rr:
-                {}
+        {}
       Update Interval: 0
+      Value: false
+    - Alpha: 1
+      Autocompute Intensity Bounds: true
+      Autocompute Value Bounds:
+        Max Value: 10
+        Min Value: -10
+        Value: true
+      Axis: Z
+      Channel Name: intensity
+      Class: rviz/PointCloud2
+      Color: 255; 255; 255
+      Color Transformer: RGB8
+      Decay Time: 0
+      Enabled: true
+      Invert Rainbow: false
+      Max Color: 255; 255; 255
+      Min Color: 0; 0; 0
+      Name: PointCloud2
+      Position Transformer: XYZ
+      Queue Size: 10
+      Selectable: true
+      Size (Pixels): 3
+      Size (m): 0.009999999776482582
+      Style: Flat Squares
+      Topic: /camera/depth/color/points
+      Unreliable: false
+      Use Fixed Frame: true
+      Use rainbow: true
+      Value: true
+    - Class: rviz/Camera
+      Enabled: true
+      Image Rendering: background and overlay
+      Image Topic: /camera/color/image_raw
+      Name: Camera
+      Overlay Alpha: 0.5
+      Queue Size: 2
+      Transport Hint: raw
+      Unreliable: false
+      Value: true
+      Visibility:
+        Grid: true
+        LaserScan: true
+        PointCloud2: true
+        RobotModel: true
+        TF: true
+        Value: true
+      Zoom Factor: 1
+    - Alpha: 1
+      Autocompute Intensity Bounds: true
+      Autocompute Value Bounds:
+        Max Value: 10
+        Min Value: -10
+        Value: true
+      Axis: Z
+      Channel Name: intensity
+      Class: rviz/LaserScan
+      Color: 255; 255; 255
+      Color Transformer: Intensity
+      Decay Time: 0
+      Enabled: true
+      Invert Rainbow: false
+      Max Color: 255; 255; 255
+      Min Color: 0; 0; 0
+      Name: LaserScan
+      Position Transformer: XYZ
+      Queue Size: 10
+      Selectable: true
+      Size (Pixels): 3
+      Size (m): 0.009999999776482582
+      Style: Flat Squares
+      Topic: /scan
+      Unreliable: false
+      Use Fixed Frame: true
+      Use rainbow: true
       Value: true
   Enabled: true
   Global Options:
@@ -269,35 +276,37 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 0.392190545797348
+      Distance: 15.555587768554688
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: -1.2993929386138916
-        Y: -1.2735222578048706
-        Z: 0.23180264234542847
+        X: 0.214915469288826
+        Y: -0.8410627841949463
+        Z: 1.752554178237915
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 1.5697963237762451
+      Pitch: 0.3797978162765503
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 1.2299996614456177
+      Yaw: 3.044999361038208
     Saved: ~
 Window Geometry:
+  Camera:
+    collapsed: false
   Displays:
     collapsed: false
-  Height: 1043
+  Height: 1011
   Hide Left Dock: false
   Hide Right Dock: false
-  QMainWindow State: 000000ff00000000fd000000010000000000000156000003bdfc0200000002fb000000100044006900730070006c006100790073010000003b00000243000000c700fffffffb0000000a00560069006500770073010000028400000174000000a000ffffff000005f7000003bd00000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
+  QMainWindow State: 000000ff00000000fd0000000100000000000001560000039dfc0200000003fb000000100044006900730070006c006100790073010000003b000001b1000000c700fffffffb0000000a0056006900650077007301000001f200000101000000a000fffffffb0000000c00430061006d00650072006101000002f9000000df0000001600ffffff000005f70000039d00000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
   Views:
     collapsed: false
   Width: 1875
-  X: 45
-  Y: 0
+  X: 1965
+  Y: 32
