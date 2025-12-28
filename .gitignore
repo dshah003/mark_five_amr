@@ -13,3 +13,6 @@ install/
 
 # Catkin custom files
 CATKIN_IGNORE
+
+# Network configuration (contains IP addresses)
+scripts/network.conf

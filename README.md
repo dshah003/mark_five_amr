@@ -100,6 +100,60 @@ To visualize the robot model in RViz:
 roslaunch mark_five_description robot.launch
 ```
 
+## Distributed ROS (Multi-Machine Setup)
+
+For running heavy processing (SLAM, navigation, object detection) on a GPU workstation while the robot runs sensing and actuation.
+
+### Network Configuration (One-time)
+
+```sh
+# Copy template and edit with your IPs
+cp scripts/network.conf.template scripts/network.conf
+nano scripts/network.conf
+```
+
+### Workstation Setup
+
+```sh
+# Terminal 1: Start ROS Master
+source scripts/env_workstation.sh
+roscore
+
+# Terminal 2: Launch workstation nodes (teleop + RViz)
+source scripts/env_workstation.sh
+source devel/setup.bash
+roslaunch mark_five_bot workstation.launch
+
+# Options:
+# roslaunch mark_five_bot workstation.launch teleop:=joy    # Joystick control
+# roslaunch mark_five_bot workstation.launch teleop:=none   # No teleop
+# roslaunch mark_five_bot workstation.launch rviz:=false    # No RViz
+```
+
+### Robot Setup (Jetson Nano)
+
+```sh
+# Start Docker in distributed mode (no local roscore)
+cd docker
+./start.sh --distributed
+./bash.sh
+
+# Inside container
+source ~/mark_five_amr/scripts/env_robot.sh
+source ~/mark_five_amr/devel/setup.bash
+roslaunch mark_five_bot robot.launch
+
+# With camera:
+# roslaunch mark_five_bot robot.launch camera:=true
+```
+
+### Verify Connection
+
+```sh
+# On workstation - should see robot topics
+rostopic list | grep -E "(odom|ticks|tf)"
+```
+
 ## Notes 
 
 - One Revolution = 540 Encoder ticks. 

@@ -1,0 +1,13 @@
+# Mark Five AMR - Network Configuration Template
+#
+# Copy this file to network.conf and fill in your IP addresses:
+#   cp network.conf.template network.conf
+#
+# network.conf is gitignored and will not be committed.
+#
+
+# Workstation IP (ROS Master)
+WORKSTATION_IP=192.168.1.100
+
+# Jetson Nano IP (Robot)
+JETSON_IP=192.168.1.101

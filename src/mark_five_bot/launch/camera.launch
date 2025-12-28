@@ -7,10 +7,15 @@
     - depthimage_to_laserscan converter for navigation
 
     Topics published:
-    - /camera/color/image_raw       : RGB image
-    - /camera/depth/image_rect_raw  : Depth image
-    - /camera/depth/points          : Point cloud
-    - /scan                         : 2D laser scan (for move_base navigation)
+    - /camera/color/image_raw              : RGB image (raw)
+    - /camera/color/image_raw/compressed   : RGB image (compressed, for bandwidth)
+    - /camera/depth/image_rect_raw         : Depth image
+    - /camera/depth/points                 : Point cloud
+    - /scan                                : 2D laser scan (for move_base navigation)
+
+    For distributed ROS (bandwidth optimization):
+    - Subscribe to /camera/*/compressed topics on workstation
+    - Use image_transport republish to decompress if needed
   -->
 
   <!-- ==================== REALSENSE CAMERA NODE ==================== -->

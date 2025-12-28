@@ -1,7 +1,24 @@
 #!/usr/bin/env bash
+#
+# Mark Five AMR - Docker Container Start Script
+#
+# Usage:
+#   ./start.sh              # Standalone mode (starts local roscore)
+#   ./start.sh --distributed # Distributed mode (connects to workstation roscore)
+#
 
 DOCKER_NAME=mark_five_robot
-echo "Stopping exisitng containers if any. . ."
+DISTRIBUTED_MODE=false
+
+# Parse arguments
+if [ "$1" == "--distributed" ] || [ "$1" == "-d" ]; then
+    DISTRIBUTED_MODE=true
+    echo "Starting in DISTRIBUTED mode (no local roscore)"
+else
+    echo "Starting in STANDALONE mode (local roscore)"
+fi
+
+echo "Stopping existing containers if any..."
 docker stop ${DOCKER_NAME} &> /dev/null
 docker rm ${DOCKER_NAME} &> /dev/null
 
@@ -37,5 +54,20 @@ docker run \
 docker exec -u root ${DOCKER_NAME} sh -c "echo 127.0.0.1 ${DOCKER_NAME} >> /etc/hosts"
 docker exec ${DOCKER_NAME} sh -c "echo 'force_color_prompt=yes' >> ~/.bashrc"
 
-# docker exec -u root ${DOCKER_NAME} sh -c "source /opt/ros/melodic/setup.bash && roscore &> /dev/null &"
-docker exec -d mark_five_robot bash -c ". /opt/ros/melodic/setup.bash && roscore"
+# Start roscore only in standalone mode
+if [ "$DISTRIBUTED_MODE" = false ]; then
+    echo "Starting local roscore..."
+    docker exec -d ${DOCKER_NAME} bash -c ". /opt/ros/melodic/setup.bash && roscore"
+    echo "Roscore started. Use './bash.sh' to access container."
+else
+    echo ""
+    echo "=========================================="
+    echo "  DISTRIBUTED MODE"
+    echo "=========================================="
+    echo "  No local roscore started."
+    echo ""
+    echo "  Inside container, run:"
+    echo "    source ~/mark_five_amr/scripts/env_robot.sh"
+    echo "    roslaunch mark_five_bot robot.launch"
+    echo "=========================================="
+fi

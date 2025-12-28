@@ -1,0 +1,54 @@
+<launch>
+  <!--
+    Mark Five AMR - Robot Launch (Jetson Nano)
+
+    For distributed ROS setup. Run this on the robot (Jetson Nano).
+    Workstation should be running roscore before launching this.
+
+    Prerequisites:
+      1. Source environment: source ~/mark_five_amr/scripts/env_robot.sh
+      2. Verify connection: rostopic list
+
+    Nodes launched:
+      - rosserial_python (Arduino communication)
+      - robot_state_publisher (TF from URDF)
+      - odometry_node (encoder -> odom)
+
+    Optional (via args):
+      - camera: RealSense D435 (default: false until hardware ready)
+
+    Usage:
+      roslaunch mark_five_bot robot.launch
+      roslaunch mark_five_bot robot.launch camera:=true
+  -->
+
+  <!-- Arguments -->
+  <arg name="camera" default="false" doc="Enable RealSense D435 camera"/>
+  <arg name="serial_port" default="/dev/ttyACM0" doc="Arduino serial port"/>
+  <arg name="serial_baud" default="115200" doc="Arduino baud rate"/>
+
+  <!-- ==================== CORE ROBOT NODES ==================== -->
+
+  <!-- Serial communication with Arduino -->
+  <node pkg="rosserial_python" type="serial_node.py" name="serial_node" output="screen">
+    <param name="port" value="$(arg serial_port)"/>
+    <param name="baud" value="$(arg serial_baud)"/>
+  </node>
+
+  <!-- Load robot URDF -->
+  <param name="robot_description" textfile="$(find mark_five_description)/urdf/robot.urdf"/>
+
+  <!-- Robot state publisher for TF from URDF -->
+  <node pkg="robot_state_publisher" type="robot_state_publisher" name="robot_state_publisher">
+    <param name="publish_frequency" value="50"/>
+  </node>
+
+  <!-- Odometry from encoder ticks -->
+  <include file="$(find mark_five_bot)/launch/odometry.launch"/>
+
+  <!-- ==================== OPTIONAL: CAMERA ==================== -->
+
+  <!-- RealSense D435 camera (when hardware is available) -->
+  <include file="$(find mark_five_bot)/launch/camera.launch" if="$(arg camera)"/>
+
+</launch>
