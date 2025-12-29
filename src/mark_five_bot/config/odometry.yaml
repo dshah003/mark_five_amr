@@ -1,0 +1,33 @@
+# Mark Five AMR - Odometry Node Parameters
+
+odometry_node:
+  ros__parameters:
+    # Robot physical parameters
+    wheel_base: 0.14          # Distance between wheels (meters)
+    ticks_per_meter: 3125.0   # Encoder ticks per meter traveled
+
+    # TF frame IDs
+    odom_frame: "odom"
+    base_frame: "base_footprint"
+
+    # TF publishing
+    publish_tf: true
+
+    # Covariance values for odometry message
+    # Position covariance (diagonal values)
+    pose_covariance:
+      x: 0.01
+      y: 0.01
+      z: 1.0e6        # Not measured (2D robot)
+      roll: 1.0e6     # Not measured
+      pitch: 1.0e6    # Not measured
+      yaw: 0.03
+
+    # Velocity covariance (diagonal values)
+    twist_covariance:
+      x: 0.01
+      y: 1.0e6        # Not measured (no lateral motion)
+      z: 1.0e6        # Not measured
+      roll: 1.0e6     # Not measured
+      pitch: 1.0e6    # Not measured
+      yaw: 0.03

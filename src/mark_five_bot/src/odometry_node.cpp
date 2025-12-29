@@ -1,6 +1,6 @@
 /**
  * @file odometry_node.cpp
- * @brief Differential drive odometry node for Mark Five AMR
+ * @brief Differential drive odometry node for Mark Five AMR (ROS2 Jazzy)
  *
  * This node subscribes to encoder tick counts from the Arduino and computes
  * odometry using differential drive kinematics. It publishes:
@@ -11,24 +11,60 @@
  * @date December 2025
  */
 
-#include <ros/ros.h>
-#include <std_msgs/Int16.h>
-#include <nav_msgs/Odometry.h>
-#include <geometry_msgs/TransformStamped.h>
-#include <tf/transform_broadcaster.h>
+#include <rclcpp/rclcpp.hpp>
+#include <std_msgs/msg/int16.hpp>
+#include <nav_msgs/msg/odometry.hpp>
+#include <geometry_msgs/msg/transform_stamped.hpp>
+#include <tf2_ros/transform_broadcaster.h>
+#include <tf2/LinearMath/Quaternion.h>
+#include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
 #include <cmath>
 
-class OdometryNode
+class OdometryNode : public rclcpp::Node
 {
 public:
-    OdometryNode() : nh_("~")
+    OdometryNode() : Node("odometry_node")
     {
-        // Load parameters with defaults from Arduino code
-        nh_.param<double>("wheel_base", wheel_base_, 0.14);           // meters
-        nh_.param<double>("ticks_per_meter", ticks_per_meter_, 3125.0);
-        nh_.param<std::string>("odom_frame", odom_frame_, "odom");
-        nh_.param<std::string>("base_frame", base_frame_, "base_footprint");
-        nh_.param<bool>("publish_tf", publish_tf_, true);
+        // Declare and get parameters
+        this->declare_parameter("wheel_base", 0.14);
+        this->declare_parameter("ticks_per_meter", 3125.0);
+        this->declare_parameter("odom_frame", "odom");
+        this->declare_parameter("base_frame", "base_footprint");
+        this->declare_parameter("publish_tf", true);
+
+        // Covariance parameters
+        this->declare_parameter("pose_covariance.x", 0.01);
+        this->declare_parameter("pose_covariance.y", 0.01);
+        this->declare_parameter("pose_covariance.z", 1.0e6);
+        this->declare_parameter("pose_covariance.roll", 1.0e6);
+        this->declare_parameter("pose_covariance.pitch", 1.0e6);
+        this->declare_parameter("pose_covariance.yaw", 0.03);
+        this->declare_parameter("twist_covariance.x", 0.01);
+        this->declare_parameter("twist_covariance.y", 1.0e6);
+        this->declare_parameter("twist_covariance.z", 1.0e6);
+        this->declare_parameter("twist_covariance.roll", 1.0e6);
+        this->declare_parameter("twist_covariance.pitch", 1.0e6);
+        this->declare_parameter("twist_covariance.yaw", 0.03);
+
+        wheel_base_ = this->get_parameter("wheel_base").as_double();
+        ticks_per_meter_ = this->get_parameter("ticks_per_meter").as_double();
+        odom_frame_ = this->get_parameter("odom_frame").as_string();
+        base_frame_ = this->get_parameter("base_frame").as_string();
+        publish_tf_ = this->get_parameter("publish_tf").as_bool();
+
+        // Load covariance values
+        pose_cov_x_ = this->get_parameter("pose_covariance.x").as_double();
+        pose_cov_y_ = this->get_parameter("pose_covariance.y").as_double();
+        pose_cov_z_ = this->get_parameter("pose_covariance.z").as_double();
+        pose_cov_roll_ = this->get_parameter("pose_covariance.roll").as_double();
+        pose_cov_pitch_ = this->get_parameter("pose_covariance.pitch").as_double();
+        pose_cov_yaw_ = this->get_parameter("pose_covariance.yaw").as_double();
+        twist_cov_x_ = this->get_parameter("twist_covariance.x").as_double();
+        twist_cov_y_ = this->get_parameter("twist_covariance.y").as_double();
+        twist_cov_z_ = this->get_parameter("twist_covariance.z").as_double();
+        twist_cov_roll_ = this->get_parameter("twist_covariance.roll").as_double();
+        twist_cov_pitch_ = this->get_parameter("twist_covariance.pitch").as_double();
+        twist_cov_yaw_ = this->get_parameter("twist_covariance.yaw").as_double();
 
         // Initialize state
         x_ = 0.0;
@@ -44,33 +80,40 @@ public:
         right_ticks_received_ = false;
         first_reading_ = true;
 
-        // Publishers
-        odom_pub_ = nh_.advertise<nav_msgs::Odometry>("/odom", 50);
+        // TF broadcaster
+        tf_broadcaster_ = std::make_unique<tf2_ros::TransformBroadcaster>(*this);
+
+        // Publisher
+        odom_pub_ = this->create_publisher<nav_msgs::msg::Odometry>("/odom", 50);
 
         // Subscribers
-        left_ticks_sub_ = nh_.subscribe("/left_ticks", 10,
-                                         &OdometryNode::leftTicksCallback, this);
-        right_ticks_sub_ = nh_.subscribe("/right_ticks", 10,
-                                          &OdometryNode::rightTicksCallback, this);
+        left_ticks_sub_ = this->create_subscription<std_msgs::msg::Int16>(
+            "/left_ticks", 10,
+            std::bind(&OdometryNode::leftTicksCallback, this, std::placeholders::_1));
 
-        last_time_ = ros::Time::now();
+        right_ticks_sub_ = this->create_subscription<std_msgs::msg::Int16>(
+            "/right_ticks", 10,
+            std::bind(&OdometryNode::rightTicksCallback, this, std::placeholders::_1));
 
-        ROS_INFO("Odometry node initialized");
-        ROS_INFO("  wheel_base: %.4f m", wheel_base_);
-        ROS_INFO("  ticks_per_meter: %.1f", ticks_per_meter_);
-        ROS_INFO("  odom_frame: %s", odom_frame_.c_str());
-        ROS_INFO("  base_frame: %s", base_frame_.c_str());
-        ROS_INFO("  publish_tf: %s", publish_tf_ ? "true" : "false");
+        last_time_ = this->now();
+
+        RCLCPP_INFO(this->get_logger(), "Odometry node initialized");
+        RCLCPP_INFO(this->get_logger(), "  wheel_base: %.4f m", wheel_base_);
+        RCLCPP_INFO(this->get_logger(), "  ticks_per_meter: %.1f", ticks_per_meter_);
+        RCLCPP_INFO(this->get_logger(), "  odom_frame: %s", odom_frame_.c_str());
+        RCLCPP_INFO(this->get_logger(), "  base_frame: %s", base_frame_.c_str());
+        RCLCPP_INFO(this->get_logger(), "  publish_tf: %s", publish_tf_ ? "true" : "false");
     }
 
-    void leftTicksCallback(const std_msgs::Int16::ConstPtr& msg)
+private:
+    void leftTicksCallback(const std_msgs::msg::Int16::SharedPtr msg)
     {
         left_ticks_ = msg->data;
         left_ticks_received_ = true;
         tryComputeOdometry();
     }
 
-    void rightTicksCallback(const std_msgs::Int16::ConstPtr& msg)
+    void rightTicksCallback(const std_msgs::msg::Int16::SharedPtr msg)
     {
         right_ticks_ = msg->data;
         right_ticks_received_ = true;
@@ -85,7 +128,7 @@ public:
             return;
         }
 
-        ros::Time current_time = ros::Time::now();
+        rclcpp::Time current_time = this->now();
 
         // On first reading, just store the values
         if (first_reading_)
@@ -94,12 +137,12 @@ public:
             prev_right_ticks_ = right_ticks_;
             last_time_ = current_time;
             first_reading_ = false;
-            ROS_INFO("Odometry: First encoder reading received");
+            RCLCPP_INFO(this->get_logger(), "Odometry: First encoder reading received");
             return;
         }
 
         // Compute time delta
-        double dt = (current_time - last_time_).toSec();
+        double dt = (current_time - last_time_).seconds();
         if (dt <= 0.0)
         {
             return;
@@ -149,9 +192,9 @@ public:
         right_ticks_received_ = false;
     }
 
-    void publishOdometry(const ros::Time& timestamp, double v_linear, double v_angular)
+    void publishOdometry(const rclcpp::Time& timestamp, double v_linear, double v_angular)
     {
-        nav_msgs::Odometry odom;
+        nav_msgs::msg::Odometry odom;
         odom.header.stamp = timestamp;
         odom.header.frame_id = odom_frame_;
         odom.child_frame_id = base_frame_;
@@ -162,37 +205,38 @@ public:
         odom.pose.pose.position.z = 0.0;
 
         // Set orientation (quaternion from yaw)
-        geometry_msgs::Quaternion odom_quat = tf::createQuaternionMsgFromYaw(theta_);
-        odom.pose.pose.orientation = odom_quat;
+        tf2::Quaternion q;
+        q.setRPY(0.0, 0.0, theta_);
+        odom.pose.pose.orientation = tf2::toMsg(q);
 
         // Set velocity
         odom.twist.twist.linear.x = v_linear;
         odom.twist.twist.linear.y = 0.0;
         odom.twist.twist.angular.z = v_angular;
 
-        // Set covariance (diagonal, rough estimates)
+        // Set covariance (diagonal, from parameters)
         // Position covariance
-        odom.pose.covariance[0] = 0.01;   // x
-        odom.pose.covariance[7] = 0.01;   // y
-        odom.pose.covariance[14] = 1e6;   // z (not measured)
-        odom.pose.covariance[21] = 1e6;   // roll (not measured)
-        odom.pose.covariance[28] = 1e6;   // pitch (not measured)
-        odom.pose.covariance[35] = 0.03;  // yaw
+        odom.pose.covariance[0] = pose_cov_x_;     // x
+        odom.pose.covariance[7] = pose_cov_y_;     // y
+        odom.pose.covariance[14] = pose_cov_z_;    // z (not measured)
+        odom.pose.covariance[21] = pose_cov_roll_; // roll (not measured)
+        odom.pose.covariance[28] = pose_cov_pitch_;// pitch (not measured)
+        odom.pose.covariance[35] = pose_cov_yaw_;  // yaw
 
         // Velocity covariance
-        odom.twist.covariance[0] = 0.01;  // linear x
-        odom.twist.covariance[7] = 1e6;   // linear y (not measured)
-        odom.twist.covariance[14] = 1e6;  // linear z (not measured)
-        odom.twist.covariance[21] = 1e6;  // angular x (not measured)
-        odom.twist.covariance[28] = 1e6;  // angular y (not measured)
-        odom.twist.covariance[35] = 0.03; // angular z
+        odom.twist.covariance[0] = twist_cov_x_;   // linear x
+        odom.twist.covariance[7] = twist_cov_y_;   // linear y (not measured)
+        odom.twist.covariance[14] = twist_cov_z_;  // linear z (not measured)
+        odom.twist.covariance[21] = twist_cov_roll_;  // angular x (not measured)
+        odom.twist.covariance[28] = twist_cov_pitch_; // angular y (not measured)
+        odom.twist.covariance[35] = twist_cov_yaw_;   // angular z
 
-        odom_pub_.publish(odom);
+        odom_pub_->publish(odom);
     }
 
-    void publishTransform(const ros::Time& timestamp)
+    void publishTransform(const rclcpp::Time& timestamp)
     {
-        geometry_msgs::TransformStamped odom_tf;
+        geometry_msgs::msg::TransformStamped odom_tf;
         odom_tf.header.stamp = timestamp;
         odom_tf.header.frame_id = odom_frame_;
         odom_tf.child_frame_id = base_frame_;
@@ -201,10 +245,11 @@ public:
         odom_tf.transform.translation.y = y_;
         odom_tf.transform.translation.z = 0.0;
 
-        geometry_msgs::Quaternion odom_quat = tf::createQuaternionMsgFromYaw(theta_);
-        odom_tf.transform.rotation = odom_quat;
+        tf2::Quaternion q;
+        q.setRPY(0.0, 0.0, theta_);
+        odom_tf.transform.rotation = tf2::toMsg(q);
 
-        tf_broadcaster_.sendTransform(odom_tf);
+        tf_broadcaster_->sendTransform(odom_tf);
     }
 
     double normalizeAngle(double angle)
@@ -216,14 +261,13 @@ public:
         return angle;
     }
 
-private:
-    ros::NodeHandle nh_;
+    // TF broadcaster
+    std::unique_ptr<tf2_ros::TransformBroadcaster> tf_broadcaster_;
 
     // Publishers and subscribers
-    ros::Publisher odom_pub_;
-    ros::Subscriber left_ticks_sub_;
-    ros::Subscriber right_ticks_sub_;
-    tf::TransformBroadcaster tf_broadcaster_;
+    rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr odom_pub_;
+    rclcpp::Subscription<std_msgs::msg::Int16>::SharedPtr left_ticks_sub_;
+    rclcpp::Subscription<std_msgs::msg::Int16>::SharedPtr right_ticks_sub_;
 
     // Parameters
     double wheel_base_;
@@ -232,22 +276,25 @@ private:
     std::string base_frame_;
     bool publish_tf_;
 
+    // Covariance parameters
+    double pose_cov_x_, pose_cov_y_, pose_cov_z_;
+    double pose_cov_roll_, pose_cov_pitch_, pose_cov_yaw_;
+    double twist_cov_x_, twist_cov_y_, twist_cov_z_;
+    double twist_cov_roll_, twist_cov_pitch_, twist_cov_yaw_;
+
     // State
     double x_, y_, theta_;
     int16_t left_ticks_, right_ticks_;
     int16_t prev_left_ticks_, prev_right_ticks_;
     bool left_ticks_received_, right_ticks_received_;
     bool first_reading_;
-    ros::Time last_time_;
+    rclcpp::Time last_time_;
 };
 
 int main(int argc, char** argv)
 {
-    ros::init(argc, argv, "odometry_node");
-
-    OdometryNode odometry_node;
-
-    ros::spin();
-
+    rclcpp::init(argc, argv);
+    rclcpp::spin(std::make_shared<OdometryNode>());
+    rclcpp::shutdown();
     return 0;
 }

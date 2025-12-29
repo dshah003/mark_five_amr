@@ -1,123 +1,194 @@
-# mark_five_amr
-Jetson nano based mobile robot with SLAM capability
+# Mark Five AMR
 
-## Setup
-The Mark Five AMR runs on Jetson Nano as it's main computer. An Arduino Mega is used to  control motors via motor driver and read encoder data. 
-The robot environment is setup on a docker container based on ROS Melodic. 
+Jetson Nano based mobile robot with SLAM capability, powered by **ROS2 Jazzy**.
 
-### Pre-requisites
+## Overview
 
-#### Install docker 
+Mark Five AMR is a differential-drive robot platform designed for autonomous navigation, object recognition, and manipulation tasks. The robot uses:
+- **Jetson Nano** as the main computer
+- **Arduino Mega** for motor control and encoder reading
+- **Sabertooth 2x12** motor driver (recommended) or L293DNE H-Bridge
+- **Intel RealSense D435** depth camera for perception
 
-Follow instructions at https://docs.docker.com/engine/install/ubuntu/ to install docker on your host OS.
+## Quick Start
+
+### Prerequisites
+
+#### Install Docker
+Follow instructions at https://docs.docker.com/engine/install/ubuntu/
 
 #### Post Installation
-
-```sh 
-sudo groupadd docker 
+```bash
+sudo groupadd docker
 sudo usermod -aG docker $USER
-## After running this, logout and log back in for changes to take effect. OR run the following command.
-newgrp docker
+newgrp docker  # Or logout and log back in
 ```
 
-## Docker container
+### Docker Setup
 
-To run the docker, run the `build.sh` script in `docker/` dir. 
-To start the docker run the `start.sh` script once, and then run `bash.sh` script in new terminal everytime to open bash within the docker. 
+```bash
+# Build Docker image
+cd docker && ./build.sh
 
-## Arduino Node
-The arduino_ws/Robot_Node/Robot_Node.ino code runs on the arduino Mega. 
-The code is referenced from https://automaticaddison.com/how-to-control-a-robots-velocity-remotely-using-ros/ and tweaked specific to my robot.
+# Start container
+./start.sh
 
-### To Run ROS Serial  
-
-```sh
-catkin_make
-source devel/setup.bash
-# Assuming you have roscore running on another terminal.
-rosrun rosserial_python serial_node.py _port:=/dev/ttyACM0 _baud:=115200  
-
-# OR run using roslaunch
-roslaunch mark_five_bot launch_rosserial.launch
-``` 
-
-### For Running the robot via tele-op 
-
-```sh
-roslaunch mark_five_bot launch_rosserial_keyboard_teleop.launch 
+# Access shell
+./bash.sh
 ```
 
-### To Publish cmd_vel from terminal
-```sh
-rostopic pub /cmd_vel geometry_msgs/Twist "linear:
-  x: 0.3
-angular:
-  z: -0.1" --once
+### Build and Run
+
+```bash
+# Inside Docker container
+cd ~/mark_five_amr
+colcon build
+source install/setup.bash
+
+# Launch full robot bringup
+ros2 launch mark_five_bot bringup.launch.py
+
+# Or with camera
+ros2 launch mark_five_bot bringup.launch.py use_camera:=true
 ```
 
-### Run Teleop + Joystick node.
-This publishes to /cmd_vel based on joystick movements. Move the left joystick axis to move the robot. The robot will move while the enable button is pressed. (The Button marked "2" on the controller")
-```sh
-roslaunch mark_five_bot launch_joystick_teleop.launch
+## Arduino Setup
+
+The Arduino firmware uses **ros2arduino** for ROS2 communication.
+
+### Install ros2arduino Library
+1. Open Arduino IDE
+2. Sketch → Include Library → Manage Libraries
+3. Search "ros2arduino" → Install
+
+### Upload Firmware
+```bash
+# For Sabertooth 2x12 motor driver (recommended)
+arduino_ws/Robot_Node_Sabertooth/Robot_Node_Sabertooth.ino
+
+# For L293DNE H-Bridge
+arduino_ws/Robot_Node/Robot_Node.ino
+```
+
+### Run micro-ROS Agent
+The Arduino communicates with ROS2 via a micro-ROS agent:
+```bash
+ros2 run micro_ros_agent micro_ros_agent serial --dev /dev/ttyACM0 -b 115200
+```
+
+## Launch Files
+
+| Launch File | Description |
+|-------------|-------------|
+| `bringup.launch.py` | Full robot bringup (serial + odometry + teleop) |
+| `robot.launch.py` | Jetson-only nodes (for distributed mode) |
+| `workstation.launch.py` | Workstation nodes (teleop + RViz) |
+| `odometry.launch.py` | Odometry node only |
+| `camera.launch.py` | RealSense D435 camera |
+| `teleop_keyboard.launch.py` | Keyboard teleoperation |
+| `teleop_joy.launch.py` | Joystick teleoperation |
+
+### Examples
+
+```bash
+# Full robot bringup
+ros2 launch mark_five_bot bringup.launch.py
+
+# Distributed mode - on Jetson
+ros2 launch mark_five_bot robot.launch.py camera:=true
+
+# Distributed mode - on Workstation
+ros2 launch mark_five_bot workstation.launch.py teleop:=joy
+```
+
+## Configuration
+
+All parameters are stored in YAML config files:
+
+```
+src/mark_five_bot/config/
+├── robot_params.yaml    # Physical robot parameters
+├── odometry.yaml        # Odometry node settings
+├── camera.yaml          # RealSense camera settings
+└── teleop.yaml          # Teleop (joystick/keyboard) settings
+```
+
+## Teleoperation
+
+### Keyboard Control
+```bash
+ros2 launch mark_five_bot teleop_keyboard.launch.py
+```
+
+### Joystick Control
+```bash
+ros2 launch mark_five_bot teleop_joy.launch.py
+```
+Move the left joystick to control the robot. Hold the enable button (Button 2) while moving.
+
+### Manual cmd_vel Publishing
+```bash
+ros2 topic pub /cmd_vel geometry_msgs/msg/Twist "{linear: {x: 0.3}, angular: {z: 0.0}}" --once
 ```
 
 ## Odometry
 
 The odometry node computes robot position from encoder ticks using differential drive kinematics.
 
-### Run odometry with full robot bringup
-```sh
-roslaunch mark_five_bot bringup.launch
-```
-
-This launches:
-- rosserial (Arduino communication)
-- robot_state_publisher (URDF TF)
-- odometry_node (encoder -> /odom)
-
-### Run odometry standalone
-```sh
-roslaunch mark_five_bot odometry.launch
-```
-
-### Verify odometry
-```sh
+### Verify Odometry
+```bash
 # Check odometry topic
-rostopic echo /odom
-
-# Visualize TF tree
-rosrun tf view_frames
-evince frames.pdf
+ros2 topic echo /odom
 
 # Check TF
-rosrun tf tf_echo odom base_footprint
+ros2 run tf2_ros tf2_echo odom base_footprint
+
+# View TF tree
+ros2 run tf2_tools view_frames
 ```
 
 ## URDF Visualization
 
-To visualize the robot model in RViz:
-```sh
-roslaunch mark_five_description robot.launch
+```bash
+ros2 launch mark_five_description display.launch.py
 ```
 
-## Notes 
+## Robot Specifications
 
-- One Revolution = 540 Encoder ticks. 
-- Wheel diameter = 0.055 m
-- Wheel Radius = 0.0275 m
-- Max Motor speed = 130rpm
-- Circumference = 2*pi*r = 0.17279
+| Parameter | Value |
+|-----------|-------|
+| Wheel Diameter | 0.055 m |
+| Wheel Base | 0.14 m |
+| Encoder Ticks per Revolution | 540 |
+| Ticks per Meter | 3125 |
+| Max Motor Speed | 130 RPM |
+| Velocity Range | 0.187 - 0.374 m/s |
 
-*If PWM range is 50-100, robot velocity will be in the range:*
-- Linear velocity = Angular_Velocity * r OR rpm * Circumference (divide by 60 to get m/s)
-- Linear velocity Min = 130 rotations/min * 0.50 duty cycle * 0.17279 m / 60 sec = 0.187 m/s
-- Linear velocity Max = 130 rotations/min * 1.0 duty cycle * 0.17279 m / 60 sec = 0.3744 m/s
-- Velocity Range = 0.187 - 0.3744 m/s
+## Project Structure
 
-@TODO: Calculate robot velocity via Encoder and verify the above calculations.
+```
+mark_five_amr/
+├── src/
+│   ├── mark_five_bot/           # Main robot package
+│   │   ├── config/              # YAML configuration files
+│   │   ├── launch/              # Python launch files
+│   │   └── src/                 # C++ nodes
+│   └── mark_five_description/   # URDF and visualization
+├── arduino_ws/                  # Arduino firmware
+├── docker/                      # Docker configuration
+└── docs/                        # Documentation
+```
 
-### References:
+## Documentation
 
-Math: http://wiki.ros.org/diff_drive_controller
-Overall autonomous system design: https://github.com/danielsnider/ros-rover  
+- [Project Roadmap](docs/01-Roadmap.md)
+- [System Architecture](docs/02-Architecture.md)
+- [Package Reference](docs/05-Package-Reference.md)
+- [CLAUDE.md](CLAUDE.md) - Technical reference for AI assistants
 
+## References
+
+- ROS2 Jazzy: https://docs.ros.org/en/jazzy/
+- ros2arduino: https://github.com/ROBOTIS-GIT/ros2arduino
+- Differential Drive Math: http://wiki.ros.org/diff_drive_controller
+- Project Inspiration: https://github.com/danielsnider/ros-rover

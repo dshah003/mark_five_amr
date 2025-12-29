@@ -1,33 +1,35 @@
 /*
- * Robot_Node_Sabertooth.ino
+ * Robot_Node_Sabertooth.ino (Simple Serial Protocol)
  *
- * Description: ROS node for Mark Five AMR using Sabertooth 2x12 motor driver.
- *              Publishes encoder ticks (/right_ticks, /left_ticks) and
- *              subscribes to /cmd_vel for differential drive control.
+ * Description: Arduino node for Mark Five AMR using Sabertooth 2x12 motor driver.
+ *              Uses simple serial protocol instead of ros2arduino (memory efficient).
+ *              Publishes encoder ticks and receives velocity commands via serial.
  *
  * Motor Driver: Sabertooth 2x12 v1.00 (Packetized Serial Mode)
  * Library: Dimension Engineering Sabertooth Arduino Library
  *
  * DIP Switches: OFF OFF ON ON ON ON (Packetized Serial, Address 128)
  *
+ * Serial Protocol:
+ *   TX (Arduino sends):  "t,<left_ticks>,<right_ticks>\n"
+ *   RX (Arduino receives): "v,<linear_x>,<angular_z>\n"
+ *
  * Wiring:
  *   Pin 18 (TX1) --> Sabertooth S1
  *   GND --> Sabertooth 0V
  *   Encoders on pins 2, 3, 20, 21
  *
+ * ROS2 Bridge: Run the serial_bridge node on the host to convert to ROS2 topics.
+ *
  * Based on original Robot_Node.ino for L293DNE H-Bridge.
  * Reference: Automatic Addison, Practical Robotics in C++
  */
 
-#include <ros.h>
-#include <std_msgs/Int16.h>
-#include <geometry_msgs/Twist.h>
 #include <Sabertooth.h>
 
-// Handles startup and shutdown of ROS
-ros::NodeHandle nh;
-
-////////////////// Sabertooth Configuration ///////////////////////////////////
+// Serial configuration
+#define SERIAL_BAUD 115200
+#define PUBLISH_INTERVAL 30  // ms
 
 // Sabertooth at address 128, using Serial1 (Pin 18 TX on Mega)
 Sabertooth ST(128, Serial1);
@@ -51,16 +53,12 @@ const int encoder_minimum = -32768;
 const int encoder_maximum = 32767;
 
 // Keep track of the number of wheel ticks
-std_msgs::Int16 right_wheel_tick_count;
-ros::Publisher rightPub("right_ticks", &right_wheel_tick_count);
-
-std_msgs::Int16 left_wheel_tick_count;
-ros::Publisher leftPub("left_ticks", &left_wheel_tick_count);
+volatile int16_t right_wheel_tick_count = 0;
+volatile int16_t left_wheel_tick_count = 0;
 
 // Time interval for measurements in milliseconds
-const int interval = 30;
-long previousMillis = 0;
-long currentMillis = 0;
+unsigned long previousMillis = 0;
+unsigned long currentMillis = 0;
 
 ////////////////// Motor Controller Variables and Constants ///////////////////
 
@@ -99,7 +97,11 @@ double pwmLeftReq = 0;
 double pwmRightReq = 0;
 
 // Record the time that the last velocity command was received
-double lastCmdVelReceived = 0;
+unsigned long lastCmdVelReceived = 0;
+
+// Serial receive buffer
+String inputString = "";
+boolean stringComplete = false;
 
 /////////////////////// Tick Data Publishing Functions ////////////////////////
 
@@ -113,16 +115,16 @@ void right_wheel_tick() {
   }
 
   if (Direction_right) {
-    if (right_wheel_tick_count.data == encoder_maximum) {
-      right_wheel_tick_count.data = encoder_minimum;
+    if (right_wheel_tick_count == encoder_maximum) {
+      right_wheel_tick_count = encoder_minimum;
     } else {
-      right_wheel_tick_count.data++;
+      right_wheel_tick_count++;
     }
   } else {
-    if (right_wheel_tick_count.data == encoder_minimum) {
-      right_wheel_tick_count.data = encoder_maximum;
+    if (right_wheel_tick_count == encoder_minimum) {
+      right_wheel_tick_count = encoder_maximum;
     } else {
-      right_wheel_tick_count.data--;
+      right_wheel_tick_count--;
     }
   }
 }
@@ -137,16 +139,16 @@ void left_wheel_tick() {
   }
 
   if (Direction_left) {
-    if (left_wheel_tick_count.data == encoder_maximum) {
-      left_wheel_tick_count.data = encoder_minimum;
+    if (left_wheel_tick_count == encoder_maximum) {
+      left_wheel_tick_count = encoder_minimum;
     } else {
-      left_wheel_tick_count.data++;
+      left_wheel_tick_count++;
     }
   } else {
-    if (left_wheel_tick_count.data == encoder_minimum) {
-      left_wheel_tick_count.data = encoder_maximum;
+    if (left_wheel_tick_count == encoder_minimum) {
+      left_wheel_tick_count = encoder_maximum;
     } else {
-      left_wheel_tick_count.data--;
+      left_wheel_tick_count--;
     }
   }
 }
@@ -154,44 +156,50 @@ void left_wheel_tick() {
 /////////////////////// Motor Controller Functions ////////////////////////////
 
 void calc_vel_left_wheel() {
-  static double prevTime = 0;
+  static unsigned long prevTime = 0;
   static int prevLeftCount = 0;
 
-  int numOfTicks = (65535 + left_wheel_tick_count.data - prevLeftCount) % 65535;
+  int numOfTicks = (65535 + left_wheel_tick_count - prevLeftCount) % 65535;
 
   if (numOfTicks > 10000) {
     numOfTicks = 0 - (65535 - numOfTicks);
   }
 
-  velLeftWheel = numOfTicks / TICKS_PER_METER / ((millis() / 1000.0) - prevTime);
-  prevLeftCount = left_wheel_tick_count.data;
-  prevTime = (millis() / 1000.0);
+  unsigned long currentTime = millis();
+  if (currentTime > prevTime) {
+    velLeftWheel = (double)numOfTicks / TICKS_PER_METER / ((currentTime - prevTime) / 1000.0);
+  }
+  prevLeftCount = left_wheel_tick_count;
+  prevTime = currentTime;
 }
 
 void calc_vel_right_wheel() {
-  static double prevTime = 0;
+  static unsigned long prevTime = 0;
   static int prevRightCount = 0;
 
-  int numOfTicks = (65535 + right_wheel_tick_count.data - prevRightCount) % 65535;
+  int numOfTicks = (65535 + right_wheel_tick_count - prevRightCount) % 65535;
 
   if (numOfTicks > 10000) {
     numOfTicks = 0 - (65535 - numOfTicks);
   }
 
-  velRightWheel = numOfTicks / TICKS_PER_METER / ((millis() / 1000.0) - prevTime);
-  prevRightCount = right_wheel_tick_count.data;
-  prevTime = (millis() / 1000.0);
+  unsigned long currentTime = millis();
+  if (currentTime > prevTime) {
+    velRightWheel = (double)numOfTicks / TICKS_PER_METER / ((currentTime - prevTime) / 1000.0);
+  }
+  prevRightCount = right_wheel_tick_count;
+  prevTime = currentTime;
 }
 
-void calc_pwm_values(const geometry_msgs::Twist& cmdVel) {
-  lastCmdVelReceived = (millis() / 1000.0);
+void processCmdVel(double linear_x, double angular_z) {
+  lastCmdVelReceived = millis();
 
   // Scale linear velocity to PWM (-127 to 127 for Sabertooth)
-  pwmLeftReq = K_P * cmdVel.linear.x + b;
-  pwmRightReq = K_P * cmdVel.linear.x + b;
+  pwmLeftReq = K_P * linear_x + b;
+  pwmRightReq = K_P * linear_x + b;
 
-  if (cmdVel.angular.z != 0.0) {
-    if (cmdVel.angular.z > 0.0) {  // Turn left
+  if (angular_z != 0.0) {
+    if (angular_z > 0.0) {  // Turn left
       pwmLeftReq = -PWM_TURN;
       pwmRightReq = PWM_TURN;
     } else {  // Turn right
@@ -265,14 +273,47 @@ void set_pwm_values() {
   ST.motor(2, rightWithSign);
 }
 
-// ROS subscriber to velocity command
-ros::Subscriber<geometry_msgs::Twist> subCmdVel("cmd_vel", &calc_pwm_values);
+/////////////////////// Serial Communication //////////////////////////////////
+
+void parseCommand() {
+  if (inputString.startsWith("v,")) {
+    // Parse velocity command: "v,<linear_x>,<angular_z>\n"
+    int firstComma = inputString.indexOf(',');
+    int secondComma = inputString.indexOf(',', firstComma + 1);
+
+    if (firstComma > 0 && secondComma > firstComma) {
+      double linear_x = inputString.substring(firstComma + 1, secondComma).toFloat();
+      double angular_z = inputString.substring(secondComma + 1).toFloat();
+      processCmdVel(linear_x, angular_z);
+    }
+  }
+}
+
+void serialEvent() {
+  while (Serial.available()) {
+    char inChar = (char)Serial.read();
+    if (inChar == '\n') {
+      stringComplete = true;
+    } else {
+      inputString += inChar;
+    }
+  }
+}
+
+void publishTicks() {
+  // Send tick counts: "t,<left_ticks>,<right_ticks>\n"
+  Serial.print("t,");
+  Serial.print(left_wheel_tick_count);
+  Serial.print(",");
+  Serial.println(right_wheel_tick_count);
+}
+
+/////////////////////// Setup and Loop ////////////////////////////////////////
 
 void setup() {
   // Initialize Sabertooth serial communication
   Serial1.begin(9600);
   ST.autobaud();
-
   delay(100);
 
   // Stop both motors on startup
@@ -289,25 +330,25 @@ void setup() {
   attachInterrupt(digitalPinToInterrupt(ENC_IN_LEFT_A), left_wheel_tick, RISING);
   attachInterrupt(digitalPinToInterrupt(ENC_IN_RIGHT_A), right_wheel_tick, RISING);
 
-  // ROS Setup
-  nh.getHardware()->setBaud(115200);
-  nh.initNode();
-  nh.advertise(rightPub);
-  nh.advertise(leftPub);
-  nh.subscribe(subCmdVel);
+  // USB Serial for communication with ROS2 bridge
+  Serial.begin(SERIAL_BAUD);
+  inputString.reserve(64);
 }
 
 void loop() {
-  nh.spinOnce();
-
   currentMillis = millis();
 
-  if (currentMillis - previousMillis > interval) {
-    previousMillis = currentMillis;
+  // Process any received serial commands
+  if (stringComplete) {
+    parseCommand();
+    inputString = "";
+    stringComplete = false;
+  }
 
-    // Publish tick counts
-    leftPub.publish(&left_wheel_tick_count);
-    rightPub.publish(&right_wheel_tick_count);
+  // Publish ticks at regular intervals
+  if (currentMillis - previousMillis > PUBLISH_INTERVAL) {
+    previousMillis = currentMillis;
+    publishTicks();
 
     // Calculate wheel velocities
     calc_vel_right_wheel();
@@ -315,7 +356,7 @@ void loop() {
   }
 
   // Stop if no cmd_vel messages received for 1 second
-  if ((millis() / 1000.0) - lastCmdVelReceived > 1) {
+  if (millis() - lastCmdVelReceived > 1000) {
     pwmLeftReq = 0;
     pwmRightReq = 0;
   }

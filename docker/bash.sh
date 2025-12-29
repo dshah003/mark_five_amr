@@ -2,4 +2,4 @@
 
 echo "Opening Docker bash"
 
-docker exec -it mark_five_robot bash -c 'source devel/setup.bash; exec bash'
+docker exec -it -w /root/mark_five_amr mark_five_robot bash
