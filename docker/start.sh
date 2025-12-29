@@ -56,7 +56,9 @@ docker run \
     --env="XAUTHORITY=/root/.Xauthority" \
     --privileged \
     --network=host \
+    --ipc=host \
     --env=ROS_DOMAIN_ID=5 \
+    --env=ROS_AUTOMATIC_DISCOVERY_RANGE=SUBNET \
     ${ARDUINO_DEV} \
     ${JOYSTICK_DEV} \
     -v /dev/bus/usb:/dev/bus/usb \
