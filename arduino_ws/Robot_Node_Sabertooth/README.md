@@ -1,8 +1,10 @@
 # Robot_Node_Sabertooth
 
-ROS-enabled Arduino firmware for Mark Five AMR using **Sabertooth 2x12 v1.00** motor driver.
+Arduino firmware for Mark Five AMR using **Sabertooth 2x12 v1.00** motor driver.
 
 This is an alternative to the original `Robot_Node.ino` which uses the L293DNE H-Bridge.
+
+**Communication:** Simple serial protocol with ROS2 Python bridge (no ros2arduino/micro-ROS needed)
 
 ## Why Sabertooth 2x12?
 
@@ -23,8 +25,21 @@ This is an alternative to the original `Robot_Node.ino` which uses the L293DNE H
 
 ### Software
 - **Sabertooth Arduino Library** by Dimension Engineering
-  - Install via: Sketch → Include Library → Manage Libraries → Search "Sabertooth"
+  - Install via: Sketch -> Include Library -> Manage Libraries -> Search "Sabertooth"
   - Or download from: https://www.dimensionengineering.com/info/arduino
+
+**Note:** ros2arduino and micro-ROS are NOT needed. The simple serial protocol is more reliable on Arduino Mega's limited 8KB RAM.
+
+## Serial Protocol
+
+The Arduino uses a lightweight text-based serial protocol:
+
+```
+Arduino TX (publishes):  "t,<left_ticks>,<right_ticks>\n"
+Arduino RX (receives):   "v,<linear_x>,<angular_z>\n"
+```
+
+The ROS2 `serial_bridge.py` node translates this to ROS2 topics.
 
 ## DIP Switch Configuration
 
@@ -89,7 +104,7 @@ http://www.dimensionengineering.com/datasheets/SabertoothDIPWizard/start.htm
 
 **Note:** If motors spin in wrong direction, swap M1A/M1B or M2A/M2B, or swap motor(1)/motor(2) in code.
 
-## ROS Topics
+## ROS2 Topics (via serial_bridge.py)
 
 ### Published Topics
 
@@ -107,29 +122,33 @@ http://www.dimensionengineering.com/datasheets/SabertoothDIPWizard/start.htm
 ## Installation
 
 1. **Install Sabertooth library** in Arduino IDE:
-   - Sketch → Include Library → Manage Libraries
-   - Search "Sabertooth" → Install
+   - Sketch -> Include Library -> Manage Libraries
+   - Search "Sabertooth" -> Install
 
 2. **Set DIP switches**: `OFF OFF ON ON ON ON`
 
 3. **Wire connections** per the diagram above
 
-4. **Upload firmware** to Arduino Mega
+4. **Upload firmware** to Arduino Mega:
+   - Board: Arduino Mega 2560
+   - Port: /dev/ttyACM0
 
-5. **Test with ROS**:
+5. **Launch ROS2 robot**:
    ```bash
-   # Terminal 1
-   roscore
+   ros2 launch mark_five_bot bringup.launch.py
+   ```
+   This automatically starts the serial_bridge node.
 
-   # Terminal 2
-   rosrun rosserial_python serial_node.py /dev/ttyACM0 _baud:=115200
+6. **Test with ROS2**:
+   ```bash
+   # Terminal 1 - Launch robot (already running)
 
-   # Terminal 3 - Monitor encoder ticks
-   rostopic echo /left_ticks
-   rostopic echo /right_ticks
+   # Terminal 2 - Monitor encoder ticks
+   ros2 topic echo /left_ticks
+   ros2 topic echo /right_ticks
 
-   # Terminal 4 - Send velocity command
-   rostopic pub /cmd_vel geometry_msgs/Twist "linear: {x: 0.1}" --once
+   # Terminal 3 - Keyboard teleop
+   ros2 run teleop_twist_keyboard teleop_twist_keyboard
    ```
 
 ## Troubleshooting
@@ -141,6 +160,21 @@ http://www.dimensionengineering.com/datasheets/SabertoothDIPWizard/start.htm
 3. Check S1 connected to Arduino Pin 18
 4. Ensure common ground between Arduino and Sabertooth
 5. Verify Sabertooth library is installed
+6. Check serial_bridge node is running: `ros2 node list`
+
+### No topics appearing
+
+1. Check serial_bridge is running:
+   ```bash
+   ros2 node list | grep serial_bridge
+   ```
+2. Check Arduino is connected to correct port (`/dev/ttyACM0`)
+3. Verify baud rate matches (115200)
+4. Test serial directly:
+   ```bash
+   cat /dev/ttyACM0
+   # Should see: t,0,0 (tick messages)
+   ```
 
 ### Motors spin wrong direction
 
@@ -171,7 +205,7 @@ Adjust the `DRIFT_MULTIPLIER` constant in the code (default: 120).
 | Current | 3A minimum, 5A preferred |
 | Type | Regulated DC supply or 3S LiPo battery |
 
-**Important:** Do not use a 5V→12V boost converter. The Sabertooth requires direct 12V with adequate current capacity.
+**Important:** Do not use a 5V->12V boost converter. The Sabertooth requires direct 12V with adequate current capacity.
 
 ## Files
 
@@ -180,6 +214,14 @@ Adjust the `DRIFT_MULTIPLIER` constant in the code (default: 120).
 
 ## Test Code
 
-For standalone motor testing (without ROS), see:
+For standalone motor testing (without ROS2), see:
 - `arduino_ws/test_sabertooth/test_sabertooth.ino` - Full test sequence
 - `arduino_ws/test_sabertooth_minimal/test_sabertooth_minimal.ino` - Minimal test
+
+## Migration from ROS1
+
+The ROS2 version uses a **simple serial protocol** instead of rosserial. Key changes:
+- No ROS libraries needed on Arduino (just Sabertooth library)
+- ROS2 `serial_bridge.py` node handles translation
+- Much lower memory footprint on Arduino
+- More reliable than ros2arduino/micro-ROS on Arduino Mega

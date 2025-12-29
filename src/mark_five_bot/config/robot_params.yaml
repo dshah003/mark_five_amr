@@ -1,0 +1,29 @@
+# Mark Five AMR - Robot Physical Parameters
+# These parameters define the physical characteristics of the robot
+# and are shared across multiple nodes.
+
+# Robot geometry
+robot:
+  # Distance between wheel centers (meters)
+  wheel_base: 0.14
+
+  # Wheel radius (meters)
+  wheel_radius: 0.055
+
+  # Encoder ticks per full wheel revolution
+  ticks_per_revolution: 540
+
+  # Calculated: ticks per meter of travel
+  # Formula: ticks_per_revolution / (2 * pi * wheel_radius)
+  ticks_per_meter: 3125.0
+
+# TF frame names
+frames:
+  odom: "odom"
+  base_footprint: "base_footprint"
+  base_link: "base_link"
+
+# Serial communication settings
+serial:
+  port: "/dev/ttyACM0"
+  baud_rate: 115200

@@ -1,0 +1,41 @@
+# Mark Five AMR - Teleoperation Parameters
+
+# Joystick driver parameters
+joy_node:
+  ros__parameters:
+    device_id: 0
+    deadzone: 0.05
+    autorepeat_rate: 20.0
+
+# Teleop twist joy parameters
+teleop_node:
+  ros__parameters:
+    # Axis mappings (typical gamepad layout)
+    axis_linear:
+      x: 1              # Left joystick Y-axis for forward/backward
+    axis_angular:
+      yaw: 0            # Left joystick X-axis for rotation
+
+    # Speed scaling factors
+    scale_linear:
+      x: 0.5            # Maximum linear velocity (m/s)
+    scale_angular:
+      yaw: 0.5          # Maximum angular velocity (rad/s)
+
+    # Enable button (must be held for movement)
+    enable_button: 1    # Button index (0-indexed)
+
+    # Turbo button for faster movement (optional)
+    enable_turbo_button: -1  # Disabled by default
+    scale_linear_turbo:
+      x: 1.0
+    scale_angular_turbo:
+      yaw: 1.0
+
+# Keyboard teleop parameters
+teleop_twist_keyboard:
+  ros__parameters:
+    speed: 0.5          # Linear speed (m/s)
+    turn: 0.5           # Angular speed (rad/s)
+    speed_limit: 1.0    # Maximum linear speed
+    turn_limit: 1.0     # Maximum angular speed

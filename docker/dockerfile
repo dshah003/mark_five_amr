@@ -1,47 +1,71 @@
-FROM ros:melodic
+# Mark Five AMR - ROS2 Jazzy Docker Image
+# For use on Jetson Nano or Ubuntu 24.04 workstation
+
+FROM ros:jazzy
 
 ENV DEBIAN_FRONTEND=noninteractive
 ENV TZ=America/New_York
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
 # Basic tools
-RUN apt-get update && \
-    apt-get install vim nano git tmux wget curl python-pip net-tools iputils-ping  -y
+RUN apt-get update && apt-get install -y \
+    nano \
+    git \
+    tmux \
+    wget \
+    curl \
+    net-tools \
+    iputils-ping \
+    python3-pip \
+    python3-colcon-common-extensions \
+    python3-serial \
+    && rm -rf /var/lib/apt/lists/*
 
-RUN apt-get update && \
-    apt-get install -y ros-melodic-rosbridge-server \
-    ros-melodic-joy \
-    ros-melodic-rosserial-arduino \
-    ros-melodic-rosserial \
-    ros-melodic-teleop-twist-keyboard \
-    ros-melodic-teleop-twist-joy \
-    ros-melodic-rviz \
-    ros-melodic-urdf \
-    ros-melodic-xacro \
-    ros-melodic-navigation \
-    ros-melodic-joint-state-publisher \
-    ros-melodic-joint-state-publisher-gui \
-    ros-melodic-robot-state-publisher
+# ROS2 packages
+RUN apt-get update && apt-get install -y \
+    ros-jazzy-joy \
+    ros-jazzy-teleop-twist-keyboard \
+    ros-jazzy-teleop-twist-joy \
+    ros-jazzy-rviz2 \
+    ros-jazzy-urdf \
+    ros-jazzy-xacro \
+    ros-jazzy-joint-state-publisher \
+    ros-jazzy-joint-state-publisher-gui \
+    ros-jazzy-robot-state-publisher \
+    ros-jazzy-tf2 \
+    ros-jazzy-tf2-ros \
+    ros-jazzy-tf2-geometry-msgs \
+    ros-jazzy-nav2-bringup \
+    ros-jazzy-navigation2 \
+    && rm -rf /var/lib/apt/lists/*
 
 # Intel RealSense camera and depth-to-laserscan packages
-RUN apt-get update && \
-    apt-get install -y ros-melodic-realsense2-camera \
-    ros-melodic-realsense2-description \
-    ros-melodic-depthimage-to-laserscan \
-    ros-melodic-rgbd-launch \
-    ros-melodic-image-transport \
-    ros-melodic-image-transport-plugins
+RUN apt-get update && apt-get install -y \
+    ros-jazzy-realsense2-camera \
+    ros-jazzy-realsense2-description \
+    ros-jazzy-depthimage-to-laserscan \
+    ros-jazzy-image-transport \
+    ros-jazzy-image-transport-plugins \
+    && rm -rf /var/lib/apt/lists/*
 
-RUN apt-get update && \
-    apt-get install liburdfdom-tools
+# URDF tools
+RUN apt-get update && apt-get install -y \
+    liburdfdom-tools \
+    xterm \
+    && rm -rf /var/lib/apt/lists/*
 
-# Add ros sourcing to bashrc
-RUN echo ". /opt/ros/melodic/setup.bash" >> ~/.bashrc
+# Add ROS2 sourcing to bashrc
+RUN echo "source /opt/ros/jazzy/setup.bash" >> ~/.bashrc
+RUN echo "# Source workspace if built" >> ~/.bashrc
+RUN echo "if [ -f ~/mark_five_amr/install/setup.bash ]; then source ~/mark_five_amr/install/setup.bash; fi" >> ~/.bashrc
 
-ARG HOME
-ENV MARKY_ROOT="${HOME}/mark_five_amr/"
+# Colcon build defaults
+RUN mkdir -p ~/.colcon && \
+    echo -e "build:\n  symlink-install: true" > ~/.colcon/defaults.yaml
 
-WORKDIR ${HOME}
+ENV MARKY_ROOT="/root/mark_five_amr/"
+
+WORKDIR /root/mark_five_amr
 
 HEALTHCHECK --interval=5m --timeout=3s CMD echo "Mark Five: I'm alive!" || exit 1
 CMD ["/bin/bash"]

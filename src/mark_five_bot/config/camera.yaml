@@ -1,0 +1,46 @@
+# Mark Five AMR - RealSense D435 Camera Parameters
+
+# RealSense camera node parameters
+camera:
+  ros__parameters:
+    # Camera identification
+    camera_name: "camera"
+
+    # Stream enables
+    enable_color: true
+    enable_depth: true
+    enable_infra1: false
+    enable_infra2: false
+    pointcloud.enable: true
+
+    # Color stream settings (optimized for Jetson Nano)
+    rgb_camera.color_profile: "640x480x15"
+
+    # Depth stream settings
+    depth_module.depth_profile: "640x480x15"
+
+    # Align depth to color for better visualization
+    align_depth.enable: true
+
+    # Depth filters for noise reduction
+    decimation_filter.enable: true
+    spatial_filter.enable: true
+    temporal_filter.enable: true
+
+# Depth to laserscan converter parameters
+depthimage_to_laserscan:
+  ros__parameters:
+    # Output frame for laser scan
+    output_frame: "camera_link"
+
+    # Number of pixel rows to use (centered vertically)
+    # Higher value = more robust but slower processing
+    scan_height: 10
+
+    # Valid depth range in meters
+    # D435 effective range: 0.1m to 10m
+    range_min: 0.15
+    range_max: 4.0
+
+    # Time between scans (1/15 FPS)
+    scan_time: 0.0667
