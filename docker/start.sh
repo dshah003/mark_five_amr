@@ -56,7 +56,7 @@ docker run \
     --env="XAUTHORITY=/root/.Xauthority" \
     --privileged \
     --network=host \
-    --env=ROS_DOMAIN_ID=0 \
+    --env=ROS_DOMAIN_ID=5 \
     ${ARDUINO_DEV} \
     ${JOYSTICK_DEV} \
     -v /dev/bus/usb:/dev/bus/usb \
