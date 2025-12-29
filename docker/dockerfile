@@ -67,5 +67,7 @@ ENV MARKY_ROOT="/root/mark_five_amr/"
 
 WORKDIR /root/mark_five_amr
 
+ENV ROS_DOMAIN_ID=5
+
 HEALTHCHECK --interval=5m --timeout=3s CMD echo "Mark Five: I'm alive!" || exit 1
 CMD ["/bin/bash"]
