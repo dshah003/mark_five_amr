@@ -37,7 +37,13 @@ def generate_launch_description():
         description='Full path to slam_toolbox params file'
     )
 
-    # SLAM Toolbox node - online async mode
+    autostart_arg = DeclareLaunchArgument(
+        'autostart',
+        default_value='true',
+        description='Automatically start slam_toolbox'
+    )
+
+    # SLAM Toolbox node - online async mode (lifecycle node)
     slam_toolbox_node = Node(
         package='slam_toolbox',
         executable='async_slam_toolbox_node',
@@ -49,8 +55,24 @@ def generate_launch_description():
         ],
     )
 
+    # Lifecycle manager for slam_toolbox
+    slam_lifecycle_manager = Node(
+        package='nav2_lifecycle_manager',
+        executable='lifecycle_manager',
+        name='lifecycle_manager_slam',
+        output='screen',
+        parameters=[{
+            'autostart': LaunchConfiguration('autostart'),
+            'node_names': ['slam_toolbox'],
+            'bond_timeout': 10.0,
+            'attempt_respawn_reconnection': True,
+        }],
+    )
+
     return LaunchDescription([
         use_sim_time_arg,
         slam_params_file_arg,
+        autostart_arg,
         slam_toolbox_node,
+        slam_lifecycle_manager,
     ])

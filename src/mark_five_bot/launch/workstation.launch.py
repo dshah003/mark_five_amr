@@ -1,9 +1,26 @@
 """
 Workstation Launch File (for remote workstation in distributed mode)
 
-Launches visualization and control nodes:
-- teleop (keyboard or joystick)
-- RViz (optional visualization)
+Launches heavy compute nodes on the workstation:
+- SLAM (slam_toolbox) or Localization (AMCL)
+- Nav2 navigation stack
+- RViz visualization
+- Teleop (optional keyboard or joystick)
+
+The Jetson runs sensors and actuation via robot.launch.py.
+
+Usage:
+  # SLAM mode (mapping)
+  ros2 launch mark_five_bot workstation.launch.py
+
+  # Localization mode (with existing map)
+  ros2 launch mark_five_bot workstation.launch.py nav_mode:=localization map:=/path/to/map.yaml
+
+  # With joystick teleop
+  ros2 launch mark_five_bot workstation.launch.py teleop:=joy
+
+  # Without navigation (teleop + RViz only)
+  ros2 launch mark_five_bot workstation.launch.py use_nav:=false
 """
 
 from launch import LaunchDescription
@@ -21,20 +38,61 @@ def generate_launch_description():
     pkg_share = get_package_share_directory('mark_five_bot')
     description_share = get_package_share_directory('mark_five_description')
 
-    # Path to RViz config
-    rviz_config = os.path.join(description_share, 'rviz', 'display.rviz')
+    # Path to RViz configs
+    nav_rviz_config = os.path.join(description_share, 'rviz', 'navigation.rviz')
+    default_rviz_config = os.path.join(description_share, 'rviz', 'display.rviz')
+
+    # Default map
+    default_map = os.path.join(pkg_share, 'maps', 'map.yaml')
 
     # Declare launch arguments
+    use_nav_arg = DeclareLaunchArgument(
+        'use_nav',
+        default_value='true',
+        description='Launch SLAM/Nav2 navigation stack'
+    )
+
+    nav_mode_arg = DeclareLaunchArgument(
+        'nav_mode',
+        default_value='slam',
+        description='Navigation mode: slam or localization'
+    )
+
+    map_arg = DeclareLaunchArgument(
+        'map',
+        default_value=default_map,
+        description='Full path to map yaml file (for localization mode)'
+    )
+
     teleop_arg = DeclareLaunchArgument(
         'teleop',
-        default_value='keyboard',
-        description='Teleop mode: keyboard or joy'
+        default_value='none',
+        description='Teleop mode: keyboard, joy, or none'
     )
 
     use_rviz_arg = DeclareLaunchArgument(
         'use_rviz',
         default_value='true',
         description='Launch RViz for visualization'
+    )
+
+    use_sim_time_arg = DeclareLaunchArgument(
+        'use_sim_time',
+        default_value='false',
+        description='Use simulation time'
+    )
+
+    # Navigation stack (SLAM or Localization + Nav2)
+    navigation_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            os.path.join(pkg_share, 'launch', 'navigation.launch.py')
+        ),
+        condition=IfCondition(LaunchConfiguration('use_nav')),
+        launch_arguments={
+            'mode': LaunchConfiguration('nav_mode'),
+            'map': LaunchConfiguration('map'),
+            'use_sim_time': LaunchConfiguration('use_sim_time'),
+        }.items(),
     )
 
     # Keyboard teleop (conditional)
@@ -57,19 +115,24 @@ def generate_launch_description():
         ),
     )
 
-    # RViz (conditional)
+    # RViz with navigation config when nav is enabled
     rviz_node = Node(
         package='rviz2',
         executable='rviz2',
         name='rviz2',
         output='screen',
-        arguments=['-d', rviz_config],
+        arguments=['-d', nav_rviz_config],
         condition=IfCondition(LaunchConfiguration('use_rviz')),
     )
 
     return LaunchDescription([
+        use_nav_arg,
+        nav_mode_arg,
+        map_arg,
         teleop_arg,
         use_rviz_arg,
+        use_sim_time_arg,
+        navigation_launch,
         teleop_keyboard_launch,
         teleop_joy_launch,
         rviz_node,
