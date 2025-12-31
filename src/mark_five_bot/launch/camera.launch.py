@@ -63,6 +63,7 @@ def generate_launch_description():
             'range_min': 0.15,
             'range_max': 4.0,
             'scan_time': 0.0667,
+            'depth_scale': 0.001,
         }],
         remappings=[
             ('image', '/camera/depth/image_rect_raw'),

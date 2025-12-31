@@ -48,6 +48,11 @@ RUN apt-get update && apt-get install -y \
     ros-jazzy-image-transport-plugins \
     && rm -rf /var/lib/apt/lists/*
 
+# SLAM toolbox for mapping
+RUN apt-get update && apt-get install -y \
+    ros-jazzy-slam-toolbox \
+    && rm -rf /var/lib/apt/lists/*
+
 # URDF tools
 RUN apt-get update && apt-get install -y \
     liburdfdom-tools \

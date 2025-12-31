@@ -40,6 +40,24 @@ def generate_launch_description():
         description='Launch RealSense camera'
     )
 
+    use_nav_arg = DeclareLaunchArgument(
+        'use_nav',
+        default_value='false',
+        description='Launch Nav2 navigation stack'
+    )
+
+    nav_mode_arg = DeclareLaunchArgument(
+        'nav_mode',
+        default_value='slam',
+        description='Navigation mode: slam or localization'
+    )
+
+    map_arg = DeclareLaunchArgument(
+        'map',
+        default_value='',
+        description='Full path to map yaml file (for localization mode)'
+    )
+
     # Read URDF file
     with open(urdf_file, 'r') as f:
         robot_description = f.read()
@@ -85,12 +103,28 @@ def generate_launch_description():
         condition=IfCondition(LaunchConfiguration('use_camera')),
     )
 
+    # Navigation (conditional)
+    navigation_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            os.path.join(pkg_share, 'launch', 'navigation.launch.py')
+        ),
+        condition=IfCondition(LaunchConfiguration('use_nav')),
+        launch_arguments={
+            'mode': LaunchConfiguration('nav_mode'),
+            'map': LaunchConfiguration('map'),
+        }.items(),
+    )
+
     return LaunchDescription([
         use_teleop_arg,
         use_camera_arg,
+        use_nav_arg,
+        nav_mode_arg,
+        map_arg,
         robot_state_publisher_node,
         serial_launch,
         odometry_launch,
         teleop_launch,
         camera_launch,
+        navigation_launch,
     ])

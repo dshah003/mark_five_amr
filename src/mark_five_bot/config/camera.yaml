@@ -11,16 +11,16 @@ camera:
     enable_depth: true
     enable_infra1: false
     enable_infra2: false
-    pointcloud.enable: true
+    pointcloud.enable: false  # Disabled to reduce USB bandwidth
 
-    # Color stream settings (optimized for Jetson Nano)
-    rgb_camera.color_profile: "640x480x15"
+    # Color stream settings (reduced for stability)
+    rgb_camera.color_profile: "424x240x15"
 
-    # Depth stream settings
-    depth_module.depth_profile: "640x480x15"
+    # Depth stream settings (reduced for stability)
+    depth_module.depth_profile: "424x240x15"
 
-    # Align depth to color for better visualization
-    align_depth.enable: true
+    # Align depth to color - disabled to reduce load
+    align_depth.enable: false
 
     # Depth filters for noise reduction
     decimation_filter.enable: true

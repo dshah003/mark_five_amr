@@ -35,7 +35,7 @@ teleop_node:
 # Keyboard teleop parameters
 teleop_twist_keyboard:
   ros__parameters:
-    speed: 0.5          # Linear speed (m/s)
-    turn: 0.5           # Angular speed (rad/s)
+    speed: 0.3          # Linear speed (m/s)
+    turn: 0.3           # Angular speed (rad/s)
     speed_limit: 1.0    # Maximum linear speed
     turn_limit: 1.0     # Maximum angular speed
