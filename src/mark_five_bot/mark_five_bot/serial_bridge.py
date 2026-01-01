@@ -2,8 +2,9 @@
 """
 Serial Bridge Node for Mark Five AMR
 
-Bridges serial communication with Arduino to ROS2 topics.
-Replaces micro_ros_agent with a simpler, more reliable approach.
+Bridges serial communication with Arduino to ROS2 topics using a simple
+text-based serial protocol. More reliable than ros2arduino/micro-ROS on
+Arduino Mega's limited 8KB RAM.
 
 Serial Protocol:
   RX (from Arduino): "t,<left_ticks>,<right_ticks>\n"
