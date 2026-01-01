@@ -48,6 +48,7 @@ install(DIRECTORY
 # Install Python scripts as executables
 install(PROGRAMS
   mark_five_bot/serial_bridge.py
+  mark_five_bot/mission_manager.py
   DESTINATION lib/${PROJECT_NAME}
 )
 

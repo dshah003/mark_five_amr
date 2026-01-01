@@ -5,9 +5,12 @@ Supports two modes:
 - slam: Online SLAM with slam_toolbox (for mapping)
 - localization: AMCL localization with pre-built map (for navigation)
 
+Optional mission manager for waypoint navigation (use_mission_manager:=true)
+
 Usage:
   ros2 launch mark_five_bot navigation.launch.py mode:=slam
   ros2 launch mark_five_bot navigation.launch.py mode:=localization map:=/path/to/map.yaml
+  ros2 launch mark_five_bot navigation.launch.py mode:=localization use_mission_manager:=true
 """
 
 from launch import LaunchDescription
@@ -26,6 +29,7 @@ def generate_launch_description():
     # Config files
     nav2_params_file = os.path.join(pkg_share, 'config', 'nav2_params.yaml')
     slam_params_file = os.path.join(pkg_share, 'config', 'slam_toolbox_params.yaml')
+    mission_manager_params_file = os.path.join(pkg_share, 'config', 'mission_manager.yaml')
 
     # Default map
     default_map = os.path.join(pkg_share, 'maps', 'map.yaml')
@@ -53,6 +57,12 @@ def generate_launch_description():
         'autostart',
         default_value='true',
         description='Automatically start lifecycle nodes'
+    )
+
+    use_mission_manager_arg = DeclareLaunchArgument(
+        'use_mission_manager',
+        default_value='false',
+        description='Launch waypoint mission manager'
     )
 
     # SLAM mode - includes slam_toolbox
@@ -150,6 +160,16 @@ def generate_launch_description():
         parameters=[nav2_params_file],
     )
 
+    # Mission manager (optional)
+    mission_manager = Node(
+        package='mark_five_bot',
+        executable='mission_manager.py',
+        name='mission_manager',
+        output='screen',
+        parameters=[mission_manager_params_file],
+        condition=IfCondition(LaunchConfiguration('use_mission_manager')),
+    )
+
     # Lifecycle manager for navigation nodes
     lifecycle_manager = Node(
         package='nav2_lifecycle_manager',
@@ -176,6 +196,7 @@ def generate_launch_description():
         map_arg,
         use_sim_time_arg,
         autostart_arg,
+        use_mission_manager_arg,
         slam_launch,
         localization_launch,
         # Nav2 nodes
@@ -187,5 +208,6 @@ def generate_launch_description():
         velocity_smoother,
         collision_monitor,
         waypoint_follower,
+        mission_manager,
         lifecycle_manager,
     ])
