@@ -59,6 +59,7 @@ docker run \
     --ipc=host \
     --env=ROS_DOMAIN_ID=5 \
     --env=ROS_AUTOMATIC_DISCOVERY_RANGE=SUBNET \
+    --env=ROS_STATIC_PEERS="192.168.12.124;192.168.12.249" \
     ${ARDUINO_DEV} \
     ${JOYSTICK_DEV} \
     -v /dev/bus/usb:/dev/bus/usb \
@@ -73,6 +74,11 @@ docker exec ${DOCKER_NAME} sh -c 'cat >> ~/.bashrc << "EOF"
 
 # ROS2 Jazzy setup
 source /opt/ros/jazzy/setup.bash
+
+# ROS2 Distributed networking
+export ROS_DOMAIN_ID=5
+export ROS_AUTOMATIC_DISCOVERY_RANGE=SUBNET
+export ROS_STATIC_PEERS="192.168.12.124;192.168.12.249"
 
 # Source workspace if built
 if [ -f ~/mark_five_amr/install/setup.bash ]; then
