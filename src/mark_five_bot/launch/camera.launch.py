@@ -59,14 +59,15 @@ def generate_launch_description():
         output='screen',
         parameters=[{
             'output_frame': 'camera_link',
-            'scan_height': 10,
+            'scan_height': 1,
             'range_min': 0.15,
             'range_max': 4.0,
             'scan_time': 0.0667,
+            'depth_scale': 0.001,
         }],
         remappings=[
-            ('image', '/camera/depth/image_rect_raw'),
-            ('camera_info', '/camera/depth/camera_info'),
+            ('depth', '/camera/aligned_depth_to_color/image_raw'),
+            ('depth_camera_info', '/camera/aligned_depth_to_color/camera_info'),
             ('scan', '/scan'),
         ],
     )

@@ -1,11 +1,17 @@
 """
 Robot Launch File (for Jetson Nano in distributed mode)
 
-Launches core robot nodes without visualization:
-- rosserial (Arduino communication)
+Launches sensor and actuation nodes on the robot:
 - robot_state_publisher (URDF TF)
+- serial_bridge (Arduino communication for motors)
 - odometry (encoder-based odometry)
-- camera (optional RealSense D435)
+- RealSense camera + depthimage_to_laserscan
+
+The workstation runs SLAM, Nav2, and RViz.
+
+Usage:
+  ros2 launch mark_five_bot robot.launch.py
+  ros2 launch mark_five_bot robot.launch.py camera:=false  # Without camera
 """
 
 from launch import LaunchDescription
@@ -29,7 +35,7 @@ def generate_launch_description():
     # Declare launch arguments
     camera_arg = DeclareLaunchArgument(
         'camera',
-        default_value='false',
+        default_value='true',
         description='Launch RealSense camera'
     )
 
