@@ -15,7 +15,7 @@ ROS2 Topics:
     /left_ticks  (std_msgs/Int16)
     /right_ticks (std_msgs/Int16)
   Subscribers:
-    /cmd_vel_smoothed (geometry_msgs/Twist)
+    /cmd_vel_safe (geometry_msgs/Twist)
 """
 
 import rclpy
@@ -44,10 +44,10 @@ class SerialBridge(Node):
         self.left_ticks_pub = self.create_publisher(Int16, 'left_ticks', 10)
         self.right_ticks_pub = self.create_publisher(Int16, 'right_ticks', 10)
 
-        # Subscriber for velocity commands (smoothed by velocity_smoother)
+        # Subscriber for velocity commands (smoothed + collision-checked)
         self.cmd_vel_sub = self.create_subscription(
             Twist,
-            'cmd_vel_smoothed',
+            'cmd_vel_safe',
             self.cmd_vel_callback,
             10
         )
