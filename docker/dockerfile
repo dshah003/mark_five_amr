@@ -37,6 +37,7 @@ RUN apt-get update && apt-get install -y \
     ros-jazzy-tf2-geometry-msgs \
     ros-jazzy-nav2-bringup \
     ros-jazzy-navigation2 \
+    ros-jazzy-rmw-cyclonedds-cpp \
     && rm -rf /var/lib/apt/lists/*
 
 # Intel RealSense camera and depth-to-laserscan packages
@@ -76,6 +77,7 @@ WORKDIR /root/mark_five_amr
 ENV ROS_DOMAIN_ID=5
 ENV ROS_AUTOMATIC_DISCOVERY_RANGE=SUBNET
 ENV ROS_STATIC_PEERS="192.168.12.124;192.168.12.249"
+ENV RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
 
 HEALTHCHECK --interval=5m --timeout=3s CMD echo "Mark Five: I'm alive!" || exit 1
 CMD ["/bin/bash"]

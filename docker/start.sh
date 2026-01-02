@@ -60,6 +60,7 @@ docker run \
     --env=ROS_DOMAIN_ID=5 \
     --env=ROS_AUTOMATIC_DISCOVERY_RANGE=SUBNET \
     --env=ROS_STATIC_PEERS="192.168.12.124;192.168.12.249" \
+    --env=RMW_IMPLEMENTATION=rmw_cyclonedds_cpp \
     ${ARDUINO_DEV} \
     ${JOYSTICK_DEV} \
     -v /dev/bus/usb:/dev/bus/usb \
@@ -79,6 +80,7 @@ source /opt/ros/jazzy/setup.bash
 export ROS_DOMAIN_ID=5
 export ROS_AUTOMATIC_DISCOVERY_RANGE=SUBNET
 export ROS_STATIC_PEERS="192.168.12.124;192.168.12.249"
+export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
 
 # Source workspace if built
 if [ -f ~/mark_five_amr/install/setup.bash ]; then
