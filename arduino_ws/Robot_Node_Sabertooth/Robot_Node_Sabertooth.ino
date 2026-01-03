@@ -205,12 +205,13 @@ void processCmdVel(double linear_x, double angular_z) {
   }
 
   if (angular_z != 0.0) {
+    // Note: Signs inverted to match physical motor/encoder configuration
     if (angular_z > 0.0) {  // Turn left
-      pwmLeftReq = -PWM_TURN;
-      pwmRightReq = PWM_TURN;
-    } else {  // Turn right
       pwmLeftReq = PWM_TURN;
       pwmRightReq = -PWM_TURN;
+    } else {  // Turn right
+      pwmLeftReq = -PWM_TURN;
+      pwmRightReq = PWM_TURN;
     }
   } else {  // Go straight - apply drift correction
     static double prevDiff = 0;
@@ -311,10 +312,11 @@ void serialEvent() {
 
 void publishTicks() {
   // Send tick counts: "t,<left_ticks>,<right_ticks>\n"
+  // Swapped to correct RViz rotation direction
   Serial.print("t,");
-  Serial.print(left_wheel_tick_count);
+  Serial.print(right_wheel_tick_count);
   Serial.print(",");
-  Serial.println(right_wheel_tick_count);
+  Serial.println(left_wheel_tick_count);
 }
 
 /////////////////////// Setup and Loop ////////////////////////////////////////
