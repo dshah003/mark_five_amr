@@ -19,6 +19,10 @@
   <depend>geometry_msgs</depend>
   <depend>nav_msgs</depend>
   <depend>sensor_msgs</depend>
+  <depend>diagnostic_msgs</depend>
+  <depend>std_srvs</depend>
+  <depend>action_msgs</depend>
+  <depend>nav2_msgs</depend>
 
   <!-- TF2 for transforms -->
   <depend>tf2</depend>
@@ -54,6 +58,7 @@
   <exec_depend>nav2_map_server</exec_depend>
   <exec_depend>nav2_amcl</exec_depend>
   <exec_depend>nav2_regulated_pure_pursuit_controller</exec_depend>
+  <exec_depend>nav2_waypoint_follower</exec_depend>
 
   <!-- SLAM -->
   <exec_depend>slam_toolbox</exec_depend>

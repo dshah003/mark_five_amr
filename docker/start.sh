@@ -13,6 +13,17 @@ docker rm ${DOCKER_NAME} &> /dev/null
 MARKY_ROOT=$(dirname "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)")
 echo "Setting Marky Root as ${MARKY_ROOT}"
 
+# Create directory for persistent Docker data (bash history, etc.)
+DOCKER_DATA_DIR="${MARKY_ROOT}/docker/.docker_data"
+mkdir -p ${DOCKER_DATA_DIR}
+
+# Create bash_history file if it doesn't exist
+BASH_HISTORY_FILE="${DOCKER_DATA_DIR}/bash_history"
+if [ ! -f "${BASH_HISTORY_FILE}" ]; then
+    touch "${BASH_HISTORY_FILE}"
+    echo "Created bash history file at ${BASH_HISTORY_FILE}"
+fi
+
 echo "Starting docker container"
 
 # Build video device arguments for RealSense camera
@@ -49,6 +60,7 @@ done
 docker run \
     -d \
     -v ${MARKY_ROOT}:/root/mark_five_amr:rw \
+    -v ${BASH_HISTORY_FILE}:/root/.bash_history:rw \
     --env="QT_X11_NO_MITSHM=1" \
     --env="DISPLAY=$DISPLAY" \
     --volume="/tmp/.X11-unix:/tmp/.X11-unix:rw" \
@@ -59,6 +71,8 @@ docker run \
     --ipc=host \
     --env=ROS_DOMAIN_ID=5 \
     --env=ROS_AUTOMATIC_DISCOVERY_RANGE=SUBNET \
+    --env=ROS_STATIC_PEERS="192.168.12.124;192.168.12.249" \
+    --env=RMW_IMPLEMENTATION=rmw_cyclonedds_cpp \
     ${ARDUINO_DEV} \
     ${JOYSTICK_DEV} \
     -v /dev/bus/usb:/dev/bus/usb \
@@ -73,6 +87,12 @@ docker exec ${DOCKER_NAME} sh -c 'cat >> ~/.bashrc << "EOF"
 
 # ROS2 Jazzy setup
 source /opt/ros/jazzy/setup.bash
+
+# ROS2 Distributed networking
+export ROS_DOMAIN_ID=5
+export ROS_AUTOMATIC_DISCOVERY_RANGE=SUBNET
+export ROS_STATIC_PEERS="192.168.12.124;192.168.12.249"
+export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
 
 # Source workspace if built
 if [ -f ~/mark_five_amr/install/setup.bash ]; then

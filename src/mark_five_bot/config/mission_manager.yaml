@@ -1,0 +1,17 @@
+# Mark Five AMR - Mission Manager Parameters
+
+mission_manager:
+  ros__parameters:
+    # Action server timeouts
+    action_server_timeout: 900.0    # Maximum time for entire mission (seconds) - 15 minutes
+    goal_response_timeout: 5.0      # Wait time for Nav2 action server to accept goal (seconds)
+
+    # Status publishing
+    status_publish_rate: 5.0        # Frequency of status updates (Hz)
+
+    # Loop settings
+    loop_enabled_default: false     # Default loop mode on startup
+
+    # Waypoint validation
+    min_waypoints: 1                # Minimum number of waypoints required
+    max_waypoints: 100              # Maximum number of waypoints allowed

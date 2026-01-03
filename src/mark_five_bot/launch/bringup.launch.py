@@ -2,7 +2,7 @@
 Mark Five AMR Full Bringup Launch File
 
 Launches all core nodes:
-- micro-ROS agent (Arduino communication)
+- serial_bridge (Arduino communication via simple serial protocol)
 - robot_state_publisher (URDF TF)
 - odometry (encoder-based odometry)
 - teleop (optional keyboard control)

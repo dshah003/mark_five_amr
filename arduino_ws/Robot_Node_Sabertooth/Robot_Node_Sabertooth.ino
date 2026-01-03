@@ -195,16 +195,23 @@ void processCmdVel(double linear_x, double angular_z) {
   lastCmdVelReceived = millis();
 
   // Scale linear velocity to PWM (-127 to 127 for Sabertooth)
-  pwmLeftReq = K_P * linear_x + b;
-  pwmRightReq = K_P * linear_x + b;
+  // Apply offset 'b' with proper sign for forward/backward motion
+  if (linear_x >= 0) {
+    pwmLeftReq = K_P * linear_x + b;
+    pwmRightReq = K_P * linear_x + b;
+  } else {
+    pwmLeftReq = K_P * linear_x - b;
+    pwmRightReq = K_P * linear_x - b;
+  }
 
   if (angular_z != 0.0) {
+    // Note: Signs inverted to match physical motor/encoder configuration
     if (angular_z > 0.0) {  // Turn left
-      pwmLeftReq = -PWM_TURN;
-      pwmRightReq = PWM_TURN;
-    } else {  // Turn right
       pwmLeftReq = PWM_TURN;
       pwmRightReq = -PWM_TURN;
+    } else {  // Turn right
+      pwmLeftReq = -PWM_TURN;
+      pwmRightReq = PWM_TURN;
     }
   } else {  // Go straight - apply drift correction
     static double prevDiff = 0;
@@ -247,16 +254,19 @@ void set_pwm_values() {
   }
 
   // Gradually adjust output PWM
+  // Accelerate slowly (+1), but decelerate quickly (-5) for safety
   if (abs(pwmLeftReq) > pwmLeftOut) {
     pwmLeftOut += 1;
   } else if (abs(pwmLeftReq) < pwmLeftOut) {
-    pwmLeftOut -= 1;
+    pwmLeftOut -= 5;  // Faster deceleration for quick stops
+    if (pwmLeftOut < 0) pwmLeftOut = 0;
   }
 
   if (abs(pwmRightReq) > pwmRightOut) {
     pwmRightOut += 1;
   } else if (abs(pwmRightReq) < pwmRightOut) {
-    pwmRightOut -= 1;
+    pwmRightOut -= 5;  // Faster deceleration for quick stops
+    if (pwmRightOut < 0) pwmRightOut = 0;
   }
 
   // Limit PWM output (Sabertooth range: -127 to 127)
@@ -302,10 +312,11 @@ void serialEvent() {
 
 void publishTicks() {
   // Send tick counts: "t,<left_ticks>,<right_ticks>\n"
+  // Swapped to correct RViz rotation direction
   Serial.print("t,");
-  Serial.print(left_wheel_tick_count);
+  Serial.print(right_wheel_tick_count);
   Serial.print(",");
-  Serial.println(right_wheel_tick_count);
+  Serial.println(left_wheel_tick_count);
 }
 
 /////////////////////// Setup and Loop ////////////////////////////////////////

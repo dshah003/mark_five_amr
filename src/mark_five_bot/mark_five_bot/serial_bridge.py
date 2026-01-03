@@ -2,8 +2,9 @@
 """
 Serial Bridge Node for Mark Five AMR
 
-Bridges serial communication with Arduino to ROS2 topics.
-Replaces micro_ros_agent with a simpler, more reliable approach.
+Bridges serial communication with Arduino to ROS2 topics using a simple
+text-based serial protocol. More reliable than ros2arduino/micro-ROS on
+Arduino Mega's limited 8KB RAM.
 
 Serial Protocol:
   RX (from Arduino): "t,<left_ticks>,<right_ticks>\n"
@@ -14,7 +15,7 @@ ROS2 Topics:
     /left_ticks  (std_msgs/Int16)
     /right_ticks (std_msgs/Int16)
   Subscribers:
-    /cmd_vel (geometry_msgs/Twist)
+    /cmd_vel_safe (geometry_msgs/Twist)
 """
 
 import rclpy
@@ -43,10 +44,10 @@ class SerialBridge(Node):
         self.left_ticks_pub = self.create_publisher(Int16, 'left_ticks', 10)
         self.right_ticks_pub = self.create_publisher(Int16, 'right_ticks', 10)
 
-        # Subscriber for velocity commands
+        # Subscriber for velocity commands (smoothed + collision-checked)
         self.cmd_vel_sub = self.create_subscription(
             Twist,
-            'cmd_vel',
+            'cmd_vel_safe',
             self.cmd_vel_callback,
             10
         )
