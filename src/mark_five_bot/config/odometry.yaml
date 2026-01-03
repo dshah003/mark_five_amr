@@ -3,8 +3,13 @@
 odometry_node:
   ros__parameters:
     # Robot physical parameters
-    wheel_base: 0.14          # Distance between wheels (meters)
-    ticks_per_meter: 2913.0   # Encoder ticks per meter traveled (calibrated: avg of 5 tests)
+    wheel_base: 0.336         # Effective wheel_base for odometry (meters) - calibrated from rotation test
+                              # Physical track separation: 0.145m, but tracks scrub during rotation
+
+    # Per-wheel calibration (accounts for wheel asymmetry)
+    ticks_per_meter_left: 2686.0    # Left track calibration (from 5-test average)
+    ticks_per_meter_right: 3140.0   # Right track calibration (from 5-test average)
+    ticks_per_meter: 2913.0         # Fallback/average value (used if per-wheel not specified)
 
     # TF frame IDs
     odom_frame: "odom"
