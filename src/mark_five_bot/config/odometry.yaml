@@ -4,7 +4,7 @@ odometry_node:
   ros__parameters:
     # Robot physical parameters
     wheel_base: 0.14          # Distance between wheels (meters)
-    ticks_per_meter: 3125.0   # Encoder ticks per meter traveled
+    ticks_per_meter: 2913.0   # Encoder ticks per meter traveled (calibrated: avg of 5 tests)
 
     # TF frame IDs
     odom_frame: "odom"
