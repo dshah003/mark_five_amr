@@ -13,6 +13,17 @@ docker rm ${DOCKER_NAME} &> /dev/null
 MARKY_ROOT=$(dirname "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)")
 echo "Setting Marky Root as ${MARKY_ROOT}"
 
+# Create directory for persistent Docker data (bash history, etc.)
+DOCKER_DATA_DIR="${MARKY_ROOT}/docker/.docker_data"
+mkdir -p ${DOCKER_DATA_DIR}
+
+# Create bash_history file if it doesn't exist
+BASH_HISTORY_FILE="${DOCKER_DATA_DIR}/bash_history"
+if [ ! -f "${BASH_HISTORY_FILE}" ]; then
+    touch "${BASH_HISTORY_FILE}"
+    echo "Created bash history file at ${BASH_HISTORY_FILE}"
+fi
+
 echo "Starting docker container"
 
 # Build video device arguments for RealSense camera
@@ -49,6 +60,7 @@ done
 docker run \
     -d \
     -v ${MARKY_ROOT}:/root/mark_five_amr:rw \
+    -v ${BASH_HISTORY_FILE}:/root/.bash_history:rw \
     --env="QT_X11_NO_MITSHM=1" \
     --env="DISPLAY=$DISPLAY" \
     --volume="/tmp/.X11-unix:/tmp/.X11-unix:rw" \

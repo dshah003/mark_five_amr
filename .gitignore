@@ -14,3 +14,9 @@ log/
 
 # Catkin custom files
 CATKIN_IGNORE
+docker/.docker_data/
+docs/
+scripts/
+.claude/
+CLAUDE.md
+debug_images/
