@@ -4,7 +4,8 @@ Robot Launch File (for Jetson Nano in distributed mode)
 Launches sensor and actuation nodes on the robot:
 - robot_state_publisher (URDF TF)
 - serial_bridge (Arduino communication for motors)
-- odometry (encoder-based odometry)
+- odometry (encoder-based odometry with per-wheel calibration)
+- EKF filter (sensor fusion - odometry + IMU when available)
 - RealSense camera + depthimage_to_laserscan
 
 The workstation runs SLAM, Nav2, and RViz.
@@ -68,6 +69,13 @@ def generate_launch_description():
         ),
     )
 
+    # EKF for sensor fusion (fuses wheel odometry + IMU when available)
+    ekf_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            os.path.join(pkg_share, 'launch', 'ekf.launch.py')
+        ),
+    )
+
     # Camera (conditional)
     camera_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
@@ -81,5 +89,6 @@ def generate_launch_description():
         robot_state_publisher_node,
         serial_launch,
         odometry_launch,
+        ekf_launch,
         camera_launch,
     ])
