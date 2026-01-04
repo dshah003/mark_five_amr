@@ -38,6 +38,7 @@ RUN apt-get update && apt-get install -y \
     ros-jazzy-nav2-bringup \
     ros-jazzy-navigation2 \
     ros-jazzy-rmw-cyclonedds-cpp \
+    ros-jazzy-robot-localization \
     && rm -rf /var/lib/apt/lists/*
 
 # Intel RealSense camera and depth-to-laserscan packages

@@ -15,8 +15,8 @@ odometry_node:
     odom_frame: "odom"
     base_frame: "base_footprint"
 
-    # TF publishing
-    publish_tf: true
+    # TF publishing (disabled - EKF publishes the odom->base_footprint transform)
+    publish_tf: false
 
     # Covariance values for odometry message
     # Position covariance (diagonal values)

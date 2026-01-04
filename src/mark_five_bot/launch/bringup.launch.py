@@ -87,6 +87,13 @@ def generate_launch_description():
         ),
     )
 
+    # EKF for sensor fusion (fuses wheel odometry + IMU when available)
+    ekf_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            os.path.join(pkg_share, 'launch', 'ekf.launch.py')
+        ),
+    )
+
     # Keyboard teleop (conditional)
     teleop_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
@@ -124,6 +131,7 @@ def generate_launch_description():
         robot_state_publisher_node,
         serial_launch,
         odometry_launch,
+        ekf_launch,  # Sensor fusion (odometry + IMU)
         teleop_launch,
         camera_launch,
         navigation_launch,
