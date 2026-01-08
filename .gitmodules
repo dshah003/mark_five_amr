@@ -1,0 +1,3 @@
+[submodule "src/bno08x_ros2_driver"]
+	path = src/bno08x_ros2_driver
+	url = https://github.com/bnbhat/bno08x_ros2_driver.git
