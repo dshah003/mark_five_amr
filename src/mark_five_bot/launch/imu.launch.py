@@ -28,8 +28,8 @@ def generate_launch_description():
     # Declare launch arguments
     i2c_address_arg = DeclareLaunchArgument(
         'i2c_address',
-        default_value='0x68',
-        description='I2C address of ICM20948 (0x68 or 0x69)'
+        default_value='104',  # 0x68 in decimal
+        description='I2C address of ICM20948 (104=0x68 or 105=0x69)'
     )
 
     frame_id_arg = DeclareLaunchArgument(
@@ -57,7 +57,7 @@ def generate_launch_description():
         name='icm20948_node',
         output='screen',
         parameters=[{
-            'i2c_address': LaunchConfiguration('i2c_address'),
+            'i2c_address': 0x68,  # GY-ICM20948v2 default address (104 in decimal)
             'frame_id': LaunchConfiguration('frame_id'),
             'pub_rate': LaunchConfiguration('pub_rate'),
             'use_sim_time': LaunchConfiguration('use_sim_time')

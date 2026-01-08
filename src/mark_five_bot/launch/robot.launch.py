@@ -5,7 +5,7 @@ Launches sensor and actuation nodes on the robot:
 - robot_state_publisher (URDF TF)
 - serial_bridge (Arduino communication for motors)
 - odometry (encoder-based odometry with per-wheel calibration)
-- IMU (BNO085 9-DOF sensor)
+- IMU (ICM-20948 9-DOF sensor)
 - EKF filter (sensor fusion - odometry + IMU)
 - RealSense camera + depthimage_to_laserscan
 
@@ -45,7 +45,7 @@ def generate_launch_description():
     imu_arg = DeclareLaunchArgument(
         'imu',
         default_value='true',
-        description='Launch BNO085 IMU sensor'
+        description='Launch ICM-20948 IMU sensor'
     )
 
     # Read URDF file
@@ -77,7 +77,7 @@ def generate_launch_description():
         ),
     )
 
-    # IMU (BNO085 9-DOF sensor - conditional)
+    # IMU (ICM-20948 9-DOF sensor - conditional)
     imu_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             os.path.join(pkg_share, 'launch', 'imu.launch.py')
