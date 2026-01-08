@@ -1,19 +1,21 @@
 """
-Launch file for BNO085 IMU driver
+Launch file for ICM20948 IMU driver
 
-Launches the bno08x_driver node for I2C communication with BNO085 9-DOF IMU.
-The IMU provides orientation, angular velocity, and linear acceleration data
+Launches the icm20948_node for I2C communication with ICM-20948 9-DOF IMU.
+The IMU provides angular velocity, linear acceleration, and magnetometer data
 for sensor fusion with wheel odometry.
 
 Hardware connection (Jetson Nano):
-  BNO085 VIN → Pin 1 (3.3V)
-  BNO085 GND → Pin 6 (GND)
-  BNO085 SDA → Pin 3 (I2C Bus 1 SDA / GPIO2)
-  BNO085 SCL → Pin 5 (I2C Bus 1 SCL / GPIO3)
+  ICM20948 VIN → Pin 1 (3.3V)
+  ICM20948 GND → Pin 6 (GND)
+  ICM20948 SDA → Pin 3 (I2C Bus 1 SDA / GPIO2)
+  ICM20948 SCL → Pin 5 (I2C Bus 1 SCL / GPIO3)
+
+I2C Address: 0x68 (default for GY-ICM20948v2 boards)
 
 Usage:
   ros2 launch mark_five_bot imu.launch.py
-  ros2 launch mark_five_bot imu.launch.py i2c_bus:=1
+  ros2 launch mark_five_bot imu.launch.py i2c_address:=0x69  # If using alternate address
 """
 
 from launch import LaunchDescription
@@ -24,10 +26,22 @@ from launch_ros.actions import Node
 
 def generate_launch_description():
     # Declare launch arguments
-    i2c_bus_arg = DeclareLaunchArgument(
-        'i2c_bus',
-        default_value='1',
-        description='I2C bus number (Jetson Nano uses bus 1)'
+    i2c_address_arg = DeclareLaunchArgument(
+        'i2c_address',
+        default_value='0x68',
+        description='I2C address of ICM20948 (0x68 or 0x69)'
+    )
+
+    frame_id_arg = DeclareLaunchArgument(
+        'frame_id',
+        default_value='imu_link',
+        description='Frame ID for IMU messages'
+    )
+
+    pub_rate_arg = DeclareLaunchArgument(
+        'pub_rate',
+        default_value='50',
+        description='Publishing rate in Hz'
     )
 
     use_sim_time_arg = DeclareLaunchArgument(
@@ -36,23 +50,24 @@ def generate_launch_description():
         description='Use simulation time'
     )
 
-    # BNO085 IMU driver node
+    # ICM20948 IMU driver node
     imu_node = Node(
-        package='bno08x_driver',
-        executable='bno08x_driver_node',
-        name='imu',
+        package='ros2_icm20948',
+        executable='icm20948_node',
+        name='icm20948_node',
         output='screen',
         parameters=[{
-            'i2c_bus': LaunchConfiguration('i2c_bus'),
+            'i2c_address': LaunchConfiguration('i2c_address'),
+            'frame_id': LaunchConfiguration('frame_id'),
+            'pub_rate': LaunchConfiguration('pub_rate'),
             'use_sim_time': LaunchConfiguration('use_sim_time')
-        }],
-        remappings=[
-            ('imu/data', 'imu/data')
-        ]
+        }]
     )
 
     return LaunchDescription([
-        i2c_bus_arg,
+        i2c_address_arg,
+        frame_id_arg,
+        pub_rate_arg,
         use_sim_time_arg,
         imu_node
     ])

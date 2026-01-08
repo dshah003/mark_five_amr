@@ -761,10 +761,10 @@
     <origin xyz="0 -0.020 0" rpy="0 0 0"/>
   </joint>
 
-  <!-- ==================== BNO085 9-DOF IMU ==================== -->
+  <!-- ==================== ICM-20948 9-DOF IMU ==================== -->
   <!--
     IMU mounted at center of platform for optimal differential drive odometry
-    BNO085 Adafruit breakout dimensions: ~25mm x 18mm x 3mm
+    ICM-20948 GY-ICM20948v2 breakout dimensions: ~25mm x 18mm x 3mm
     Position: (0, 0, 0.010) relative to platform_link
       - Centered between left/right wheels (Y=0)
       - Centered along wheelbase (X=0)
@@ -779,6 +779,8 @@
       GND → GND  (Pin 6)
       SDA → GPIO2/SDA1 (Pin 3)
       SCL → GPIO3/SCL1 (Pin 5)
+
+    I2C Address: 0x68 (GY-ICM20948v2)
   -->
 
   <link name="imu_link">

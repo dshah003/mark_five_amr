@@ -29,13 +29,15 @@ ekf_filter_node:
                    false, false, false]  # x_ddot, y_ddot, z_ddot acceleration (not from odometry)
 
     # IMU Input (imu0)
-    # Source: /imu/data topic from bno08x_driver (BNO085 9-DOF IMU)
-    # We use orientation (yaw), angular velocity (yaw rate), and linear acceleration
-    imu0: /imu/data
+    # Source: /imu/data_raw topic from ros2_icm20948 (ICM-20948 9-DOF IMU)
+    # ICM20948 provides raw sensor data (no built-in sensor fusion)
+    # We use angular velocity (gyro) and linear acceleration (accel)
+    # Orientation will be derived by the EKF from integrated gyro data
+    imu0: /imu/data_raw
     imu0_config: [false, false, false,  # position (IMU doesn't provide position)
-                  false, false, true,   # orientation (USE yaw only in 2D mode)
+                  false, false, false,  # orientation (raw IMU doesn't provide orientation)
                   false, false, false,  # velocity (not from IMU)
-                  false, false, true,   # angular velocity (USE yaw rate/gyro)
+                  false, false, true,   # angular velocity (USE yaw rate/gyro for differential drive)
                   true,  true,  false]  # linear acceleration (USE x, y accel for slip detection)
 
     # Process Noise Covariance
