@@ -16,7 +16,7 @@ def generate_launch_description():
     pkg_dir = get_package_share_directory('mark_five_bot')
 
     # EKF config file
-    ekf_config = os.path.join(pkg_dir, 'config', 'ekf.yaml')
+    ekf_config = os.path.join(pkg_dir, 'config', 'robot_localization.yaml')
 
     # Launch arguments
     use_sim_time_arg = DeclareLaunchArgument(

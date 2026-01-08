@@ -761,6 +761,104 @@
     <origin xyz="0 -0.020 0" rpy="0 0 0"/>
   </joint>
 
+  <!-- ==================== BNO085 9-DOF IMU ==================== -->
+  <!--
+    IMU mounted at center of platform for optimal differential drive odometry
+    BNO085 Adafruit breakout dimensions: ~25mm x 18mm x 3mm
+    Position: (0, 0, 0.010) relative to platform_link
+      - Centered between left/right wheels (Y=0)
+      - Centered along wheelbase (X=0)
+      - 10mm above platform surface for clearance
+    Orientation: Aligned with robot axes
+      - IMU +X → Robot Forward
+      - IMU +Y → Robot Left
+      - IMU +Z → Robot Up
+
+    Connection (Jetson Nano I2C Bus 1):
+      VIN → 3.3V (Pin 1)
+      GND → GND  (Pin 6)
+      SDA → GPIO2/SDA1 (Pin 3)
+      SCL → GPIO3/SCL1 (Pin 5)
+  -->
+
+  <link name="imu_link">
+    <!-- IMU breakout board -->
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.025 0.018 0.003"/>
+      </geometry>
+      <material name="imu_purple">
+        <color rgba="0.4 0.2 0.6 1.0"/>
+      </material>
+    </visual>
+    <!-- Mounting standoffs (4 corners) -->
+    <visual>
+      <origin xyz="0.010 0.007 -0.003" rpy="0 0 0"/>
+      <geometry>
+        <cylinder radius="0.001" length="0.005"/>
+      </geometry>
+      <material name="standoff_metal">
+        <color rgba="0.6 0.6 0.6 1.0"/>
+      </material>
+    </visual>
+    <visual>
+      <origin xyz="0.010 -0.007 -0.003" rpy="0 0 0"/>
+      <geometry>
+        <cylinder radius="0.001" length="0.005"/>
+      </geometry>
+      <material name="standoff_metal">
+        <color rgba="0.6 0.6 0.6 1.0"/>
+      </material>
+    </visual>
+    <visual>
+      <origin xyz="-0.010 0.007 -0.003" rpy="0 0 0"/>
+      <geometry>
+        <cylinder radius="0.001" length="0.005"/>
+      </geometry>
+      <material name="standoff_metal">
+        <color rgba="0.6 0.6 0.6 1.0"/>
+      </material>
+    </visual>
+    <visual>
+      <origin xyz="-0.010 -0.007 -0.003" rpy="0 0 0"/>
+      <geometry>
+        <cylinder radius="0.001" length="0.005"/>
+      </geometry>
+      <material name="standoff_metal">
+        <color rgba="0.6 0.6 0.6 1.0"/>
+      </material>
+    </visual>
+    <!-- BNO085 chip (small visual indicator) -->
+    <visual>
+      <origin xyz="0 0 0.002" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.005 0.005 0.001"/>
+      </geometry>
+      <material name="chip_black">
+        <color rgba="0.1 0.1 0.1 1.0"/>
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.025 0.018 0.003"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <mass value="0.003"/>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <inertia ixx="0.000001" ixy="0.0" ixz="0.0" iyy="0.000001" iyz="0.0" izz="0.000001"/>
+    </inertial>
+  </link>
+
+  <!-- IMU mount joint - centered on platform -->
+  <joint name="imu_joint" type="fixed">
+    <parent link="platform_link"/>
+    <child link="imu_link"/>
+    <origin xyz="0.0 0.0 0.010" rpy="0 0 0"/>
+  </joint>
+
   <!-- ==================== INTEL REALSENSE D435 CAMERA ==================== -->
   <!--
     Camera mounted on clamp at front of platform, facing straight ahead

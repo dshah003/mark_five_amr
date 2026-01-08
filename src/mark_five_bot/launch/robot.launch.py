@@ -5,7 +5,8 @@ Launches sensor and actuation nodes on the robot:
 - robot_state_publisher (URDF TF)
 - serial_bridge (Arduino communication for motors)
 - odometry (encoder-based odometry with per-wheel calibration)
-- EKF filter (sensor fusion - odometry + IMU when available)
+- IMU (BNO085 9-DOF sensor)
+- EKF filter (sensor fusion - odometry + IMU)
 - RealSense camera + depthimage_to_laserscan
 
 The workstation runs SLAM, Nav2, and RViz.
@@ -13,6 +14,7 @@ The workstation runs SLAM, Nav2, and RViz.
 Usage:
   ros2 launch mark_five_bot robot.launch.py
   ros2 launch mark_five_bot robot.launch.py camera:=false  # Without camera
+  ros2 launch mark_five_bot robot.launch.py imu:=false     # Without IMU
 """
 
 from launch import LaunchDescription
@@ -38,6 +40,12 @@ def generate_launch_description():
         'camera',
         default_value='true',
         description='Launch RealSense camera'
+    )
+
+    imu_arg = DeclareLaunchArgument(
+        'imu',
+        default_value='true',
+        description='Launch BNO085 IMU sensor'
     )
 
     # Read URDF file
@@ -69,7 +77,15 @@ def generate_launch_description():
         ),
     )
 
-    # EKF for sensor fusion (fuses wheel odometry + IMU when available)
+    # IMU (BNO085 9-DOF sensor - conditional)
+    imu_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            os.path.join(pkg_share, 'launch', 'imu.launch.py')
+        ),
+        condition=IfCondition(LaunchConfiguration('imu')),
+    )
+
+    # EKF for sensor fusion (fuses wheel odometry + IMU)
     ekf_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             os.path.join(pkg_share, 'launch', 'ekf.launch.py')
@@ -86,9 +102,11 @@ def generate_launch_description():
 
     return LaunchDescription([
         camera_arg,
+        imu_arg,
         robot_state_publisher_node,
         serial_launch,
         odometry_launch,
+        imu_launch,
         ekf_launch,
         camera_launch,
     ])
