@@ -1,7 +1,7 @@
 ekf_filter_node:
   ros__parameters:
     # Core Settings
-    frequency: 50.0
+    frequency: 30.0  # Reduced from 50Hz to balance performance and reliability
     sensor_timeout: 0.2
     two_d_mode: true
 
@@ -31,14 +31,25 @@ ekf_filter_node:
     # IMU Input (imu0)
     # Source: /imu/data_raw topic from ros2_icm20948 (ICM-20948 9-DOF IMU)
     # ICM20948 provides raw sensor data (no built-in sensor fusion)
-    # We use angular velocity (gyro) and linear acceleration (accel)
-    # Orientation will be derived by the EKF from integrated gyro data
+    # We ONLY use angular velocity (gyro) for rotation rate
+    # Linear acceleration is DISABLED - raw accel data is too noisy and causes jitter
+    # For differential drive with good wheel odometry, accel data degrades performance
     imu0: /imu/data_raw
     imu0_config: [false, false, false,  # position (IMU doesn't provide position)
                   false, false, false,  # orientation (raw IMU doesn't provide orientation)
                   false, false, false,  # velocity (not from IMU)
-                  false, false, true,   # angular velocity (USE yaw rate/gyro for differential drive)
-                  true,  true,  false]  # linear acceleration (USE x, y accel for slip detection)
+                  false, false, true,   # angular velocity (USE ONLY yaw rate/gyro for turns)
+                  false, false, false]  # linear acceleration (DISABLED - too noisy, trust wheels instead)
+
+    # IMU differential mode - use velocity instead of absolute measurements
+    imu0_differential: false
+
+    # Remove gravitational acceleration from IMU data
+    imu0_remove_gravitational_acceleration: true
+
+    # Trust wheel odometry more than raw gyro for yaw rate (higher value = less trust in IMU)
+    # Format: [x, y, z, roll, pitch, yaw, vx, vy, vz, vroll, vpitch, vyaw, ax, ay, az]
+    imu0_relative: false
 
     # Process Noise Covariance
     # Diagonal matrix representing uncertainty in state prediction model

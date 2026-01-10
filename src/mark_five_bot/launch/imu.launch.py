@@ -40,8 +40,8 @@ def generate_launch_description():
 
     pub_rate_arg = DeclareLaunchArgument(
         'pub_rate',
-        default_value='50',
-        description='Publishing rate in Hz'
+        default_value='30',
+        description='Publishing rate in Hz (matches EKF frequency)'
     )
 
     use_sim_time_arg = DeclareLaunchArgument(
