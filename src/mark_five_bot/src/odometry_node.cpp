@@ -27,7 +27,9 @@ public:
     {
         // Declare and get parameters
         this->declare_parameter("wheel_base", 0.14);
-        this->declare_parameter("ticks_per_meter", 3125.0);
+        this->declare_parameter("ticks_per_meter", 3125.0);  // Default/fallback value
+        this->declare_parameter("ticks_per_meter_left", 0.0);   // Per-wheel calibration
+        this->declare_parameter("ticks_per_meter_right", 0.0);  // Per-wheel calibration
         this->declare_parameter("odom_frame", "odom");
         this->declare_parameter("base_frame", "base_footprint");
         this->declare_parameter("publish_tf", true);
@@ -48,6 +50,23 @@ public:
 
         wheel_base_ = this->get_parameter("wheel_base").as_double();
         ticks_per_meter_ = this->get_parameter("ticks_per_meter").as_double();
+
+        // Per-wheel calibration (use if specified, otherwise fall back to single value)
+        double tpm_left = this->get_parameter("ticks_per_meter_left").as_double();
+        double tpm_right = this->get_parameter("ticks_per_meter_right").as_double();
+
+        if (tpm_left > 0.0 && tpm_right > 0.0) {
+            ticks_per_meter_left_ = tpm_left;
+            ticks_per_meter_right_ = tpm_right;
+            RCLCPP_INFO(this->get_logger(), "Using per-wheel calibration:");
+            RCLCPP_INFO(this->get_logger(), "  Left:  %.1f ticks/m", ticks_per_meter_left_);
+            RCLCPP_INFO(this->get_logger(), "  Right: %.1f ticks/m", ticks_per_meter_right_);
+        } else {
+            ticks_per_meter_left_ = ticks_per_meter_;
+            ticks_per_meter_right_ = ticks_per_meter_;
+            RCLCPP_INFO(this->get_logger(), "Using single ticks_per_meter for both wheels");
+        }
+
         odom_frame_ = this->get_parameter("odom_frame").as_string();
         base_frame_ = this->get_parameter("base_frame").as_string();
         publish_tf_ = this->get_parameter("publish_tf").as_bool();
@@ -153,8 +172,8 @@ private:
         int16_t delta_right = right_ticks_ - prev_right_ticks_;
 
         // Convert ticks to distance traveled by each wheel
-        double dist_left = static_cast<double>(delta_left) / ticks_per_meter_;
-        double dist_right = static_cast<double>(delta_right) / ticks_per_meter_;
+        double dist_left = static_cast<double>(delta_left) / ticks_per_meter_left_;
+        double dist_right = static_cast<double>(delta_right) / ticks_per_meter_right_;
 
         // Differential drive kinematics
         double dist_center = (dist_left + dist_right) / 2.0;
@@ -271,7 +290,9 @@ private:
 
     // Parameters
     double wheel_base_;
-    double ticks_per_meter_;
+    double ticks_per_meter_;  // Fallback value
+    double ticks_per_meter_left_;   // Per-wheel calibration
+    double ticks_per_meter_right_;  // Per-wheel calibration
     std::string odom_frame_;
     std::string base_frame_;
     bool publish_tf_;

@@ -1,0 +1,100 @@
+### robot_localization EKF Configuration for Mark Five AMR
+### Fuses wheel odometry (and IMU when available) for improved pose estimation
+
+ekf_filter_node:
+  ros__parameters:
+    # Frequency at which the filter produces output
+    frequency: 30.0
+
+    # Sensor timeout (sensors older than this are ignored)
+    sensor_timeout: 0.1
+
+    # If true, publishes transform from world_frame to base_link_frame
+    two_d_mode: true
+
+    # Transform frames
+    map_frame: map
+    odom_frame: odom
+    base_link_frame: base_footprint
+    world_frame: odom
+
+    # Publishing
+    publish_tf: true
+    publish_acceleration: false
+
+    # Filtered odometry output topic
+    # This will be /odometry/filtered (namespace + topic name)
+
+    # --- Wheel Odometry Configuration ---
+    # Input: /odom (from your odometry_node)
+    odom0: /odom
+    odom0_config: [false, false, false,    # x, y, z position (don't use position from odom, accumulates drift)
+                   false, false, false,    # roll, pitch, yaw orientation (don't use orientation from odom)
+                   true,  true,  false,    # x_dot, y_dot, z_dot velocity (USE velocities - these are good!)
+                   false, false, true,     # roll_dot, pitch_dot, yaw_dot (USE yaw_dot/angular velocity)
+                   false, false, false]    # x_ddot, y_ddot, z_ddot acceleration
+
+    # Use differential mode for wheel odometry
+    # This integrates velocities to get position (better than using raw position)
+    odom0_differential: false
+    odom0_relative: false
+
+    # Queue size for odometry messages
+    odom0_queue_size: 10
+
+    # Reject outliers (3 sigma)
+    odom0_rejection_threshold: 5.0
+
+    # --- IMU Configuration (DISABLED - uncomment when IMU is added) ---
+    # Input: /imu/data (from your IMU driver)
+    # imu0: /imu/data
+    # imu0_config: [false, false, false,    # x, y, z position (IMU doesn't measure position)
+    #               true,  true,  true,     # roll, pitch, yaw orientation (USE orientation from IMU)
+    #               false, false, false,    # x_dot, y_dot, z_dot velocity
+    #               false, false, true,     # roll_dot, pitch_dot, yaw_dot (USE yaw_dot/angular velocity)
+    #               true,  true,  false]    # x_ddot, y_ddot, z_ddot acceleration (USE linear acceleration)
+    #
+    # imu0_differential: false
+    # imu0_relative: false
+    # imu0_queue_size: 10
+    # imu0_rejection_threshold: 5.0
+    #
+    # # Remove gravitational acceleration (IMU measures gravity + robot acceleration)
+    # imu0_remove_gravitational_acceleration: true
+
+    # --- Process noise covariance ---
+    # How much we trust the process model (lower = trust model more)
+    # Increase these if the robot motion is jerky or unpredictable
+    process_noise_covariance: [0.05, 0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,
+                               0.0,  0.05, 0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,
+                               0.0,  0.0,  0.06, 0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,
+                               0.0,  0.0,  0.0,  0.03, 0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,
+                               0.0,  0.0,  0.0,  0.0,  0.03, 0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,
+                               0.0,  0.0,  0.0,  0.0,  0.0,  0.06, 0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,
+                               0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.025,0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,
+                               0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.025,0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,
+                               0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.04, 0.0,  0.0,  0.0,  0.0,  0.0,  0.0,
+                               0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.01, 0.0,  0.0,  0.0,  0.0,  0.0,
+                               0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.01, 0.0,  0.0,  0.0,  0.0,
+                               0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.02, 0.0,  0.0,  0.0,
+                               0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.01, 0.0,  0.0,
+                               0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.01, 0.0,
+                               0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.015]
+
+    # --- Initial state covariance ---
+    # Uncertainty in initial state (large = very uncertain)
+    initial_estimate_covariance: [1e-9, 0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,
+                                  0.0,  1e-9, 0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,
+                                  0.0,  0.0,  1e-9, 0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,
+                                  0.0,  0.0,  0.0,  1e-9, 0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,
+                                  0.0,  0.0,  0.0,  0.0,  1e-9, 0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,
+                                  0.0,  0.0,  0.0,  0.0,  0.0,  1e-9, 0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,
+                                  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  1e-9, 0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,
+                                  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  1e-9, 0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,
+                                  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  1e-9, 0.0,  0.0,  0.0,  0.0,  0.0,  0.0,
+                                  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  1e-9, 0.0,  0.0,  0.0,  0.0,  0.0,
+                                  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  1e-9, 0.0,  0.0,  0.0,  0.0,
+                                  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  1e-9, 0.0,  0.0,  0.0,
+                                  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  1e-9, 0.0,  0.0,
+                                  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  1e-9, 0.0,
+                                  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  1e-9]

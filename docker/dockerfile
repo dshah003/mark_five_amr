@@ -38,6 +38,7 @@ RUN apt-get update && apt-get install -y \
     ros-jazzy-nav2-bringup \
     ros-jazzy-navigation2 \
     ros-jazzy-rmw-cyclonedds-cpp \
+    ros-jazzy-robot-localization \
     && rm -rf /var/lib/apt/lists/*
 
 # Intel RealSense camera and depth-to-laserscan packages
@@ -59,7 +60,7 @@ RUN apt-get update && apt-get install -y \
     liburdfdom-tools \
     xterm \
     && rm -rf /var/lib/apt/lists/*
-
+RUN pip install sparkfun-qwiic-icm20948 --break-system-packages
 # Enable colored terminal prompt
 RUN sed -i 's/^#force_color_prompt=yes/force_color_prompt=yes/' ~/.bashrc
 
