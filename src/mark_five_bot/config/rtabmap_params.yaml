@@ -36,12 +36,13 @@ rtabmap:
     approx_sync_max_interval: 0.1           # Max time difference between synced messages (100ms)
 
     # ===== RGB-D SLAM Core Parameters =====
+    # NOTE: All RTAB-Map parameters (RGBD/*, Vis/*, Mem/*, etc.) MUST be strings
     RGBD/Enabled: "true"                    # Enable RGB-D mode
     RGBD/AngularUpdate: "0.05"              # Min angular motion to process frame (3 degrees)
     RGBD/LinearUpdate: "0.05"               # Min linear motion to process frame (5 cm)
     RGBD/OptimizeFromGraphEnd: "false"      # Optimize from loop closure point (not graph end)
     RGBD/ProximityBySpace: "true"           # Use spatial proximity for loop closure candidates
-    RGBD/ProximityPathMaxNeighbors: 10      # Max neighbors for proximity detection
+    RGBD/ProximityPathMaxNeighbors: "10"    # Max neighbors for proximity detection
     RGBD/LocalRadius: "5.0"                 # Local map radius (meters)
 
     # ===== Odometry Strategy =====

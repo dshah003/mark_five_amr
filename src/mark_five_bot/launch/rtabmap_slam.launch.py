@@ -115,12 +115,13 @@ def generate_launch_description():
         executable='rgbd_sync',
         name='rgbd_sync',
         output='screen',
-        parameters=parameters + [rtabmap_config],
+        parameters=parameters,  # Only basic parameters, not full rtabmap_config
         remappings=[
             # Camera inputs
             ('rgb/image', '/camera/color/image_raw'),
             ('rgb/camera_info', '/camera/color/camera_info'),
             ('depth/image', '/camera/aligned_depth_to_color/image_raw'),
+            ('depth/camera_info', '/camera/aligned_depth_to_color/camera_info'),
 
             # Odometry input (EKF-fused wheel + IMU)
             ('odom', '/odometry/filtered'),
