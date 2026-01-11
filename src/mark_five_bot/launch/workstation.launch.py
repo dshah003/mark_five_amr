@@ -2,16 +2,27 @@
 Workstation Launch File (for remote workstation in distributed mode)
 
 Launches heavy compute nodes on the workstation:
-- SLAM (slam_toolbox) or Localization (AMCL)
+- SLAM (slam_toolbox or RTAB-Map) or Localization (AMCL)
 - Nav2 navigation stack
 - RViz visualization
 - Teleop (optional keyboard or joystick)
 
 The Jetson runs sensors and actuation via robot.launch.py.
 
+SLAM Modes:
+- laser: slam_toolbox with 2D laser scan (stable, lower CPU)
+- visual: RTAB-Map RGB-D visual SLAM (better map quality, default)
+- hybrid: RTAB-Map with RGB-D + laser fusion (best quality)
+
 Usage:
-  # SLAM mode (mapping)
+  # Visual SLAM mode (default - best map quality)
   ros2 launch mark_five_bot workstation.launch.py
+
+  # Laser SLAM mode (fallback)
+  ros2 launch mark_five_bot workstation.launch.py slam_mode:=laser
+
+  # Hybrid SLAM mode
+  ros2 launch mark_five_bot workstation.launch.py slam_mode:=hybrid
 
   # Localization mode (with existing map)
   ros2 launch mark_five_bot workstation.launch.py nav_mode:=localization map:=/path/to/map.yaml
@@ -58,6 +69,12 @@ def generate_launch_description():
         description='Navigation mode: slam or localization'
     )
 
+    slam_mode_arg = DeclareLaunchArgument(
+        'slam_mode',
+        default_value='visual',
+        description='SLAM sensor mode: laser (slam_toolbox), visual (RTAB-Map), or hybrid (RTAB-Map+laser)'
+    )
+
     map_arg = DeclareLaunchArgument(
         'map',
         default_value=default_map,
@@ -90,6 +107,7 @@ def generate_launch_description():
         condition=IfCondition(LaunchConfiguration('use_nav')),
         launch_arguments={
             'mode': LaunchConfiguration('nav_mode'),
+            'slam_mode': LaunchConfiguration('slam_mode'),
             'map': LaunchConfiguration('map'),
             'use_sim_time': LaunchConfiguration('use_sim_time'),
         }.items(),
@@ -128,6 +146,7 @@ def generate_launch_description():
     return LaunchDescription([
         use_nav_arg,
         nav_mode_arg,
+        slam_mode_arg,
         map_arg,
         teleop_arg,
         use_rviz_arg,

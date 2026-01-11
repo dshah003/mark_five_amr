@@ -55,6 +55,16 @@ RUN apt-get update && apt-get install -y \
     ros-jazzy-slam-toolbox \
     && rm -rf /var/lib/apt/lists/*
 
+# RTAB-Map for visual SLAM
+RUN apt-get update && apt-get install -y \
+    ros-jazzy-rtabmap \
+    ros-jazzy-rtabmap-ros \
+    ros-jazzy-rtabmap-sync \
+    ros-jazzy-rtabmap-slam \
+    ros-jazzy-rtabmap-viz \
+    ros-jazzy-rtabmap-conversions \
+    && rm -rf /var/lib/apt/lists/*
+
 # URDF tools
 RUN apt-get update && apt-get install -y \
     liburdfdom-tools \
