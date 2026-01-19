@@ -22,12 +22,12 @@ rtabmap:
     wait_for_transform: 0.2                 # Wait time for TF lookups
 
     # ===== Input Topics Configuration =====
-    subscribe_rgb: true                     # Subscribe to RGB images
-    subscribe_depth: true                   # Subscribe to depth images
+    subscribe_rgb: false                    # Not subscribing to separate RGB
+    subscribe_depth: false                  # Not subscribing to separate depth
     subscribe_scan: false                   # Disable laser scan (pure visual mode)
     subscribe_scan_cloud: false             # Disable scan point cloud
     subscribe_stereo: false                 # Not using stereo
-    subscribe_rgbd: false                   # Using separate RGB + Depth
+    subscribe_rgbd: true                    # Subscribe to synchronized rgbd_image from rgbd_sync
 
     # ===== Queue and Synchronization =====
     queue_size: 30                          # Increased for distributed mode latency

@@ -90,10 +90,10 @@ def generate_launch_description():
     parameters = [{
         'use_sim_time': LaunchConfiguration('use_sim_time'),
         'database_path': LaunchConfiguration('database_path'),
-        'subscribe_depth': True,
-        'subscribe_rgb': True,
+        'subscribe_depth': False,
+        'subscribe_rgb': False,
         'subscribe_scan': False,  # Pure visual mode (no laser scan)
-        'subscribe_rgbd': False,  # Using separate RGB + Depth topics
+        'subscribe_rgbd': True,   # Subscribe to synchronized rgbd_image from rgbd_sync
         'approx_sync': True,      # Critical for distributed mode
         'queue_size': 30,
         'qos': 1,
