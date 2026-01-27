@@ -7,8 +7,8 @@ odometry_node:
                               # Physical track separation: 0.145m, but tracks scrub during rotation
 
     # Per-wheel calibration (accounts for wheel asymmetry)
-    ticks_per_meter_left: 2686.0    # Left track calibration (from 5-test average)
-    ticks_per_meter_right: 3140.0   # Right track calibration (from 5-test average)
+    ticks_per_meter_left: 2765.0 
+    ticks_per_meter_right: 3170.0 
     ticks_per_meter: 2913.0         # Fallback/average value (used if per-wheel not specified)
 
     # TF frame IDs

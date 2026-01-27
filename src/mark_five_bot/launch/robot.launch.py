@@ -7,14 +7,22 @@ Launches sensor and actuation nodes on the robot:
 - odometry (encoder-based odometry with per-wheel calibration)
 - IMU (ICM-20948 9-DOF sensor)
 - EKF filter (sensor fusion - odometry + IMU)
-- RealSense camera + depthimage_to_laserscan
+- RealSense camera (with mode switching for laser/visual SLAM)
 
 The workstation runs SLAM, Nav2, and RViz.
 
 Usage:
+  # Laser SLAM mode (424x240@15fps - default)
   ros2 launch mark_five_bot robot.launch.py
-  ros2 launch mark_five_bot robot.launch.py camera:=false  # Without camera
-  ros2 launch mark_five_bot robot.launch.py imu:=false     # Without IMU
+
+  # Visual SLAM mode (640x480@30fps - for RTAB-Map)
+  ros2 launch mark_five_bot robot.launch.py camera_mode:=visual_slam
+
+  # Without camera
+  ros2 launch mark_five_bot robot.launch.py camera:=false
+
+  # Without IMU
+  ros2 launch mark_five_bot robot.launch.py imu:=false
 """
 
 from launch import LaunchDescription
@@ -40,6 +48,12 @@ def generate_launch_description():
         'camera',
         default_value='true',
         description='Launch RealSense camera'
+    )
+
+    camera_mode_arg = DeclareLaunchArgument(
+        'camera_mode',
+        default_value='laser_scan',
+        description='Camera mode: laser_scan (424x240@15fps) or visual_slam (640x480@30fps)'
     )
 
     imu_arg = DeclareLaunchArgument(
@@ -98,10 +112,14 @@ def generate_launch_description():
             os.path.join(pkg_share, 'launch', 'camera.launch.py')
         ),
         condition=IfCondition(LaunchConfiguration('camera')),
+        launch_arguments={
+            'mode': LaunchConfiguration('camera_mode'),
+        }.items(),
     )
 
     return LaunchDescription([
         camera_arg,
+        camera_mode_arg,
         imu_arg,
         robot_state_publisher_node,
         serial_launch,

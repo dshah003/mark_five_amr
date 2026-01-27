@@ -1,0 +1,67 @@
+# Mark Five AMR - RealSense D435 Camera Parameters (Visual SLAM Mode)
+# Optimized for RTAB-Map RGB-D visual SLAM
+
+# RealSense camera node parameters
+camera:
+  ros__parameters:
+    # Camera identification
+    camera_name: "camera"
+
+    # Stream enables
+    enable_color: true
+    enable_depth: true
+    enable_infra1: false
+    enable_infra2: false
+    pointcloud.enable: false  # RTAB-Map generates its own point cloud from RGB-D
+
+    # CRITICAL: Higher resolution for visual feature extraction
+    # 640x480 provides 4x more pixels than 424x240 for better feature detection
+    rgb_camera.color_profile: "640x480x30"
+
+    # CRITICAL: Match depth resolution to color for aligned RGB-D
+    depth_module.depth_profile: "640x480x30"
+
+    # CRITICAL: Enable depth alignment for RGB-D SLAM
+    # This aligns depth pixels to color camera frame for accurate RGB-D correspondence
+    align_depth.enable: true
+
+    # Depth filters - balanced for visual SLAM
+    # DISABLE decimation - reduces resolution (bad for feature detection)
+    decimation_filter.enable: false
+
+    # ENABLE spatial filter - reduces depth noise while preserving edges
+    spatial_filter.enable: true
+    spatial_filter.smooth_alpha: 0.5    # Moderate smoothing
+    spatial_filter.smooth_delta: 20     # Edge-preserving threshold
+
+    # ENABLE temporal filter - smooths depth over time
+    temporal_filter.enable: true
+    temporal_filter.smooth_alpha: 0.4
+    temporal_filter.smooth_delta: 20
+
+    # ENABLE hole filling - fills missing depth values for better coverage
+    # Critical for visual SLAM to have dense depth information
+    hole_filling_filter.enable: true
+
+    # Auto-exposure and white balance for consistent visual features
+    enable_auto_exposure: true
+    enable_auto_white_balance: true
+
+# Depth to laserscan converter parameters (optional - for hybrid mode)
+# In pure visual SLAM mode, this converter may not be needed
+# Keep it available for hybrid mode (visual + laser fusion)
+depthimage_to_laserscan:
+  ros__parameters:
+    # Output frame for laser scan
+    output_frame: "camera_link"
+
+    # Number of pixel rows to use (centered vertically)
+    scan_height: 10
+
+    # Valid depth range in meters
+    # D435 effective range: 0.1m to 10m
+    range_min: 0.15
+    range_max: 4.0
+
+    # Time between scans (1/30 FPS for higher resolution mode)
+    scan_time: 0.0333

@@ -40,23 +40,34 @@ RUN apt-get update && apt-get install -y \
     ros-jazzy-rmw-cyclonedds-cpp \
     ros-jazzy-robot-localization \
     && rm -rf /var/lib/apt/lists/*
-
-# Intel RealSense camera and depth-to-laserscan packages
-RUN apt-get update && apt-get install -y \
+    
+    # Intel RealSense camera and depth-to-laserscan packages
+    RUN apt-get update && apt-get install -y \
     ros-jazzy-realsense2-camera \
     ros-jazzy-realsense2-description \
     ros-jazzy-depthimage-to-laserscan \
     ros-jazzy-image-transport \
     ros-jazzy-image-transport-plugins \
     && rm -rf /var/lib/apt/lists/*
-
-# SLAM toolbox for mapping
-RUN apt-get update && apt-get install -y \
+    
+    # SLAM toolbox for mapping
+    RUN apt-get update && apt-get install -y \
     ros-jazzy-slam-toolbox \
     && rm -rf /var/lib/apt/lists/*
-
-# URDF tools
-RUN apt-get update && apt-get install -y \
+    
+    # RTAB-Map for visual SLAM
+    RUN apt-get update && apt-get install -y \
+    ros-jazzy-rtabmap \
+    ros-jazzy-rtabmap-ros \
+    ros-jazzy-rtabmap-sync \
+    ros-jazzy-rtabmap-slam \
+    ros-jazzy-rtabmap-viz \
+    ros-jazzy-rtabmap-conversions \
+    ros-jazzy-rqt-image-view \
+    && rm -rf /var/lib/apt/lists/*
+    
+    # URDF tools
+    RUN apt-get update && apt-get install -y \
     liburdfdom-tools \
     xterm \
     && rm -rf /var/lib/apt/lists/*

@@ -2,14 +2,30 @@
 Nav2 Navigation Launch File for Mark Five AMR
 
 Supports two modes:
-- slam: Online SLAM with slam_toolbox (for mapping)
-- localization: AMCL localization with pre-built map (for navigation)
+- slam: Online SLAM (for mapping)
+- localization: Localization with pre-built map (for navigation)
+
+SLAM sensor modes (slam_mode argument):
+- laser: slam_toolbox with 2D laser scan (default, stable)
+- visual: RTAB-Map with RGB-D visual SLAM (better map quality)
+- hybrid: RTAB-Map with RGB-D + laser fusion (best of both worlds)
 
 Optional mission manager for waypoint navigation (use_mission_manager:=true)
 
 Usage:
-  ros2 launch mark_five_bot navigation.launch.py mode:=slam
+  # Laser SLAM (slam_toolbox)
+  ros2 launch mark_five_bot navigation.launch.py mode:=slam slam_mode:=laser
+
+  # Visual SLAM (RTAB-Map)
+  ros2 launch mark_five_bot navigation.launch.py mode:=slam slam_mode:=visual
+
+  # Hybrid SLAM (RTAB-Map with laser fusion)
+  ros2 launch mark_five_bot navigation.launch.py mode:=slam slam_mode:=hybrid
+
+  # Localization mode (uses existing map)
   ros2 launch mark_five_bot navigation.launch.py mode:=localization map:=/path/to/map.yaml
+
+  # With waypoint mission manager
   ros2 launch mark_five_bot navigation.launch.py mode:=localization use_mission_manager:=true
 """
 
@@ -41,6 +57,12 @@ def generate_launch_description():
         description='Navigation mode: slam or localization'
     )
 
+    slam_mode_arg = DeclareLaunchArgument(
+        'slam_mode',
+        default_value='laser',
+        description='SLAM sensor mode: laser (slam_toolbox), visual (RTAB-Map), or hybrid (RTAB-Map+laser)'
+    )
+
     map_arg = DeclareLaunchArgument(
         'map',
         default_value=default_map,
@@ -65,17 +87,38 @@ def generate_launch_description():
         description='Launch waypoint mission manager'
     )
 
-    # SLAM mode - includes slam_toolbox
-    slam_launch = IncludeLaunchDescription(
+    # SLAM mode - Laser (slam_toolbox)
+    slam_toolbox_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             os.path.join(pkg_share, 'launch', 'slam.launch.py')
         ),
         condition=IfCondition(
-            PythonExpression(["'", LaunchConfiguration('mode'), "' == 'slam'"])
+            PythonExpression([
+                "'", LaunchConfiguration('mode'), "' == 'slam' and '",
+                LaunchConfiguration('slam_mode'), "' == 'laser'"
+            ])
         ),
         launch_arguments={
             'use_sim_time': LaunchConfiguration('use_sim_time'),
             'slam_params_file': slam_params_file,
+        }.items(),
+    )
+
+    # SLAM mode - Visual/Hybrid (RTAB-Map)
+    rtabmap_slam_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            os.path.join(pkg_share, 'launch', 'rtabmap_slam.launch.py')
+        ),
+        condition=IfCondition(
+            PythonExpression([
+                "'", LaunchConfiguration('mode'), "' == 'slam' and (",
+                "'", LaunchConfiguration('slam_mode'), "' == 'visual' or '",
+                LaunchConfiguration('slam_mode'), "' == 'hybrid')"
+            ])
+        ),
+        launch_arguments={
+            'use_sim_time': LaunchConfiguration('use_sim_time'),
+            'localization': 'false',  # Mapping mode
         }.items(),
     )
 
@@ -193,11 +236,13 @@ def generate_launch_description():
 
     return LaunchDescription([
         mode_arg,
+        slam_mode_arg,
         map_arg,
         use_sim_time_arg,
         autostart_arg,
         use_mission_manager_arg,
-        slam_launch,
+        slam_toolbox_launch,
+        rtabmap_slam_launch,
         localization_launch,
         # Nav2 nodes
         controller_server,
