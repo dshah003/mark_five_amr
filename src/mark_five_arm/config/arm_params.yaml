@@ -1,0 +1,92 @@
+/**:
+  ros__parameters:
+    # PCA9685 I2C Configuration
+    i2c_address: 0x40  # Default PCA9685 address
+    pwm_frequency: 50  # 50 Hz for standard servos
+
+    # Number of joints
+    num_joints: 6
+
+    # Joint names (modify based on your arm design)
+    joint_names: ['base', 'shoulder', 'elbow', 'wrist_pitch', 'wrist_roll', 'gripper']
+
+    # Publishing rate for joint states (Hz)
+    publish_rate: 10.0
+
+    # =================================================================
+    # Per-Joint Configuration
+    # =================================================================
+    # For each joint, configure:
+    #   - channel: PCA9685 channel (0-15)
+    #   - min_angle: Minimum angle in radians
+    #   - max_angle: Maximum angle in radians
+    #   - min_pwm: PWM value (0-4095) at min_angle
+    #   - max_pwm: PWM value (0-4095) at max_angle
+    #   - home_angle: Home/neutral position in radians
+    #   - inverted: Reverse servo direction if true
+    #
+    # PWM Calibration Guide:
+    #   Most hobby servos: 1000-2000 (typical range)
+    #   Some servos: 500-2500 (extended range, check datasheet)
+    #   Center position: ~1500
+    # =================================================================
+
+    # Base Joint (rotation around vertical axis)
+    base:
+      channel: 0
+      min_angle: -1.5708  # -90 degrees in radians
+      max_angle: 1.5708   # +90 degrees in radians
+      min_pwm: 1000       # PWM at -90°
+      max_pwm: 2000       # PWM at +90°
+      home_angle: 0.0     # 0° (center)
+      inverted: false
+
+    # Shoulder Joint (first vertical rotation)
+    shoulder:
+      channel: 1
+      min_angle: -1.5708  # -90 degrees
+      max_angle: 1.5708   # +90 degrees
+      min_pwm: 1000
+      max_pwm: 2000
+      home_angle: 0.0
+      inverted: false
+
+    # Elbow Joint
+    elbow:
+      channel: 2
+      min_angle: -1.5708  # -90 degrees
+      max_angle: 1.5708   # +90 degrees
+      min_pwm: 1000
+      max_pwm: 2000
+      home_angle: 0.0
+      inverted: false
+
+    # Wrist Pitch Joint (up/down)
+    wrist_pitch:
+      channel: 3
+      min_angle: -1.5708  # -90 degrees
+      max_angle: 1.5708   # +90 degrees
+      min_pwm: 1000
+      max_pwm: 2000
+      home_angle: 0.0
+      inverted: false
+
+    # Wrist Roll Joint (rotation)
+    wrist_roll:
+      channel: 4
+      min_angle: -1.5708  # -90 degrees
+      max_angle: 1.5708   # +90 degrees
+      min_pwm: 1000
+      max_pwm: 2000
+      home_angle: 0.0
+      inverted: false
+
+    # Gripper (open/close)
+    gripper:
+      channel: 5
+      min_angle: 0.0      # Fully open (0°)
+      max_angle: 1.0472   # Closed (60°)
+      min_pwm: 1000       # PWM for open
+      max_pwm: 2000       # PWM for closed
+      home_angle: 0.5236  # Half-open (30°)
+      inverted: false

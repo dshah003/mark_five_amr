@@ -72,6 +72,10 @@ RUN apt-get update && apt-get install -y \
     xterm \
     && rm -rf /var/lib/apt/lists/*
 RUN pip install sparkfun-qwiic-icm20948 --break-system-packages
+
+# Python libraries for robotic arm control (PCA9685 PWM driver)
+RUN pip install adafruit-circuitpython-pca9685 --break-system-packages
+
 # Enable colored terminal prompt
 RUN sed -i 's/^#force_color_prompt=yes/force_color_prompt=yes/' ~/.bashrc
 
