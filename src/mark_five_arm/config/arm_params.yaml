@@ -5,10 +5,13 @@
     pwm_frequency: 50  # 50 Hz for standard servos
 
     # Number of joints
-    num_joints: 6
+    # Original Lite Arm i2 has 3 servos (base, shoulder, elbow)
+    # Set to 4 if you add a gripper servo
+    num_joints: 3
 
-    # Joint names (modify based on your arm design)
-    joint_names: ['base', 'shoulder', 'elbow', 'wrist_pitch', 'wrist_roll', 'gripper']
+    # Joint names (Lite Arm i2 - 3 DOF parallel linkage design)
+    # Add 'gripper' to this list if you install a gripper servo
+    joint_names: ['base', 'shoulder', 'elbow']
 
     # Publishing rate for joint states (Hz)
     publish_rate: 10.0
@@ -32,61 +35,51 @@
     # =================================================================
 
     # Base Joint (rotation around vertical axis)
+    # Servo: Power HD 1501 MG
     base:
       channel: 0
       min_angle: -1.5708  # -90 degrees in radians
       max_angle: 1.5708   # +90 degrees in radians
-      min_pwm: 1000       # PWM at -90°
+      min_pwm: 1000       # PWM at -90° (official spec: 1000-2000μs range)
       max_pwm: 2000       # PWM at +90°
-      home_angle: 0.0     # 0° (center)
+      home_angle: 0.0     # 0° (center = 1500μs)
       inverted: false
 
     # Shoulder Joint (first vertical rotation)
+    # Servo: Power HD 1501 MG
     shoulder:
       channel: 1
       min_angle: -1.5708  # -90 degrees
       max_angle: 1.5708   # +90 degrees
-      min_pwm: 1000
-      max_pwm: 2000
-      home_angle: 0.0
+      min_pwm: 1000       # 1000μs
+      max_pwm: 2000       # 2000μs
+      home_angle: 0.0     # 1500μs center
       inverted: false
 
-    # Elbow Joint
+    # Elbow Joint (forearm)
+    # Servo: Power HD 1501 MG
     elbow:
       channel: 2
       min_angle: -1.5708  # -90 degrees
       max_angle: 1.5708   # +90 degrees
-      min_pwm: 1000
-      max_pwm: 2000
-      home_angle: 0.0
+      min_pwm: 1000       # 1000μs
+      max_pwm: 2000       # 2000μs
+      home_angle: 0.0     # 1500μs center
       inverted: false
 
-    # Wrist Pitch Joint (up/down)
-    wrist_pitch:
-      channel: 3
-      min_angle: -1.5708  # -90 degrees
-      max_angle: 1.5708   # +90 degrees
-      min_pwm: 1000
-      max_pwm: 2000
-      home_angle: 0.0
-      inverted: false
-
-    # Wrist Roll Joint (rotation)
-    wrist_roll:
-      channel: 4
-      min_angle: -1.5708  # -90 degrees
-      max_angle: 1.5708   # +90 degrees
-      min_pwm: 1000
-      max_pwm: 2000
-      home_angle: 0.0
-      inverted: false
-
-    # Gripper (open/close)
-    gripper:
-      channel: 5
-      min_angle: 0.0      # Fully open (0°)
-      max_angle: 1.0472   # Closed (60°)
-      min_pwm: 1000       # PWM for open
-      max_pwm: 2000       # PWM for closed
-      home_angle: 0.5236  # Half-open (30°)
-      inverted: false
+    # =================================================================
+    # OPTIONAL: Gripper (uncomment if you add a gripper servo)
+    # =================================================================
+    # To enable gripper:
+    # 1. Change num_joints to 4
+    # 2. Add 'gripper' to joint_names list
+    # 3. Uncomment the gripper section below
+    #
+    # gripper:
+    #   channel: 3
+    #   min_angle: 0.0      # Fully open (0°)
+    #   max_angle: 1.0472   # Closed (60°)
+    #   min_pwm: 1000       # PWM for open
+    #   max_pwm: 2000       # PWM for closed
+    #   home_angle: 0.5236  # Half-open (30°)
+    #   inverted: false

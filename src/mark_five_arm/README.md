@@ -1,4 +1,4 @@
-# Mark Five Arm - ROS2 Robotic Arm Controller
+ # Mark Five Arm - ROS2 Robotic Arm Controller
 
 ROS2 package for controlling a hobby servo-based robotic arm using the PCA9685 PWM driver board.
 
@@ -16,6 +16,59 @@ This package provides a ROS2 node that interfaces with a PCA9685 16-channel PWM 
 - **Simulation mode** for testing without hardware
 - **GUI testing tool** with joint sliders for manual control
 
+## Supported Arm Designs
+
+This package is configured for the **Lite Arm i2** (Thingiverse thing:480446) - a 4-DOF robotic arm modeled after the uFactory uArm.
+
+**Lite Arm i2 Specifications (Official):**
+- **3-4 servos:** 3x Power HD 1501 MG (base, shoulder, elbow) + optional gripper servo
+- **4 DOF:** Base rotation (Z-axis), Shoulder (Y-axis), Elbow (Y-axis), Gripper
+- **Design:** Inspired by ABB IRB-660 industrial robot
+- **3D Printed:** All structural parts are 3D printable
+- **STL Files:** Available on [Thingiverse thing:480446](https://www.thingiverse.com/thing:480446)
+- **Dimensions (from STL analysis):**
+  - Upper arm: 230mm (20_21B.stl)
+  - Forearm: 180mm (15C.stl)
+  - Base bearing: 35mm ID × 47mm OD × 7mm (6807 2RS)
+- **PWM Range:** 1000-2000μs (1500μs = center position)
+
+The URDF (`urdf/lite_arm_i2.urdf.xacro`) has been updated with dimensions extracted from the official STL files.
+
+**Arm Configuration (3-DOF, parallel linkage):**
+```
+       End Effector (passive)
+            │
+            │ (no servo - parallel linkage keeps it level)
+            ▼
+      ┌─────────────┐
+      │  Forearm    │ ← 180mm (15C.stl)
+      │ (2 parallel │
+      │   links)    │
+      └─────┬───────┘
+            │ (revolute, Y-axis)
+         Elbow (CH2)
+            │
+      ┌─────────────┐
+      │ Upper Arm   │ ← 230mm (20_21B.stl)
+      │ (2 parallel │
+      │   links)    │
+      └─────┬───────┘
+            │ (revolute, Y-axis)
+       Shoulder (CH1)
+            │
+      Rotating Base
+            │
+            │ (revolute, Z-axis)
+        Base (CH0)
+            │
+         ═════════
+        Fixed Base
+```
+
+**Note:** The parallel linkage mechanism keeps the end effector/tool at a consistent orientation as the arm moves (similar to ABB IRB-660). The URDF simplifies this to a serial chain for basic visualization. For accurate inverse kinematics, the parallel linkage geometry would need to be modeled.
+
+**Optional Gripper:** Add a gripper servo to channel 3 if needed (see `config/arm_params.yaml`).
+
 ## Hardware Requirements
 
 ### Components
@@ -28,13 +81,14 @@ This package provides a ROS2 node that interfaces with a PCA9685 16-channel PWM 
 | **Jetson Nano** | Or similar SBC with I2C | Robot computer |
 | **Jumper Wires** | Female-to-female | I2C connections |
 
-### Recommended Servos
+### Official Servos (Lite Arm i2)
 
-For a typical 5-6 DOF arm:
-- **Base rotation:** MG996R or SG90 (depending on torque needs)
-- **Shoulder/Elbow:** MG996R or DS3218 (high torque)
-- **Wrist joints:** SG90 or MG90S (lighter)
-- **Gripper:** SG90 with gripper attachment
+As specified in the official parts list:
+- **3x Power HD 1501 MG servos** (base, shoulder, forearm) - $15.95 each
+  - Operating voltage: 4.8-6V
+  - PWM range: 1000-2000μs (1500μs center)
+  - Torque: ~15kg-cm @ 6V
+- **Optional gripper servo:** Any standard servo (SG90 or similar)
 
 ### uArm Swift Pro (Example Configuration)
 
@@ -170,117 +224,223 @@ base:
   inverted: false      # Reverse direction if true
 ```
 
+## Measuring and Updating URDF Dimensions
+
+The included URDF has estimated dimensions. For accurate visualization and future kinematics, measure your printed arm and update the URDF.
+
+### What to Measure
+
+Open `urdf/lite_arm_i2.urdf.xacro` and update these properties at the top:
+
+```xml
+<!-- Measure these on your printed arm! -->
+<xacro:property name="base_height" value="0.050" />      <!-- Base cylinder height -->
+<xacro:property name="base_radius" value="0.045" />      <!-- Base cylinder radius -->
+
+<xacro:property name="upper_arm_length" value="0.148" /> <!-- Shoulder to elbow distance -->
+<xacro:property name="forearm_length" value="0.160" />   <!-- Elbow to wrist distance -->
+<xacro:property name="gripper_length" value="0.080" />   <!-- Gripper reach -->
+```
+
+### How to Measure
+
+1. **Base dimensions:**
+   - Measure height and radius of the rotating base platform
+
+2. **Upper arm (shoulder to elbow):**
+   - Measure center-to-center distance between shoulder servo axis and elbow servo axis
+   - This is the most critical dimension for kinematics
+
+3. **Forearm (elbow to wrist/gripper):**
+   - Measure center-to-center distance from elbow servo axis to gripper attachment point
+
+4. **Gripper:**
+   - Measure from gripper base to tip of fingers when closed
+
+### Verify URDF in RViz
+
+After updating dimensions:
+
+```bash
+ros2 launch mark_five_arm display.launch.py
+```
+
+Use the joint sliders to move the arm and verify:
+- Links are the correct length
+- Joints rotate around correct axes
+- No unexpected offsets or rotations
+
+## Hardware Assembly
+
+### Parts List
+
+The official Lite Arm i2 parts list is included in `stl/LAi2Partslist.pdf`. Key components:
+
+**Electronics:**
+- 3x Power HD 1501 MG servos ($15.95 each)
+- 3x 25T servo horns (3mm threaded)
+- PCA9685 PWM driver (not in original - added for ROS2 control)
+
+**Mechanical:**
+- 24x MF84zz 4x8x3mm flanged ball bearings ($15 for 24)
+- 1x 6807 2RS bearing (35mm ID × 47mm OD) for base rotation ($9.47)
+- Various 6-32 and 8-32 bolts and nuts (see PDF for full list)
+
+**3D Printed Parts:**
+- 30 STL files included in `stl/` directory
+- Print all parts in PLA or PETG
+- See assembly instructions in `stl/LAi2_Instructions.zip`
+
+### Assembly Notes
+
+1. Follow the official assembly instructions in `LAi2_Instructions.zip`
+2. The original design uses direct Arduino control - we're replacing that with PCA9685 for ROS2 integration
+3. Wire servos to PCA9685 channels 0-2 (base, shoulder, elbow)
+4. Gripper servo (if used) goes to channel 3
+
 ## Calibration
 
-### Step 1: Find PWM Range for Each Servo
+### Official PWM Values (Power HD 1501 MG)
 
-Use this test script to find the correct PWM values:
+The Lite Arm i2 uses **Power HD 1501 MG** servos with these specs (from official Arduino code):
+
+| Position | PWM Value |
+|----------|-----------|
+| Full left/min | 1000μs |
+| **Center** | **1500μs** |
+| Full right/max | 2000μs |
+
+These values are **already configured** in `config/arm_params.yaml`. For most builds, no calibration is needed!
+
+### Quick Test (Verify Default Values Work)
 
 ```bash
 # Terminal 1: Run arm controller
 ros2 launch mark_five_arm arm.launch.py
 
-# Terminal 2: Test PWM values (substitute joint name and angle)
+# Terminal 2: Send all servos to center (1500μs)
 ros2 topic pub --once /arm/joint_commands sensor_msgs/JointState \
-  "{name: ['base'], position: [0.0]}"
-
-# Try different angles to find limits:
-# Min angle: servo at minimum physical position
-# Max angle: servo at maximum physical position
-# Adjust min_pwm and max_pwm in config until servo moves correctly
+  "{name: ['base', 'shoulder', 'elbow'], position: [0.0, 0.0, 0.0]}"
 ```
 
-### Step 2: Calibration Process
+All three servos should move to their center positions. If this works, the default calibration is correct!
 
-For each servo:
+### When Calibration IS Needed
 
-1. **Set servo to center position:**
-   ```bash
-   ros2 topic pub --once /arm/joint_commands sensor_msgs/JointState \
-     "{name: ['base'], position: [0.0]}"
-   ```
+Only calibrate if:
+1. **Servo moves wrong direction** → Set `inverted: true` for that joint
+2. **Center position is off** → Adjust PWM values slightly
+3. **Using different servos** → Find their PWM range
 
-2. **Find minimum PWM:**
-   - Start with `min_pwm: 1000`
-   - Decrease until servo reaches minimum physical limit
-   - Record this PWM value
+### Calibration Process (If Needed)
 
-3. **Find maximum PWM:**
-   - Start with `max_pwm: 2000`
-   - Increase until servo reaches maximum physical limit
-   - Record this PWM value
-
-4. **Set angle ranges:**
-   - Measure physical rotation range (use protractor or known design)
-   - Convert to radians: `radians = degrees × π / 180`
-   - Update `min_angle` and `max_angle`
-
-5. **Test direction:**
-   - Command positive angle
-   - If servo moves wrong direction, set `inverted: true`
-
-6. **Set home position:**
-   - Choose neutral/safe position (usually 0.0 radians)
-   - Verify arm doesn't collide with itself at home
-
-### Step 3: Verify Calibration
-
+**Step 1: Check servo direction**
 ```bash
-# Launch with GUI sliders
-ros2 launch mark_five_arm arm_test.launch.py
+# Command positive angle for base
+ros2 topic pub --once /arm/joint_commands sensor_msgs/JointState \
+  "{name: ['base'], position: [0.5]}"
+```
+- If base rotates counter-clockwise (looking from above): correct
+- If base rotates clockwise: set `base.inverted: true` in config
 
-# Use sliders to test each joint through full range
-# Verify smooth motion and correct angle correspondence
+Repeat for shoulder and elbow.
+
+**Step 2: Verify home position**
+
+The arm should be in a safe "home" pose when all joints are at 0.0:
+```bash
+ros2 service call /arm/home std_srvs/srv/Trigger
 ```
 
-### Example Calibration Results
+If the home position causes collisions or looks wrong, adjust `home_angle` for each joint in the config.
+
+**Step 3: Test full range with GUI**
+```bash
+ros2 launch mark_five_arm arm_test.launch.py
+```
+
+Use the sliders to move each joint through its full range. Verify:
+- Smooth motion (no jitter)
+- No mechanical binding at limits
+- Physical arm matches RViz visualization
+
+### Fine-Tuning PWM (Rare)
+
+If servos don't reach full range or overshoot:
 
 ```yaml
-# Example: MG996R servo with 180° rotation
+# In config/arm_params.yaml
+base:
+  min_pwm: 1000   # Decrease if servo doesn't reach min position
+  max_pwm: 2000   # Increase if servo doesn't reach max position
+```
+
+Some servos accept extended range (500-2500μs), but the Power HD 1501 MG should work with 1000-2000μs.
+
+### Lite Arm i2 Default Calibration
+
+```yaml
+# These values should work out-of-the-box for Lite Arm i2
 base:
   channel: 0
   min_angle: -1.5708   # -90°
   max_angle: 1.5708    # +90°
-  min_pwm: 500         # Servo at -90° (found via testing)
-  max_pwm: 2400        # Servo at +90° (found via testing)
-  home_angle: 0.0      # Center position
-  inverted: false
-
-# Example: SG90 servo with 180° rotation
-gripper:
-  channel: 5
-  min_angle: 0.0       # Fully open
-  max_angle: 1.0472    # 60° (closed)
-  min_pwm: 1000        # Open position
-  max_pwm: 2000        # Closed position
-  home_angle: 0.5236   # 30° (half-open)
-  inverted: false
+  min_pwm: 1000        # Official spec
+  max_pwm: 2000        # Official spec
+  home_angle: 0.0      # Center
+  inverted: false      # Change if needed
 ```
 
 ## Usage
 
-### Basic Launch
+### 1. Visualize URDF Only (No Hardware)
+
+Visualize the arm model in RViz without connecting to hardware:
 
 ```bash
-# Start arm controller
-ros2 launch mark_five_arm arm.launch.py
-
-# In another terminal, command joints
-ros2 topic pub /arm/joint_commands sensor_msgs/JointState \
-  "{name: ['base', 'shoulder'], position: [0.5, -0.3]}"
+ros2 launch mark_five_arm display.launch.py
 ```
 
-### Testing with GUI
+This launches:
+- `robot_state_publisher` - publishes URDF transforms
+- `joint_state_publisher_gui` - GUI sliders for joint control
+- `rviz2` - visualization
+
+Use this to verify your URDF dimensions before connecting servos.
+
+### 2. Test with Hardware (PCA9685 + Servos)
+
+Test actual servo control with GUI and visualization:
 
 ```bash
-# Launch with joint sliders
+# Full test with RViz
 ros2 launch mark_five_arm arm_test.launch.py
 
-# Or without RViz
+# Or without RViz (faster)
 ros2 launch mark_five_arm arm_test.launch.py use_rviz:=false
 ```
 
-Use the GUI sliders to manually control each joint.
+This launches:
+- `robot_state_publisher` - publishes URDF transforms
+- `arm_controller` - controls PCA9685 hardware
+- `joint_state_publisher_gui` - GUI sliders send commands to hardware
+- `rviz2` - visualization (optional)
+
+Move the sliders and watch both the physical arm and RViz model move together.
+
+### 3. Programmatic Control (No GUI)
+
+Control the arm via ROS2 topics:
+
+```bash
+# Terminal 1: Start arm controller only
+ros2 launch mark_five_arm arm.launch.py
+
+# Terminal 2: Command joints via topic
+ros2 topic pub --once /arm/joint_commands sensor_msgs/JointState \
+  "{name: ['base', 'shoulder', 'elbow', 'gripper'], \
+    position: [0.5, 0.3, -0.5, 0.2]}"
+```
 
 ### Services
 
@@ -418,14 +578,17 @@ mark_five_arm/
 │   ├── __init__.py
 │   └── arm_controller.py        # Main PCA9685 controller node
 ├── config/
-│   └── arm_params.yaml          # Servo configuration
+│   └── arm_params.yaml          # Servo configuration (4 joints)
 ├── launch/
-│   ├── arm.launch.py            # Basic launch file
-│   └── arm_test.launch.py       # Launch with GUI for testing
+│   ├── arm.launch.py            # Basic launch (controller only)
+│   ├── arm_test.launch.py       # Hardware testing with GUI + RViz
+│   └── display.launch.py        # URDF visualization only (no hardware)
 ├── rviz/
-│   └── arm.rviz                 # RViz configuration
+│   ├── arm.rviz                 # RViz config (legacy)
+│   └── display.rviz             # RViz config for URDF display
 ├── urdf/
-│   └── (your arm URDF here)     # Robot description (future)
+│   ├── arm.urdf.xacro           # Generic 6-DOF arm (template)
+│   └── lite_arm_i2.urdf.xacro   # Lite Arm i2 specific (4-DOF)
 ├── CMakeLists.txt
 ├── package.xml
 ├── setup.py
@@ -447,10 +610,19 @@ MIT License
 
 ## References
 
+### Robotic Arm Design
+- [Lite Arm i2 on Thingiverse](https://www.thingiverse.com/thing:480446) - Original 3D printable arm design
+- [Lite Arm i2 STL Files](https://www.stlfinder.com/3dmodels/open-source-robotic-arm-lite-arm-i2-mod-files/) - Alternative STL sources
+- [Lite Arm i1 (Original)](https://www.thingiverse.com/thing:407800) - Earlier version
+
+### Electronics & Software
 - [PCA9685 Datasheet](https://cdn-shop.adafruit.com/datasheets/PCA9685.pdf)
 - [Adafruit PCA9685 Python Library](https://github.com/adafruit/Adafruit_CircuitPython_PCA9685)
 - [ROS2 Jazzy Documentation](https://docs.ros.org/en/jazzy/)
 - [MoveIt2 Documentation](https://moveit.picknik.ai/)
+
+### Related Projects
+- [Top 10 Open Source Robotic Arms](https://circuitdigest.com/articles/top-10-opensource-robotic-arms-for-beginners) - Comparison of DIY arm designs
 
 ## Support
 
