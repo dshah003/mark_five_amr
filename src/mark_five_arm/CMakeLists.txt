@@ -17,6 +17,7 @@ ament_python_install_package(${PROJECT_NAME})
 install(PROGRAMS
   mark_five_arm/arm_controller.py
   DESTINATION lib/${PROJECT_NAME}
+  RENAME arm_controller
 )
 
 # Install launch files
