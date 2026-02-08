@@ -31,12 +31,19 @@ def generate_launch_description():
     use_gui_arg = DeclareLaunchArgument(
         'use_gui',
         default_value='true',
-        description='Launch joint_state_publisher_gui'
+        description='Launch joint_state_publisher_gui (disable when arm_controller is running remotely)'
+    )
+
+    use_rsp_arg = DeclareLaunchArgument(
+        'use_rsp',
+        default_value='true',
+        description='Launch robot_state_publisher (disable when running remotely alongside arm_test)'
     )
 
     # Get launch configuration
     urdf_file = LaunchConfiguration('urdf_file')
     use_gui = LaunchConfiguration('use_gui')
+    use_rsp = LaunchConfiguration('use_rsp')
 
     # Path to URDF file
     urdf_path = PathJoinSubstitution([
@@ -48,12 +55,13 @@ def generate_launch_description():
     # Process URDF with xacro
     robot_description = ParameterValue(Command(['xacro ', urdf_path]), value_type=str)
 
-    # Robot state publisher node
+    # Robot state publisher node (skip if Jetson is already running it)
     robot_state_publisher_node = Node(
         package='robot_state_publisher',
         executable='robot_state_publisher',
         name='robot_state_publisher',
         output='screen',
+        condition=IfCondition(use_rsp),
         parameters=[{
             'robot_description': robot_description,
             'use_sim_time': False
@@ -87,6 +95,7 @@ def generate_launch_description():
     return LaunchDescription([
         urdf_file_arg,
         use_gui_arg,
+        use_rsp_arg,
         robot_state_publisher_node,
         joint_state_publisher_gui_node,
         rviz_node,

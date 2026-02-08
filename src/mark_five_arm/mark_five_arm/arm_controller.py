@@ -60,7 +60,7 @@ class ArmController(Node):
             raise ImportError('adafruit_pca9685 library required')
 
         # Declare parameters
-        self.declare_parameters()
+        self._declare_arm_parameters()
 
         # Load parameters
         self.load_parameters()
@@ -117,7 +117,7 @@ class ArmController(Node):
         # Move to home position on startup
         self.move_to_home()
 
-    def declare_parameters(self):
+    def _declare_arm_parameters(self):
         """Declare all ROS2 parameters."""
         self.declare_parameter('i2c_address', 0x40)
         self.declare_parameter('pwm_frequency', 50)

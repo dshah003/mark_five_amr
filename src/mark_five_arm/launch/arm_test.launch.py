@@ -17,7 +17,7 @@ Use the GUI sliders to test each servo joint and see the arm move in RViz.
 
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument
-from launch.conditions import IfCondition
+from launch.conditions import IfCondition, UnlessCondition
 from launch.substitutions import Command, LaunchConfiguration, PathJoinSubstitution
 from launch_ros.actions import Node
 from launch_ros.parameter_descriptions import ParameterValue
@@ -48,10 +48,17 @@ def generate_launch_description():
         description='Launch RViz2 for visualization'
     )
 
+    use_gui_arg = DeclareLaunchArgument(
+        'use_gui',
+        default_value='true',
+        description='Launch joint_state_publisher_gui for manual control'
+    )
+
     # Get launch configuration
     config_file = LaunchConfiguration('config')
     urdf_file = LaunchConfiguration('urdf_file')
     use_rviz = LaunchConfiguration('use_rviz')
+    use_gui = LaunchConfiguration('use_gui')
 
     # Path to URDF file
     urdf_path = PathJoinSubstitution([
@@ -85,12 +92,13 @@ def generate_launch_description():
         emulate_tty=True,
     )
 
-    # Joint State Publisher GUI for manual control
+    # Joint State Publisher GUI for manual control (only when display is available)
     joint_state_publisher_gui = Node(
         package='joint_state_publisher_gui',
         executable='joint_state_publisher_gui',
         name='joint_state_publisher_gui',
         output='screen',
+        condition=IfCondition(use_gui),
         remappings=[
             ('/joint_states', '/arm/joint_commands')
         ],
@@ -114,6 +122,7 @@ def generate_launch_description():
         config_arg,
         urdf_file_arg,
         use_rviz_arg,
+        use_gui_arg,
         robot_state_publisher_node,
         arm_controller_node,
         joint_state_publisher_gui,
