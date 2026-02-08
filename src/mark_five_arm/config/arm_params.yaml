@@ -36,35 +36,38 @@
 
     # Base Joint (rotation around vertical axis)
     # Servo: Power HD 1501 MG
+    # Calibrated PWM range: 690-2600μs (~180° travel)
     base:
       channel: 0
       min_angle: -1.5708  # -90 degrees in radians
       max_angle: 1.5708   # +90 degrees in radians
-      min_pwm: 1000       # PWM at -90° (official spec: 1000-2000μs range)
-      max_pwm: 2000       # PWM at +90°
-      home_angle: 0.0     # 0° (center = 1500μs)
+      min_pwm: 690        # PWM at -90°
+      max_pwm: 2600       # PWM at +90°
+      home_angle: 0.0     # 0° (center)
       inverted: false
 
     # Shoulder Joint (first vertical rotation)
     # Servo: Power HD 1501 MG
+    # Calibrated PWM range: 900-2000μs
     shoulder:
       channel: 1
       min_angle: -1.5708  # -90 degrees
       max_angle: 1.5708   # +90 degrees
-      min_pwm: 1000       # 1000μs
-      max_pwm: 2000       # 2000μs
-      home_angle: 0.0     # 1500μs center
+      min_pwm: 900        # PWM at min
+      max_pwm: 2000       # PWM at max
+      home_angle: 0.0     # center
       inverted: false
 
     # Elbow Joint (forearm)
     # Servo: Power HD 1501 MG
+    # Calibrated PWM range: 900-2350μs
     elbow:
       channel: 2
       min_angle: -1.5708  # -90 degrees
       max_angle: 1.5708   # +90 degrees
-      min_pwm: 1000       # 1000μs
-      max_pwm: 2000       # 2000μs
-      home_angle: 0.0     # 1500μs center
+      min_pwm: 900        # PWM at min
+      max_pwm: 2350       # PWM at max
+      home_angle: 0.0     # center
       inverted: false
 
     # =================================================================

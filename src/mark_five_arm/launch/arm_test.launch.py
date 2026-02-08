@@ -71,6 +71,7 @@ def generate_launch_description():
     robot_description = ParameterValue(Command(['xacro ', urdf_path]), value_type=str)
 
     # Robot state publisher node
+    # Remap to receive joint states from arm_controller's /arm/joint_states topic
     robot_state_publisher_node = Node(
         package='robot_state_publisher',
         executable='robot_state_publisher',
@@ -79,7 +80,10 @@ def generate_launch_description():
         parameters=[{
             'robot_description': robot_description,
             'use_sim_time': False
-        }]
+        }],
+        remappings=[
+            ('/joint_states', '/arm/joint_states')
+        ]
     )
 
     # Arm controller node
