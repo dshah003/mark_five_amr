@@ -223,7 +223,6 @@ mark_five_amr/
 - [Project Roadmap](docs/01-Roadmap.md)
 - [System Architecture](docs/02-Architecture.md)
 - [Package Reference](docs/05-Package-Reference.md)
-- [CLAUDE.md](CLAUDE.md) - Technical reference for AI assistants
 
 ## References
 

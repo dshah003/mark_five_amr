@@ -4,8 +4,8 @@
   <!--
     Mark Five AMR - Differential Drive Tank Tread Robot
 
-    Dimensions (from measurements):
-    - Platform: 220mm x 200mm x 3mm
+    Dimensions (from v6 chassis CAD - generate_chassis.py):
+    - Platform: 210mm x 200mm x 3mm (L x W, 3D printed)
     - Outer width: 185mm
     - Inner width (between tracks): 100mm
     - Track width: 40mm each
@@ -13,6 +13,8 @@
     - Track length: 185mm
     - Ground clearance: 15mm
     - Platform height from ground: 60mm
+    - Chassis mounting holes: 60mm square pattern (±30mm from center)
+    - IMU: centered on platform, 45mm standoff height
 
     Coordinate System (REP 103):
     - X: Forward
@@ -423,7 +425,7 @@
     <visual>
       <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
-        <box size="0.220 0.200 0.003"/>
+        <box size="0.210 0.200 0.003"/>
       </geometry>
       <material name="acrylic">
         <color rgba="0.85 0.9 0.95 0.6"/>
@@ -432,7 +434,7 @@
     <collision>
       <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
-        <box size="0.220 0.200 0.003"/>
+        <box size="0.210 0.200 0.003"/>
       </geometry>
     </collision>
     <inertial>
@@ -463,7 +465,7 @@
   <joint name="standoff_fl_joint" type="fixed">
     <parent link="base_link"/>
     <child link="standoff_fl"/>
-    <origin xyz="0.080 0.070 0.015" rpy="0 0 0"/>
+    <origin xyz="0.030 0.030 0.015" rpy="0 0 0"/>
   </joint>
 
   <link name="standoff_fr">
@@ -480,7 +482,7 @@
   <joint name="standoff_fr_joint" type="fixed">
     <parent link="base_link"/>
     <child link="standoff_fr"/>
-    <origin xyz="0.080 -0.070 0.015" rpy="0 0 0"/>
+    <origin xyz="0.030 -0.030 0.015" rpy="0 0 0"/>
   </joint>
 
   <link name="standoff_rl">
@@ -497,7 +499,7 @@
   <joint name="standoff_rl_joint" type="fixed">
     <parent link="base_link"/>
     <child link="standoff_rl"/>
-    <origin xyz="-0.080 0.070 0.015" rpy="0 0 0"/>
+    <origin xyz="-0.030 0.030 0.015" rpy="0 0 0"/>
   </joint>
 
   <link name="standoff_rr">
@@ -514,7 +516,7 @@
   <joint name="standoff_rr_joint" type="fixed">
     <parent link="base_link"/>
     <child link="standoff_rr"/>
-    <origin xyz="-0.080 -0.070 0.015" rpy="0 0 0"/>
+    <origin xyz="-0.030 -0.030 0.015" rpy="0 0 0"/>
   </joint>
 
   <!-- ==================== JETSON NANO ==================== -->
@@ -555,7 +557,7 @@
   <joint name="jetson_nano_joint" type="fixed">
     <parent link="platform_link"/>
     <child link="jetson_nano_link"/>
-    <origin xyz="-0.040 0.030 0.0265" rpy="0 0 0"/>
+    <origin xyz="-0.055 0.040 0.0285" rpy="0 0 0"/>
   </joint>
 
   <!-- ==================== ARDUINO MEGA ==================== -->
@@ -606,7 +608,7 @@
   <joint name="arduino_mega_joint" type="fixed">
     <parent link="platform_link"/>
     <child link="arduino_mega_link"/>
-    <origin xyz="0.040 -0.050 0.009" rpy="0 0 0"/>
+    <origin xyz="0.040 -0.060 0.009" rpy="0 0 0"/>
   </joint>
 
   <!-- ==================== WIFI ANTENNAS ==================== -->
@@ -764,11 +766,12 @@
   <!-- ==================== ICM-20948 9-DOF IMU ==================== -->
   <!--
     IMU mounted at center of platform for optimal differential drive odometry
-    ICM-20948 GY-ICM20948v2 breakout dimensions: ~25mm x 18mm x 3mm
-    Position: (0, 0, 0.010) relative to platform_link
+    ICM-20948 GY-ICM20948v2 breakout dimensions: ~15.5mm x 25.8mm x 3mm
+    (board rotated 90° on chassis so long axis is along robot Y)
+    Position: (0, 0, 0.0465) relative to platform_link
       - Centered between left/right wheels (Y=0)
       - Centered along wheelbase (X=0)
-      - 10mm above platform surface for clearance
+      - 45mm standoff height + 1.5mm board half-thickness = 46.5mm
     Orientation: Aligned with robot axes
       - IMU +X → Robot Forward
       - IMU +Y → Robot Left
@@ -784,48 +787,30 @@
   -->
 
   <link name="imu_link">
-    <!-- IMU breakout board -->
+    <!-- IMU breakout board (15.5mm forward x 25.8mm left, rotated 90° on chassis) -->
     <visual>
       <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
-        <box size="0.025 0.018 0.003"/>
+        <box size="0.016 0.026 0.003"/>
       </geometry>
       <material name="imu_purple">
         <color rgba="0.4 0.2 0.6 1.0"/>
       </material>
     </visual>
-    <!-- Mounting standoffs (4 corners) -->
+    <!-- Mounting standoffs (45mm height, 2 holes on right side of board) -->
     <visual>
-      <origin xyz="0.010 0.007 -0.003" rpy="0 0 0"/>
+      <origin xyz="0.005 0.006 -0.024" rpy="0 0 0"/>
       <geometry>
-        <cylinder radius="0.001" length="0.005"/>
+        <cylinder radius="0.00275" length="0.045"/>
       </geometry>
       <material name="standoff_metal">
         <color rgba="0.6 0.6 0.6 1.0"/>
       </material>
     </visual>
     <visual>
-      <origin xyz="0.010 -0.007 -0.003" rpy="0 0 0"/>
+      <origin xyz="0.005 -0.006 -0.024" rpy="0 0 0"/>
       <geometry>
-        <cylinder radius="0.001" length="0.005"/>
-      </geometry>
-      <material name="standoff_metal">
-        <color rgba="0.6 0.6 0.6 1.0"/>
-      </material>
-    </visual>
-    <visual>
-      <origin xyz="-0.010 0.007 -0.003" rpy="0 0 0"/>
-      <geometry>
-        <cylinder radius="0.001" length="0.005"/>
-      </geometry>
-      <material name="standoff_metal">
-        <color rgba="0.6 0.6 0.6 1.0"/>
-      </material>
-    </visual>
-    <visual>
-      <origin xyz="-0.010 -0.007 -0.003" rpy="0 0 0"/>
-      <geometry>
-        <cylinder radius="0.001" length="0.005"/>
+        <cylinder radius="0.00275" length="0.045"/>
       </geometry>
       <material name="standoff_metal">
         <color rgba="0.6 0.6 0.6 1.0"/>
@@ -844,7 +829,7 @@
     <collision>
       <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
-        <box size="0.025 0.018 0.003"/>
+        <box size="0.016 0.026 0.003"/>
       </geometry>
     </collision>
     <inertial>
@@ -854,20 +839,20 @@
     </inertial>
   </link>
 
-  <!-- IMU mount joint - centered on platform -->
+  <!-- IMU mount joint - centered on platform, 45mm standoff + 1.5mm board half -->
   <joint name="imu_joint" type="fixed">
     <parent link="platform_link"/>
     <child link="imu_link"/>
-    <origin xyz="0.0 0.0 0.010" rpy="0 0 0"/>
+    <origin xyz="0.0 0.0 0.0465" rpy="0 0 0"/>
   </joint>
 
   <!-- ==================== INTEL REALSENSE D435 CAMERA ==================== -->
   <!--
     Camera mounted on clamp at front of platform, facing straight ahead
     D435 dimensions: 90mm x 25mm x 25mm (width x height x depth)
-    Clamp offset: 25mm forward, 25mm up from platform front edge
-    Position: (0.135, 0, 0.025) relative to platform_link
-      - Platform front edge at x=0.110, clamp extends 25mm forward = 0.135m
+    Mount holes at 10mm from front edge (95mm from center = x=0.095m)
+    Position: (0.130, 0, 0.025) relative to platform_link
+      - Platform front edge at x=0.105 (210mm/2), clamp extends ~25mm forward = 0.130m
       - Clamp raises camera 25mm above platform surface = 0.025m
     Orientation: Facing straight ahead (no tilt)
   -->
@@ -951,7 +936,7 @@
   <joint name="camera_joint" type="fixed">
     <parent link="platform_link"/>
     <child link="camera_link"/>
-    <origin xyz="0.135 0 0.025" rpy="0 0 0"/>
+    <origin xyz="0.130 0 0.025" rpy="0 0 0"/>
   </joint>
 
   <!-- Depth optical frame (ROS convention: Z forward, X right, Y down) -->

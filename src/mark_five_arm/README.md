@@ -30,7 +30,10 @@ This package is configured for the **Lite Arm i2** (Thingiverse thing:480446) - 
   - Upper arm: 230mm (20_21B.stl)
   - Forearm: 180mm (15C.stl)
   - Base bearing: 35mm ID × 47mm OD × 7mm (6807 2RS)
-- **PWM Range:** 1000-2000μs (1500μs = center position)
+- **PWM Range (calibrated):**
+  - Base: 690-2600μs (center: 1645μs)
+  - Shoulder: 900-2000μs (center: 1450μs)
+  - Elbow: 900-2350μs (center: 1625μs)
 
 The URDF (`urdf/lite_arm_i2.urdf.xacro`) has been updated with dimensions extracted from the official STL files.
 
@@ -86,7 +89,7 @@ The URDF (`urdf/lite_arm_i2.urdf.xacro`) has been updated with dimensions extrac
 As specified in the official parts list:
 - **3x Power HD 1501 MG servos** (base, shoulder, forearm) - $15.95 each
   - Operating voltage: 4.8-6V
-  - PWM range: 1000-2000μs (1500μs center)
+  - PWM range: Varies per joint (see calibrated values above)
   - Torque: ~15kg-cm @ 6V
 - **Optional gripper servo:** Any standard servo (SG90 or similar)
 
@@ -375,7 +378,7 @@ base:
   max_pwm: 2000   # Increase if servo doesn't reach max position
 ```
 
-Some servos accept extended range (500-2500μs), but the Power HD 1501 MG should work with 1000-2000μs.
+The Power HD 1501 MG servos support extended PWM ranges beyond the nominal 1000-2000μs. Calibrated ranges: base (690-2600μs), shoulder (900-2000μs), elbow (900-2350μs).
 
 ### Lite Arm i2 Default Calibration
 
@@ -428,6 +431,27 @@ This launches:
 
 Move the sliders and watch both the physical arm and RViz model move together.
 
+### 2b. Distributed Mode (Jetson + Workstation)
+
+When running on a headless Jetson Nano, run the controller on Jetson and GUI/RViz on your workstation:
+
+**On Jetson (headless):**
+```bash
+ros2 launch mark_five_arm arm_test.launch.py use_rviz:=false use_gui:=false
+```
+
+**On Workstation:**
+```bash
+# RViz only (view arm state)
+ros2 launch mark_five_arm display.launch.py use_gui:=false use_rsp:=false
+
+# GUI control (move arm with sliders)
+ros2 run joint_state_publisher_gui joint_state_publisher_gui \
+  --ros-args -r /joint_states:=/arm/joint_commands
+```
+
+Note: `use_rsp:=false` prevents duplicate `robot_state_publisher` since Jetson is already running it.
+
 ### 3. Programmatic Control (No GUI)
 
 Control the arm via ROS2 topics:
@@ -436,10 +460,9 @@ Control the arm via ROS2 topics:
 # Terminal 1: Start arm controller only
 ros2 launch mark_five_arm arm.launch.py
 
-# Terminal 2: Command joints via topic
+# Terminal 2: Command joints via topic (positions in radians)
 ros2 topic pub --once /arm/joint_commands sensor_msgs/JointState \
-  "{name: ['base', 'shoulder', 'elbow', 'gripper'], \
-    position: [0.5, 0.3, -0.5, 0.2]}"
+  "{name: ['base', 'shoulder', 'elbow'], position: [0.5, 0.3, -0.5]}"
 ```
 
 ### Services
@@ -554,12 +577,34 @@ Set `inverted: true` for that joint in `config/arm_params.yaml`
 
 ### Node Crashes on Startup
 
+**Problem:** `Adafruit PCA9685 library not found`
+
+**Solution:**
+```bash
+pip3 install --break-system-packages adafruit-circuitpython-pca9685 Jetson.GPIO
+```
+
+**Problem:** `module 'board' has no attribute 'SCL'`
+
+**Solution:** Install Jetson GPIO library:
+```bash
+pip3 install --break-system-packages Jetson.GPIO
+```
+
 **Problem:** `Failed to initialize PCA9685`
 
 **Solutions:**
-- Install Python library: `pip3 install adafruit-circuitpython-pca9685`
-- Verify I2C permissions: Add user to `i2c` group
-- Run in simulation mode: Node will start without hardware for testing
+- Verify I2C connection: `sudo i2cdetect -y -r 1` (should show 0x40)
+- Check I2C permissions: Add user to `i2c` group
+- Node will fall back to simulation mode if hardware not available
+
+### Direct Hardware Test (No ROS2)
+
+Use the test script for debugging without ROS2:
+```bash
+python3 src/mark_five_arm/scripts/test_servos.py
+```
+This allows interactive testing of individual servos with direct PWM control.
 
 ## Integration with MoveIt2 (Future)
 
@@ -578,11 +623,13 @@ mark_five_arm/
 │   ├── __init__.py
 │   └── arm_controller.py        # Main PCA9685 controller node
 ├── config/
-│   └── arm_params.yaml          # Servo configuration (4 joints)
+│   └── arm_params.yaml          # Servo configuration (calibrated PWM values)
 ├── launch/
 │   ├── arm.launch.py            # Basic launch (controller only)
 │   ├── arm_test.launch.py       # Hardware testing with GUI + RViz
 │   └── display.launch.py        # URDF visualization only (no hardware)
+├── scripts/
+│   └── test_servos.py           # Direct hardware test (no ROS2)
 ├── rviz/
 │   ├── arm.rviz                 # RViz config (legacy)
 │   └── display.rviz             # RViz config for URDF display
