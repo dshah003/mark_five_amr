@@ -50,9 +50,9 @@ def generate_launch_description():
         description='Use simulation time'
     )
 
-    # ICM20948 IMU driver node
+    # ICM20948 IMU driver node (custom smbus2-based driver, Jetson Nano compatible)
     imu_node = Node(
-        package='ros2_icm20948',
+        package='mark_five_icm20948',
         executable='icm20948_node',
         name='icm20948_node',
         output='screen',
