@@ -25,10 +25,9 @@ DEFAULT_PORT = "/dev/ttyACM0"
 BAUD = 115200
 
 
-def send(ser, linear, angular):
-    cmd = f"v,{linear:.4f},{angular:.4f}\n"
-    ser.write(cmd.encode())
-    print(f"  -> {cmd.strip()}")
+def send(ser, char, label):
+    ser.write(char.encode())
+    print(f"  -> {label}")
 
 
 def main():
@@ -58,28 +57,19 @@ def main():
             if cmd == "q":
                 break
             elif cmd == "f":
-                send(ser, 0.2, 0.0)
+                send(ser, "f", "Forward")
             elif cmd == "b":
-                send(ser, -0.2, 0.0)
+                send(ser, "b", "Backward")
             elif cmd == "l":
-                send(ser, 0.0, 0.5)
+                send(ser, "l", "Spin left")
             elif cmd == "r":
-                send(ser, 0.0, -0.5)
+                send(ser, "r", "Spin right")
             elif cmd == "s":
-                send(ser, 0.0, 0.0)
-            elif cmd.startswith("v "):
-                parts = cmd.split()
-                if len(parts) == 3:
-                    try:
-                        send(ser, float(parts[1]), float(parts[2]))
-                    except ValueError:
-                        print("Usage: v <linear> <angular>  e.g.  v 0.15 0.3")
-                else:
-                    print("Usage: v <linear> <angular>  e.g.  v 0.15 0.3")
+                send(ser, "s", "Stop")
             elif cmd == "":
                 pass
             else:
-                print("Unknown command.")
+                print("Unknown command. Use: f b l r s q")
     finally:
         print("Stopping motors...")
         send(ser, 0.0, 0.0)

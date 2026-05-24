@@ -22,8 +22,8 @@
 #define R_EN_LEFT   6
 #define L_EN_LEFT   7
 
-#define RPWM_RIGHT  8
-#define LPWM_RIGHT  9
+#define RPWM_RIGHT  9
+#define LPWM_RIGHT  8
 #define R_EN_RIGHT  10
 #define L_EN_RIGHT  11
 

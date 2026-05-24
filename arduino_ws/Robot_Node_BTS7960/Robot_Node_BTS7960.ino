@@ -33,8 +33,8 @@
 #define L_EN_LEFT   7   // Enable (left half-bridge)
 
 // BTS7960 pin definitions - Right motor
-#define RPWM_RIGHT  8   // Forward PWM
-#define LPWM_RIGHT  9   // Reverse PWM
+#define RPWM_RIGHT  9   // Forward PWM
+#define LPWM_RIGHT  8   // Reverse PWM
 #define R_EN_RIGHT  10  // Enable (right half-bridge)
 #define L_EN_RIGHT  11  // Enable (left half-bridge)
 
