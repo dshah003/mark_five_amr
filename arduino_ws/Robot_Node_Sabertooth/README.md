@@ -1,3 +1,5 @@
+#include <Sabertooth.h>
+
 # Robot_Node_Sabertooth
 
 Arduino firmware for Mark Five AMR using **Sabertooth 2x12 v1.00** motor driver.
