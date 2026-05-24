@@ -38,7 +38,9 @@ tick_lock = threading.Lock()
 
 
 def reader_thread(ser: serial.Serial, stop_event: threading.Event):
-    """Background thread: read tick messages from Arduino and print them."""
+    """Background thread: silently update tick counts; print once per second."""
+    global last_left_ticks, last_right_ticks
+    last_print = 0.0
     while not stop_event.is_set():
         try:
             if ser.in_waiting > 0:
@@ -46,13 +48,15 @@ def reader_thread(ser: serial.Serial, stop_event: threading.Event):
                 if line.startswith("t,"):
                     parts = line.split(",")
                     if len(parts) == 3:
-                        global last_left_ticks, last_right_ticks
                         with tick_lock:
                             last_left_ticks = int(parts[1])
                             last_right_ticks = int(parts[2])
-                        print(f"\r[ticks] left={last_left_ticks:6d}  right={last_right_ticks:6d}", end="", flush=True)
+                        now = time.monotonic()
+                        if now - last_print >= 1.0:
+                            last_print = now
+                            print(f"\n[ticks] left={last_left_ticks:6d}  right={last_right_ticks:6d}")
                 elif line:
-                    print(f"\r[arduino] {line}")
+                    print(f"\n[arduino] {line}")
         except (serial.SerialException, ValueError):
             break
         time.sleep(0.01)
@@ -61,7 +65,7 @@ def reader_thread(ser: serial.Serial, stop_event: threading.Event):
 def send_velocity(ser: serial.Serial, linear: float, angular: float):
     cmd = f"v,{linear:.4f},{angular:.4f}\n"
     ser.write(cmd.encode("utf-8"))
-    print(f"\r[sent]   {cmd.strip()}", flush=True)
+    print(f"[sent]   {cmd.strip()}")
 
 
 def main():
