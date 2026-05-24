@@ -1,137 +1,89 @@
 #!/usr/bin/env python3
 """
-test_serial.py — Interactive serial test for Robot_Node_BTS7960 firmware.
-
-Tests the exact same protocol as serial_bridge.py without needing ROS2.
+test_serial.py — Send velocity commands to Arduino over serial (no ROS2 needed).
 
 Usage:
-  python3 arduino_ws/test_serial.py
-  python3 arduino_ws/test_serial.py --port /dev/ttyACM1
+  python3 test_serial.py
+  python3 test_serial.py --port /dev/ttyACM1
 
-Commands (type at the prompt):
-  f          Forward  (linear=0.2, angular=0)
-  b          Backward (linear=-0.2, angular=0)
-  l          Turn left  (linear=0, angular=0.5)
-  r          Turn right (linear=0, angular=-0.5)
-  s          Stop (send zero velocity)
-  v L A      Send custom velocity: L=linear m/s, A=angular rad/s
-               e.g.  v 0.15 0.3
-  t          Print last received tick counts
-  q          Quit
+Commands:
+  f    Forward
+  b    Backward
+  l    Turn left
+  r    Turn right
+  s    Stop
+  v L A  Custom: linear (m/s) and angular (rad/s), e.g. v 0.15 0.3
+  q    Quit
 """
 
 import argparse
 import sys
-import threading
 import time
 import serial
 
-# ── configuration ──────────────────────────────────────────────────────────────
 DEFAULT_PORT = "/dev/ttyACM0"
 BAUD = 115200
-TIMEOUT = 0.1
-
-# ── shared state ───────────────────────────────────────────────────────────────
-last_left_ticks = 0
-last_right_ticks = 0
-tick_lock = threading.Lock()
 
 
-def reader_thread(ser: serial.Serial, stop_event: threading.Event):
-    """Background thread: silently update tick counts; print once per second."""
-    global last_left_ticks, last_right_ticks
-    last_print = 0.0
-    while not stop_event.is_set():
-        try:
-            if ser.in_waiting > 0:
-                line = ser.readline().decode("utf-8", errors="replace").strip()
-                if line.startswith("t,"):
-                    parts = line.split(",")
-                    if len(parts) == 3:
-                        with tick_lock:
-                            last_left_ticks = int(parts[1])
-                            last_right_ticks = int(parts[2])
-                        now = time.monotonic()
-                        if now - last_print >= 1.0:
-                            last_print = now
-                            print(f"\n[ticks] left={last_left_ticks:6d}  right={last_right_ticks:6d}")
-                elif line:
-                    print(f"\n[arduino] {line}")
-        except (serial.SerialException, ValueError):
-            break
-        time.sleep(0.01)
-
-
-def send_velocity(ser: serial.Serial, linear: float, angular: float):
+def send(ser, linear, angular):
     cmd = f"v,{linear:.4f},{angular:.4f}\n"
-    ser.write(cmd.encode("utf-8"))
-    print(f"[sent]   {cmd.strip()}")
+    ser.write(cmd.encode())
+    print(f"  -> {cmd.strip()}")
 
 
 def main():
-    parser = argparse.ArgumentParser(description="BTS7960 serial test (no ROS2 needed)")
-    parser.add_argument("--port", default=DEFAULT_PORT, help=f"Serial port (default: {DEFAULT_PORT})")
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--port", default=DEFAULT_PORT)
     args = parser.parse_args()
 
-    print(f"Connecting to {args.port} at {BAUD} baud...")
+    print(f"Connecting to {args.port} ...")
     try:
-        ser = serial.Serial(args.port, BAUD, timeout=TIMEOUT)
+        ser = serial.Serial(args.port, BAUD, timeout=0)
     except serial.SerialException as e:
         print(f"ERROR: {e}")
-        print("Is the Arduino plugged in? Try: ls /dev/ttyACM*")
         sys.exit(1)
 
-    time.sleep(2)  # Give Arduino time to reset after opening serial
-    print(f"Connected. Waiting for tick data...")
-    print(__doc__)
+    # Drain any buffered Arduino output so it doesn't clog the port
+    time.sleep(2)
+    ser.reset_input_buffer()
 
-    stop_event = threading.Event()
-    t = threading.Thread(target=reader_thread, args=(ser, stop_event), daemon=True)
-    t.start()
+    print("Connected. Commands: f b l r s  |  v L A  |  q")
 
     try:
         while True:
-            try:
-                cmd = input("\ncmd> ").strip().lower()
-            except EOFError:
-                break
+            cmd = input("cmd> ").strip().lower()
+            # Drain incoming bytes silently so the buffer stays clear
+            ser.reset_input_buffer()
 
             if cmd == "q":
                 break
             elif cmd == "f":
-                send_velocity(ser, 0.2, 0.0)
+                send(ser, 0.2, 0.0)
             elif cmd == "b":
-                send_velocity(ser, -0.2, 0.0)
+                send(ser, -0.2, 0.0)
             elif cmd == "l":
-                send_velocity(ser, 0.0, 0.5)
+                send(ser, 0.0, 0.5)
             elif cmd == "r":
-                send_velocity(ser, 0.0, -0.5)
+                send(ser, 0.0, -0.5)
             elif cmd == "s":
-                send_velocity(ser, 0.0, 0.0)
+                send(ser, 0.0, 0.0)
             elif cmd.startswith("v "):
                 parts = cmd.split()
                 if len(parts) == 3:
                     try:
-                        send_velocity(ser, float(parts[1]), float(parts[2]))
+                        send(ser, float(parts[1]), float(parts[2]))
                     except ValueError:
-                        print("Usage: v <linear> <angular>  e.g. v 0.15 0.3")
+                        print("Usage: v <linear> <angular>  e.g.  v 0.15 0.3")
                 else:
-                    print("Usage: v <linear> <angular>  e.g. v 0.15 0.3")
-            elif cmd == "t":
-                with tick_lock:
-                    print(f"left={last_left_ticks}  right={last_right_ticks}")
+                    print("Usage: v <linear> <angular>  e.g.  v 0.15 0.3")
             elif cmd == "":
                 pass
             else:
-                print("Unknown command. Type q to quit.")
+                print("Unknown command.")
     finally:
-        print("\nStopping motors...")
-        try:
-            send_velocity(ser, 0.0, 0.0)
-            time.sleep(0.2)
-        except Exception:
-            pass
-        stop_event.set()
+        print("Stopping motors...")
+        send(ser, 0.0, 0.0)
+        time.sleep(0.2)
         ser.close()
         print("Done.")
 
