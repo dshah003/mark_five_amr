@@ -17,13 +17,13 @@
  *   Right BTS7960: RPWM=8, LPWM=9, R_EN=10, L_EN=11
  */
 
-#define RPWM_LEFT   4
-#define LPWM_LEFT   5
+#define RPWM_LEFT   5
+#define LPWM_LEFT   4
 #define R_EN_LEFT   6
 #define L_EN_LEFT   7
 
-#define RPWM_RIGHT  9
-#define LPWM_RIGHT  8
+#define RPWM_RIGHT  8
+#define LPWM_RIGHT  9
 #define R_EN_RIGHT  10
 #define L_EN_RIGHT  11
 

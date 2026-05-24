@@ -46,8 +46,8 @@ Each BTS7960 module has 6 control pins (RPWM, LPWM, R_EN, L_EN, VCC, GND):
 | Arduino     |         | Left BTS7960      |         | Right BTS7960     |
 | Mega 2560   |         |                   |         |                   |
 |             |         |  RPWM  (forward)  |         |  RPWM  (forward)  |
-|  Pin 4 -----+-------->|  RPWM             |         |                   |
-|  Pin 5 -----+-------->|  LPWM             |         |                   |
+|  Pin 5 -----+-------->|  RPWM             |         |                   |
+|  Pin 4 -----+-------->|  LPWM             |         |                   |
 |  Pin 6 -----+-------->|  R_EN             |         |                   |
 |  Pin 7 -----+-------->|  L_EN             |         |                   |
 |             |         |                   |         |                   |
@@ -74,8 +74,8 @@ Each BTS7960 module has 6 control pins (RPWM, LPWM, R_EN, L_EN, VCC, GND):
 
 | Arduino Pin | BTS7960 Module | Signal | Description |
 |-------------|----------------|--------|-------------|
-| 4  | Left  | RPWM   | Left motor forward PWM |
-| 5  | Left  | LPWM   | Left motor reverse PWM |
+| 5  | Left  | RPWM   | Left motor forward PWM |
+| 4  | Left  | LPWM   | Left motor reverse PWM |
 | 6  | Left  | R_EN   | Left module enable (right half-bridge) |
 | 7  | Left  | L_EN   | Left module enable (left half-bridge) |
 | 8  | Right | RPWM   | Right motor forward PWM |
@@ -137,11 +137,7 @@ Initial constants are scaled from the previous Sabertooth values and will need t
 4. Check serial_bridge is running: `ros2 node list | grep serial_bridge`
 
 ### Motors spin wrong direction
-Swap the motor wire connections (M+ and M−) on the module, **or** swap the sign in code:
-```cpp
-// In set_pwm_values(), swap leftWithSign sign:
-int leftWithSign = (pwmLeftReq >= 0) ? -pwmLeftOut : pwmLeftOut;
-```
+Swap the motor wire connections (M+ and M−) on the module, **or** swap the RPWM/LPWM pin numbers for that motor in the `#define` block at the top of the sketch.
 
 ### Robot drifts to one side
 Adjust `DRIFT_MULTIPLIER` (increase to correct more, decrease if oscillating).
