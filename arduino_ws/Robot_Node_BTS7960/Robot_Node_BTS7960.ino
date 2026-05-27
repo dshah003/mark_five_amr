@@ -92,8 +92,8 @@ const int DRIFT_MULTIPLIER = 120;
 const int PWM_TURN = 80;
 
 // Set minimum and maximum limits for the PWM values (0-255 scale)
-const int PWM_MIN = 60;   // Minimum to overcome friction
-const int PWM_MAX = 100;  // Limit max speed for safety during initial testing
+const int PWM_MIN = 50;   // Minimum to overcome friction
+const int PWM_MAX = 160;  // Max speed (increase from 100 once motors are confirmed working)
 
 // Velocity and PWM variables for each wheel
 double velLeftWheel = 0;
@@ -271,16 +271,16 @@ void set_pwm_values() {
   }
 
   // Gradually adjust output PWM
-  // Accelerate slowly (+1), but decelerate quickly (-5) for safety
+  // Accelerate at +5 per 30ms loop (~150ms to full speed), decelerate quickly (-10) for safety
   if (abs(pwmLeftReq) > pwmLeftOut) {
-    pwmLeftOut += 1;
+    pwmLeftOut += 5;
   } else if (abs(pwmLeftReq) < pwmLeftOut) {
-    pwmLeftOut -= 5;
+    pwmLeftOut -= 10;
     if (pwmLeftOut < 0) pwmLeftOut = 0;
   }
 
   if (abs(pwmRightReq) > pwmRightOut) {
-    pwmRightOut += 1;
+    pwmRightOut += 5;
   } else if (abs(pwmRightReq) < pwmRightOut) {
     pwmRightOut -= 5;
     if (pwmRightOut < 0) pwmRightOut = 0;
