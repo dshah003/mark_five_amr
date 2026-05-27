@@ -255,18 +255,19 @@ void set_pwm_values() {
   static int pwmLeftOut = 0;
   static int pwmRightOut = 0;
 
-  // Stop before switching direction
-  if ((pwmLeftReq * velLeftWheel < 0 && pwmLeftOut != 0) ||
-      (pwmRightReq * velRightWheel < 0 && pwmRightOut != 0)) {
+  // Stop before switching direction — only when wheel is meaningfully moving the wrong way.
+  // Threshold of 0.05 m/s avoids encoder noise / sign ambiguity killing the motor on startup.
+  if ((pwmLeftReq * velLeftWheel < 0 && abs(velLeftWheel) > 0.05 && pwmLeftOut != 0) ||
+      (pwmRightReq * velRightWheel < 0 && abs(velRightWheel) > 0.05 && pwmRightOut != 0)) {
     pwmLeftReq = 0;
     pwmRightReq = 0;
   }
 
   // Increase PWM if robot is not moving but should be
-  if (pwmLeftReq != 0 && velLeftWheel == 0) {
+  if (pwmLeftReq != 0 && abs(velLeftWheel) < 0.01) {
     pwmLeftReq *= 1.5;
   }
-  if (pwmRightReq != 0 && velRightWheel == 0) {
+  if (pwmRightReq != 0 && abs(velRightWheel) < 0.01) {
     pwmRightReq *= 1.5;
   }
 
