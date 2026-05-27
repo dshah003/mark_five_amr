@@ -200,12 +200,17 @@ void processCmdVel(double linear_x, double angular_z) {
   lastCmdVelReceived = millis();
 
   // Map linear velocity to PWM. Apply offset 'b' with correct sign.
-  if (linear_x >= 0) {
+  // Explicitly zero when linear_x == 0 — the >= case would give pwmReq = b = 52, which
+  // doesn't stop the motors since 52 > PWM_MIN.
+  if (linear_x > 0) {
     pwmLeftReq = K_P * linear_x + b;
     pwmRightReq = K_P * linear_x + b;
-  } else {
+  } else if (linear_x < 0) {
     pwmLeftReq = K_P * linear_x - b;
     pwmRightReq = K_P * linear_x - b;
+  } else {
+    pwmLeftReq = 0;
+    pwmRightReq = 0;
   }
 
   if (angular_z != 0.0) {
@@ -252,49 +257,15 @@ void set_motor(int rpwm_pin, int lpwm_pin, int signed_pwm) {
 }
 
 void set_pwm_values() {
-  static int pwmLeftOut = 0;
-  static int pwmRightOut = 0;
+  // Direct PWM — no ramp. The ramp (+N per iteration) ran at ~100kHz Arduino loop speed,
+  // completing in microseconds with no real smoothing effect and causing kickstart oscillation.
+  // Smooth accel/decel can be added back time-gated to the 30ms tick interval once basic
+  // motion is confirmed working.
+  int leftOut  = constrain((int)abs(pwmLeftReq),  0, PWM_MAX);
+  int rightOut = constrain((int)abs(pwmRightReq), 0, PWM_MAX);
 
-  // Stop before switching direction — only when wheel is meaningfully moving the wrong way.
-  // Threshold of 0.05 m/s avoids encoder noise / sign ambiguity killing the motor on startup.
-  if ((pwmLeftReq * velLeftWheel < 0 && abs(velLeftWheel) > 0.05 && pwmLeftOut != 0) ||
-      (pwmRightReq * velRightWheel < 0 && abs(velRightWheel) > 0.05 && pwmRightOut != 0)) {
-    pwmLeftReq = 0;
-    pwmRightReq = 0;
-  }
-
-  // Increase PWM if robot is not moving but should be
-  if (pwmLeftReq != 0 && abs(velLeftWheel) < 0.01) {
-    pwmLeftReq *= 1.5;
-  }
-  if (pwmRightReq != 0 && abs(velRightWheel) < 0.01) {
-    pwmRightReq *= 1.5;
-  }
-
-  // Gradually adjust output PWM
-  // Accelerate at +5 per 30ms loop (~150ms to full speed), decelerate quickly (-10) for safety
-  if (abs(pwmLeftReq) > pwmLeftOut) {
-    pwmLeftOut += 5;
-  } else if (abs(pwmLeftReq) < pwmLeftOut) {
-    pwmLeftOut -= 10;
-    if (pwmLeftOut < 0) pwmLeftOut = 0;
-  }
-
-  if (abs(pwmRightReq) > pwmRightOut) {
-    pwmRightOut += 5;
-  } else if (abs(pwmRightReq) < pwmRightOut) {
-    pwmRightOut -= 5;
-    if (pwmRightOut < 0) pwmRightOut = 0;
-  }
-
-  // Limit to safe maximum
-  pwmLeftOut = constrain(pwmLeftOut, 0, PWM_MAX);
-  pwmRightOut = constrain(pwmRightOut, 0, PWM_MAX);
-
-  // Restore direction sign and drive BTS7960 modules
-  // Swap left/right or invert signs here if motors spin the wrong way
-  int leftWithSign  = (pwmLeftReq  >= 0) ? pwmLeftOut  : -pwmLeftOut;
-  int rightWithSign = (pwmRightReq >= 0) ? pwmRightOut : -pwmRightOut;
+  int leftWithSign  = (pwmLeftReq  >= 0) ? leftOut  : -leftOut;
+  int rightWithSign = (pwmRightReq >= 0) ? rightOut : -rightOut;
 
   set_motor(RPWM_LEFT,  LPWM_LEFT,  leftWithSign);
   set_motor(RPWM_RIGHT, LPWM_RIGHT, rightWithSign);
