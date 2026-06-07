@@ -1,38 +1,42 @@
 /*
- * Robot_Node_Sabertooth.ino (Simple Serial Protocol)
+ * Robot_Node_BTS7960.ino (Simple Serial Protocol)
  *
- * Description: Arduino node for Mark Five AMR using Sabertooth 2x12 motor driver.
+ * Description: Arduino node for Mark Five AMR using 2x BTS7960 motor driver modules.
  *              Uses simple serial protocol instead of ros2arduino (memory efficient).
  *              Publishes encoder ticks and receives velocity commands via serial.
  *
- * Motor Driver: Sabertooth 2x12 v1.00 (Packetized Serial Mode)
- * Library: Dimension Engineering Sabertooth Arduino Library
- *
- * DIP Switches: OFF OFF ON ON ON ON (Packetized Serial, Address 128)
+ * Motor Driver: 2x BTS7960 (IBT-2) H-Bridge modules
+ *               - One module per motor
+ *               - Direct PWM control (no library needed)
+ *               - PWM range 0-255 per direction
  *
  * Serial Protocol:
  *   TX (Arduino sends):  "t,<left_ticks>,<right_ticks>\n"
  *   RX (Arduino receives): "v,<linear_x>,<angular_z>\n"
  *
- * Wiring:
- *   Pin 18 (TX1) --> Sabertooth S1
- *   GND --> Sabertooth 0V
- *   Encoders on pins 2, 3, 20, 21
+ * Wiring (see README.md for full diagram):
+ *   Left motor  BTS7960: RPWM→4, LPWM→5, R_EN→6, L_EN→7
+ *   Right motor BTS7960: RPWM→8, LPWM→9, R_EN→10, L_EN→11
+ *   Encoders: left A/B→21/20, right A/B→3/2
  *
  * ROS2 Bridge: Run the serial_bridge node on the host to convert to ROS2 topics.
- *
- * Based on original Robot_Node.ino for L293DNE H-Bridge.
- * Reference: Automatic Addison, Practical Robotics in C++
  */
-
-#include <Sabertooth.h>
 
 // Serial configuration
 #define SERIAL_BAUD 115200
 #define PUBLISH_INTERVAL 30  // ms
 
-// Sabertooth at address 128, using Serial1 (Pin 18 TX on Mega)
-Sabertooth ST(128, Serial1);
+// BTS7960 pin definitions - Left motor
+#define RPWM_LEFT   4   // Forward PWM
+#define LPWM_LEFT   5   // Reverse PWM
+#define R_EN_LEFT   6   // Enable (right half-bridge)
+#define L_EN_LEFT   7   // Enable (left half-bridge)
+
+// BTS7960 pin definitions - Right motor
+#define RPWM_RIGHT  8   // Forward PWM
+#define LPWM_RIGHT  9   // Reverse PWM
+#define R_EN_RIGHT  10  // Enable (right half-bridge)
+#define L_EN_RIGHT  11  // Enable (left half-bridge)
 
 ////////////////// Tick Data Publishing Variables and Constants ///////////////
 
@@ -68,14 +72,14 @@ const int TICKS_PER_REVOLUTION = 540;
 // Wheel radius in meters (70mm diameter wheels on RÅSKOG platform)
 const double WHEEL_RADIUS = 0.035;
 
-// Distance from center of left tire to center of right tire in meters (measured)
+// Distance from center of left tire to center of right tire in meters
 const double WHEEL_BASE = 0.36;
 
 // Number of ticks a wheel makes moving a linear distance of 1 meter
-// 540 ticks/rev / (2 * pi * 0.035m) = 2456 — recalibrate after first drive
 const double TICKS_PER_METER = 2456;
 
 // Proportional constant for PWM-Linear Velocity relationship
+// BTS7960 uses 0-255 scale (vs -127..127 for Sabertooth) — retune after first test
 const int K_P = 278;
 
 // Y-intercept for PWM-Linear Velocity relationship
@@ -84,12 +88,12 @@ const int b = 52;
 // Correction multiplier for drift
 const int DRIFT_MULTIPLIER = 120;
 
-// Turning PWM output (Sabertooth uses -127 to 127)
-const int PWM_TURN = 40;
+// Turning PWM output (0-255 scale)
+const int PWM_TURN = 80;
 
-// Set minimum and maximum limits for the PWM values
-const int PWM_MIN = 30;  // Minimum to overcome friction
-const int PWM_MAX = 50;  // Limit max speed
+// Set minimum and maximum limits for the PWM values (0-255 scale)
+const int PWM_MIN = 50;   // Minimum to overcome friction
+const int PWM_MAX = 160;  // Max speed (increase from 100 once motors are confirmed working)
 
 // Velocity and PWM variables for each wheel
 double velLeftWheel = 0;
@@ -195,14 +199,18 @@ void calc_vel_right_wheel() {
 void processCmdVel(double linear_x, double angular_z) {
   lastCmdVelReceived = millis();
 
-  // Scale linear velocity to PWM (-127 to 127 for Sabertooth)
-  // Apply offset 'b' with proper sign for forward/backward motion
-  if (linear_x >= 0) {
+  // Map linear velocity to PWM. Apply offset 'b' with correct sign.
+  // Explicitly zero when linear_x == 0 — the >= case would give pwmReq = b = 52, which
+  // doesn't stop the motors since 52 > PWM_MIN.
+  if (linear_x > 0) {
     pwmLeftReq = K_P * linear_x + b;
     pwmRightReq = K_P * linear_x + b;
-  } else {
+  } else if (linear_x < 0) {
     pwmLeftReq = K_P * linear_x - b;
     pwmRightReq = K_P * linear_x - b;
+  } else {
+    pwmLeftReq = 0;
+    pwmRightReq = 0;
   }
 
   if (angular_z != 0.0) {
@@ -226,7 +234,7 @@ void processCmdVel(double linear_x, double angular_z) {
     pwmRightReq += (int)(avgDifference * DRIFT_MULTIPLIER);
   }
 
-  // Handle low PWM values
+  // Zero out requests below minimum (deadband)
   if (abs(pwmLeftReq) < PWM_MIN) {
     pwmLeftReq = 0;
   }
@@ -235,53 +243,32 @@ void processCmdVel(double linear_x, double angular_z) {
   }
 }
 
+void set_motor(int rpwm_pin, int lpwm_pin, int signed_pwm) {
+  // Drive one BTS7960 module.
+  // signed_pwm > 0 → forward (RPWM active), < 0 → reverse (LPWM active)
+  int magnitude = constrain(abs(signed_pwm), 0, 255);
+  if (signed_pwm >= 0) {
+    analogWrite(rpwm_pin, magnitude);
+    analogWrite(lpwm_pin, 0);
+  } else {
+    analogWrite(rpwm_pin, 0);
+    analogWrite(lpwm_pin, magnitude);
+  }
+}
+
 void set_pwm_values() {
-  static int pwmLeftOut = 0;
-  static int pwmRightOut = 0;
+  // Direct PWM — no ramp. The ramp (+N per iteration) ran at ~100kHz Arduino loop speed,
+  // completing in microseconds with no real smoothing effect and causing kickstart oscillation.
+  // Smooth accel/decel can be added back time-gated to the 30ms tick interval once basic
+  // motion is confirmed working.
+  int leftOut  = constrain((int)abs(pwmLeftReq),  0, PWM_MAX);
+  int rightOut = constrain((int)abs(pwmRightReq), 0, PWM_MAX);
 
-  // Stop before switching direction
-  if ((pwmLeftReq * velLeftWheel < 0 && pwmLeftOut != 0) ||
-      (pwmRightReq * velRightWheel < 0 && pwmRightOut != 0)) {
-    pwmLeftReq = 0;
-    pwmRightReq = 0;
-  }
+  int leftWithSign  = (pwmLeftReq  >= 0) ? leftOut  : -leftOut;
+  int rightWithSign = (pwmRightReq >= 0) ? rightOut : -rightOut;
 
-  // Increase PWM if robot is not moving but should be
-  if (pwmLeftReq != 0 && velLeftWheel == 0) {
-    pwmLeftReq *= 1.5;
-  }
-  if (pwmRightReq != 0 && velRightWheel == 0) {
-    pwmRightReq *= 1.5;
-  }
-
-  // Gradually adjust output PWM
-  // Accelerate slowly (+1), but decelerate quickly (-5) for safety
-  if (abs(pwmLeftReq) > pwmLeftOut) {
-    pwmLeftOut += 1;
-  } else if (abs(pwmLeftReq) < pwmLeftOut) {
-    pwmLeftOut -= 5;  // Faster deceleration for quick stops
-    if (pwmLeftOut < 0) pwmLeftOut = 0;
-  }
-
-  if (abs(pwmRightReq) > pwmRightOut) {
-    pwmRightOut += 1;
-  } else if (abs(pwmRightReq) < pwmRightOut) {
-    pwmRightOut -= 5;  // Faster deceleration for quick stops
-    if (pwmRightOut < 0) pwmRightOut = 0;
-  }
-
-  // Limit PWM output (Sabertooth range: -127 to 127)
-  pwmLeftOut = constrain(pwmLeftOut, 0, PWM_MAX);
-  pwmRightOut = constrain(pwmRightOut, 0, PWM_MAX);
-
-  // Apply direction sign
-  int leftWithSign = (pwmLeftReq >= 0) ? pwmLeftOut : -pwmLeftOut;
-  int rightWithSign = (pwmRightReq >= 0) ? pwmRightOut : -pwmRightOut;
-
-  // Send commands to Sabertooth using library
-  // Note: Swap motor(1) and motor(2) if wheels are reversed
-  ST.motor(1, leftWithSign);
-  ST.motor(2, rightWithSign);
+  set_motor(RPWM_LEFT,  LPWM_LEFT,  leftWithSign);
+  set_motor(RPWM_RIGHT, LPWM_RIGHT, rightWithSign);
 }
 
 /////////////////////// Serial Communication //////////////////////////////////
@@ -323,23 +310,24 @@ void publishTicks() {
 /////////////////////// Setup and Loop ////////////////////////////////////////
 
 void setup() {
-  // Initialize Sabertooth serial communication
-  Serial1.begin(9600);
-  ST.autobaud();
-  delay(100);
+  // BTS7960 enable pins — set HIGH to activate both half-bridges on each module
+  pinMode(R_EN_LEFT,  OUTPUT); digitalWrite(R_EN_LEFT,  HIGH);
+  pinMode(L_EN_LEFT,  OUTPUT); digitalWrite(L_EN_LEFT,  HIGH);
+  pinMode(R_EN_RIGHT, OUTPUT); digitalWrite(R_EN_RIGHT, HIGH);
+  pinMode(L_EN_RIGHT, OUTPUT); digitalWrite(L_EN_RIGHT, HIGH);
 
   // Stop both motors on startup
-  ST.motor(1, 0);
-  ST.motor(2, 0);
+  set_motor(RPWM_LEFT,  LPWM_LEFT,  0);
+  set_motor(RPWM_RIGHT, LPWM_RIGHT, 0);
 
-  // Set pin states of the encoder
-  pinMode(ENC_IN_LEFT_A, INPUT_PULLUP);
-  pinMode(ENC_IN_LEFT_B, INPUT);
+  // Encoder pin setup
+  pinMode(ENC_IN_LEFT_A,  INPUT_PULLUP);
+  pinMode(ENC_IN_LEFT_B,  INPUT);
   pinMode(ENC_IN_RIGHT_A, INPUT_PULLUP);
   pinMode(ENC_IN_RIGHT_B, INPUT);
 
   // Attach encoder interrupts
-  attachInterrupt(digitalPinToInterrupt(ENC_IN_LEFT_A), left_wheel_tick, RISING);
+  attachInterrupt(digitalPinToInterrupt(ENC_IN_LEFT_A),  left_wheel_tick,  RISING);
   attachInterrupt(digitalPinToInterrupt(ENC_IN_RIGHT_A), right_wheel_tick, RISING);
 
   // USB Serial for communication with ROS2 bridge
@@ -362,12 +350,11 @@ void loop() {
     previousMillis = currentMillis;
     publishTicks();
 
-    // Calculate wheel velocities
     calc_vel_right_wheel();
     calc_vel_left_wheel();
   }
 
-  // Stop if no cmd_vel messages received for 1 second
+  // Stop if no cmd_vel received for 1 second
   if (millis() - lastCmdVelReceived > 1000) {
     pwmLeftReq = 0;
     pwmRightReq = 0;
