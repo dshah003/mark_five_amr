@@ -103,6 +103,14 @@ class ICM20948Node(Node):
         # No orientation estimate from this driver
         msg.orientation_covariance[0] = -1.0
 
+        # ICM-20948 datasheet noise specs (diagonal covariance matrices)
+        # Gyro: ~0.015 dps/√Hz → ~0.004 rad/s RMS at 30 Hz
+        # Accel: ~230 μg/√Hz → ~0.04 m/s² RMS at 30 Hz
+        gv = 4e-5   # (0.006 rad/s)²
+        av = 1.6e-3  # (0.04 m/s²)²
+        msg.angular_velocity_covariance     = [gv, 0.0, 0.0, 0.0, gv, 0.0, 0.0, 0.0, gv]
+        msg.linear_acceleration_covariance  = [av, 0.0, 0.0, 0.0, av, 0.0, 0.0, 0.0, av]
+
         self.imu_pub.publish(msg)
 
 

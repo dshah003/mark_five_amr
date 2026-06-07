@@ -12,7 +12,7 @@
       Wheel diameter:  70mm  (radius: 35mm)
       Wheel base:      360mm center-to-center (left/right)
       Cart footprint:  350mm (Y, left/right) × 250mm (X, front/back)
-      Shelf heights from ground:  65mm (bottom), 380mm (middle), 640mm (top)
+      Shelf heights from ground:  135mm (bottom, measured), 380mm (middle, estimated), 640mm (top, estimated)
       Total height:    ~880mm (top of handle)
 
     Coordinate System (REP 103):
@@ -334,30 +334,30 @@
       <material name="steel_chrome"><color rgba="0.80 0.80 0.82 1.0"/></material>
     </visual>
 
-    <!-- === Bottom shelf basket (65mm from ground) === -->
+    <!-- === Bottom shelf basket (135mm from ground, measured) === -->
     <visual>
-      <origin xyz="0 0 0.030" rpy="0 0 0"/>
+      <origin xyz="0 0 0.100" rpy="0 0 0"/>
       <geometry><box size="0.230 0.330 0.003"/></geometry>
       <material name="shelf_white"><color rgba="0.95 0.95 0.95 0.85"/></material>
     </visual>
     <!-- Bottom shelf perimeter wire -->
     <visual>
-      <origin xyz="0.115 0 0.033" rpy="0 0 0"/>
+      <origin xyz="0.115 0 0.103" rpy="0 0 0"/>
       <geometry><box size="0.003 0.330 0.006"/></geometry>
       <material name="steel_chrome"><color rgba="0.80 0.80 0.82 1.0"/></material>
     </visual>
     <visual>
-      <origin xyz="-0.115 0 0.033" rpy="0 0 0"/>
+      <origin xyz="-0.115 0 0.103" rpy="0 0 0"/>
       <geometry><box size="0.003 0.330 0.006"/></geometry>
       <material name="steel_chrome"><color rgba="0.80 0.80 0.82 1.0"/></material>
     </visual>
     <visual>
-      <origin xyz="0 0.165 0.033" rpy="0 0 0"/>
+      <origin xyz="0 0.165 0.103" rpy="0 0 0"/>
       <geometry><box size="0.230 0.003 0.006"/></geometry>
       <material name="steel_chrome"><color rgba="0.80 0.80 0.82 1.0"/></material>
     </visual>
     <visual>
-      <origin xyz="0 -0.165 0.033" rpy="0 0 0"/>
+      <origin xyz="0 -0.165 0.103" rpy="0 0 0"/>
       <geometry><box size="0.230 0.003 0.006"/></geometry>
       <material name="steel_chrome"><color rgba="0.80 0.80 0.82 1.0"/></material>
     </visual>
@@ -570,8 +570,12 @@
 
   <!-- ==================== ICM-20948 9-DOF IMU ==================== -->
   <!--
-    Mounted centered on middle shelf (380mm from ground = 345mm above base_link).
-    Shelf surface + board half-thickness: 0.345 + 0.003 + 0.0015 = 0.3495
+    Mounted on the BOTTOM shelf, centered left-right (Y=0).
+      Bottom shelf floor from ground: 135mm (measured)
+      Bottom shelf surface above cart_frame_link: 135mm - 35mm + 1.5mm = 101.5mm
+      Z: shelf surface (0.1015m) + 50mm above shelf floor = 0.152m
+      X: front wall at x=+0.115m, inset 19mm → 0.096m
+      Y: 0.0 (centered)
 
     Connection (Jetson Nano I2C Bus 1):
       VIN → 3.3V (Pin 1)   GND → GND (Pin 6)
@@ -604,24 +608,50 @@
   <joint name="imu_joint" type="fixed">
     <parent link="cart_frame_link"/>
     <child link="imu_link"/>
-    <origin xyz="0.0 0.0 0.350" rpy="0 0 0"/>
+    <origin xyz="0.096 0.0 0.152" rpy="0 0 0"/>
   </joint>
 
   <!-- ==================== INTEL REALSENSE D435 CAMERA ==================== -->
   <!--
-    Camera not yet mounted on RÅSKOG platform.
-    Link and optical frames kept for TF consistency with driver nodes.
-    Position is a placeholder — update xyz when physically mounted.
+    Clamped to the front horizontal cross-rail, facing forward, centered left-right.
+
+    Height: ~150mm from ground → 150 - 35 (base_link) = 115mm above cart_frame_link.
+    NOTE: User also quoted "250mm above bottom shelf floor" (= 315mm from ground) which
+    contradicts 150mm. Photo is consistent with 150mm. Verify with tape measure.
+
+    X: front rail at x=0.115m + ~5mm camera body protrusion = 0.120m
+    Y: 0.0 (centered on rail, per photo)
+    Z: 0.115m above cart_frame_link
+    RPY: 0 0 0 (horizontal, facing +X / forward)
   -->
   <link name="camera_link">
-    <!-- No visual — camera not yet physically mounted -->
+    <!-- D435 body: 90mm wide × 25mm tall × 25mm deep -->
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry><box size="0.025 0.090 0.025"/></geometry>
+      <material name="camera_body"><color rgba="0.15 0.15 0.15 1.0"/></material>
+    </visual>
+    <!-- Front glass / lens array -->
+    <visual>
+      <origin xyz="0.013 0 0" rpy="0 0 0"/>
+      <geometry><box size="0.001 0.086 0.020"/></geometry>
+      <material name="camera_lens"><color rgba="0.05 0.05 0.08 1.0"/></material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry><box size="0.025 0.090 0.025"/></geometry>
+    </collision>
+    <inertial>
+      <mass value="0.072"/>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <inertia ixx="0.00001" ixy="0.0" ixz="0.0" iyy="0.00001" iyz="0.0" izz="0.00001"/>
+    </inertial>
   </link>
 
   <joint name="camera_joint" type="fixed">
     <parent link="cart_frame_link"/>
     <child link="camera_link"/>
-    <!-- Placeholder: front edge of top shelf, facing forward -->
-    <origin xyz="0.115 0 0.610" rpy="0 0 0"/>
+    <origin xyz="0.120 0.0 0.115" rpy="0 0 0"/>
   </joint>
 
   <link name="camera_depth_optical_frame"/>

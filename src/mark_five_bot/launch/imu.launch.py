@@ -57,7 +57,7 @@ def generate_launch_description():
         name='icm20948_node',
         output='screen',
         parameters=[{
-            'i2c_address': 0x68,  # GY-ICM20948v2 default address (104 in decimal)
+            'i2c_address': LaunchConfiguration('i2c_address'),
             'frame_id': LaunchConfiguration('frame_id'),
             'pub_rate': LaunchConfiguration('pub_rate'),
             'use_sim_time': LaunchConfiguration('use_sim_time')
