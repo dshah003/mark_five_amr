@@ -7,10 +7,10 @@ odometry_node:
                               # Note: calibrate with rotation test and adjust if odometry drifts
 
     # Per-wheel calibration (accounts for wheel asymmetry)
-    # Initial estimate: 540 ticks/rev ÷ (2π × 0.035m) ≈ 2456 ticks/m — recalibrate after first drive
-    ticks_per_meter_left: 2456.0
-    ticks_per_meter_right: 2456.0
-    ticks_per_meter: 2456.0         # Fallback/average value (used if per-wheel not specified)
+    # Baseline: 540 ticks/rev ÷ 0.23m circumference = 2348 ticks/m — recalibrate with measured drive
+    ticks_per_meter_left: 2348.0
+    ticks_per_meter_right: 2348.0
+    ticks_per_meter: 2348.0         # Fallback/average value (used if per-wheel not specified)
 
     # TF frame IDs
     odom_frame: "odom"

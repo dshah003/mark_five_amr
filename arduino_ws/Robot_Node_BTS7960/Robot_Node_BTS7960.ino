@@ -69,14 +69,15 @@ unsigned long currentMillis = 0;
 // Number of ticks per wheel revolution
 const int TICKS_PER_REVOLUTION = 540;
 
-// Wheel radius in meters (70mm diameter wheels on RÅSKOG platform)
-const double WHEEL_RADIUS = 0.035;
+// Wheel radius in meters (circumference 230mm measured → r = 230/(2π) = 36.6mm)
+const double WHEEL_RADIUS = 0.0366;
 
 // Distance from center of left tire to center of right tire in meters
 const double WHEEL_BASE = 0.36;
 
 // Number of ticks a wheel makes moving a linear distance of 1 meter
-const double TICKS_PER_METER = 2456;
+// 540 ticks/rev ÷ 0.23m circumference = 2348 — recalibrate with measured drive
+const double TICKS_PER_METER = 2348;
 
 // Proportional constant for PWM-Linear Velocity relationship
 // BTS7960 uses 0-255 scale (vs -127..127 for Sabertooth) — retune after first test

@@ -9,7 +9,7 @@
     Support:  4x passive corner casters (~20mm radius)
 
     Key dimensions:
-      Wheel diameter:  70mm  (radius: 35mm)
+      Wheel diameter:  ~73mm (circumference 230mm measured → radius 36.6mm)
       Wheel base:      360mm center-to-center (left/right)
       Cart footprint:  350mm (Y, left/right) × 250mm (X, front/back)
       Shelf heights from ground:  135mm (bottom, measured), 380mm (middle, estimated), 640mm (top, estimated)
@@ -20,7 +20,7 @@
       Y: Left    (along 350mm cart width)
       Z: Up
       base_footprint: on ground, center between drive wheels
-      base_link:      at drive wheel axle height (35mm above ground)
+      base_link:      at drive wheel axle height (36.6mm above ground)
   -->
 
   <!-- ==================== BASE FOOTPRINT ==================== -->
@@ -29,7 +29,7 @@
   <joint name="base_footprint_joint" type="fixed">
     <parent link="base_footprint"/>
     <child link="base_link"/>
-    <origin xyz="0 0 0.035" rpy="0 0 0"/>
+    <origin xyz="0 0 0.0366" rpy="0 0 0"/>
   </joint>
 
   <!-- ==================== BASE LINK (at wheel axle height) ==================== -->
@@ -49,7 +49,7 @@
     <visual>
       <origin xyz="0 0 0" rpy="1.5708 0 0"/>
       <geometry>
-        <cylinder radius="0.035" length="0.030"/>
+        <cylinder radius="0.0366" length="0.030"/>
       </geometry>
       <material name="wheel_black">
         <color rgba="0.10 0.10 0.10 1.0"/>
@@ -68,7 +68,7 @@
     <collision>
       <origin xyz="0 0 0" rpy="1.5708 0 0"/>
       <geometry>
-        <cylinder radius="0.035" length="0.030"/>
+        <cylinder radius="0.0366" length="0.030"/>
       </geometry>
     </collision>
     <inertial>
@@ -89,7 +89,7 @@
     <visual>
       <origin xyz="0 0 0" rpy="1.5708 0 0"/>
       <geometry>
-        <cylinder radius="0.035" length="0.030"/>
+        <cylinder radius="0.0366" length="0.030"/>
       </geometry>
       <material name="wheel_black">
         <color rgba="0.10 0.10 0.10 1.0"/>
@@ -108,7 +108,7 @@
     <collision>
       <origin xyz="0 0 0" rpy="1.5708 0 0"/>
       <geometry>
-        <cylinder radius="0.035" length="0.030"/>
+        <cylinder radius="0.0366" length="0.030"/>
       </geometry>
     </collision>
     <inertial>
@@ -226,7 +226,7 @@
   <joint name="caster_fl_joint" type="fixed">
     <parent link="base_link"/>
     <child link="caster_fl"/>
-    <origin xyz="0.110 0.155 -0.015" rpy="0 0 0"/>
+    <origin xyz="0.110 0.155 -0.0166" rpy="0 0 0"/>
   </joint>
 
   <link name="caster_fr">
@@ -248,7 +248,7 @@
   <joint name="caster_fr_joint" type="fixed">
     <parent link="base_link"/>
     <child link="caster_fr"/>
-    <origin xyz="0.110 -0.155 -0.015" rpy="0 0 0"/>
+    <origin xyz="0.110 -0.155 -0.0166" rpy="0 0 0"/>
   </joint>
 
   <link name="caster_rl">
@@ -270,7 +270,7 @@
   <joint name="caster_rl_joint" type="fixed">
     <parent link="base_link"/>
     <child link="caster_rl"/>
-    <origin xyz="-0.110 0.155 -0.015" rpy="0 0 0"/>
+    <origin xyz="-0.110 0.155 -0.0166" rpy="0 0 0"/>
   </joint>
 
   <link name="caster_rr">
@@ -292,7 +292,7 @@
   <joint name="caster_rr_joint" type="fixed">
     <parent link="base_link"/>
     <child link="caster_rr"/>
-    <origin xyz="-0.110 -0.155 -0.015" rpy="0 0 0"/>
+    <origin xyz="-0.110 -0.155 -0.0166" rpy="0 0 0"/>
   </joint>
 
   <!-- ==================== RÅSKOG CART FRAME ==================== -->
@@ -615,13 +615,11 @@
   <!--
     Clamped to the front horizontal cross-rail, facing forward, centered left-right.
 
-    Height: ~150mm from ground → 150 - 35 (base_link) = 115mm above cart_frame_link.
-    NOTE: User also quoted "250mm above bottom shelf floor" (= 315mm from ground) which
-    contradicts 150mm. Photo is consistent with 150mm. Verify with tape measure.
+    Height: 389mm from ground (tape measured) → 389 - 35 (base_link) = 354mm above cart_frame_link.
 
     X: front rail at x=0.115m + ~5mm camera body protrusion = 0.120m
-    Y: 0.0 (centered on rail, per photo)
-    Z: 0.115m above cart_frame_link
+    Y: 0.0 (centered on rail)
+    Z: 0.354m above cart_frame_link
     RPY: 0 0 0 (horizontal, facing +X / forward)
   -->
   <link name="camera_link">
@@ -651,7 +649,7 @@
   <joint name="camera_joint" type="fixed">
     <parent link="cart_frame_link"/>
     <child link="camera_link"/>
-    <origin xyz="0.120 0.0 0.115" rpy="0 0 0"/>
+    <origin xyz="0.120 0.0 0.354" rpy="0 0 0"/>
   </joint>
 
   <link name="camera_depth_optical_frame"/>
