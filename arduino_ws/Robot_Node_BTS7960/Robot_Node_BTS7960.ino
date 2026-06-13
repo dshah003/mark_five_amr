@@ -87,7 +87,7 @@ const int K_P = 278;
 const int b = 52;
 
 // Correction multiplier for drift
-const int DRIFT_MULTIPLIER = 120;
+const int DRIFT_MULTIPLIER = 25;
 
 // Turning PWM output (0-255 scale)
 const int PWM_TURN = 80;
@@ -165,7 +165,11 @@ void calc_vel_left_wheel() {
   static unsigned long prevTime = 0;
   static int prevLeftCount = 0;
 
-  int numOfTicks = (65535 + left_wheel_tick_count - prevLeftCount) % 65535;
+  noInterrupts();
+  int16_t tickSnapshot = left_wheel_tick_count;
+  interrupts();
+
+  int numOfTicks = (65535 + tickSnapshot - prevLeftCount) % 65535;
 
   if (numOfTicks > 10000) {
     numOfTicks = 0 - (65535 - numOfTicks);
@@ -175,7 +179,7 @@ void calc_vel_left_wheel() {
   if (currentTime > prevTime) {
     velLeftWheel = (double)numOfTicks / TICKS_PER_METER / ((currentTime - prevTime) / 1000.0);
   }
-  prevLeftCount = left_wheel_tick_count;
+  prevLeftCount = tickSnapshot;
   prevTime = currentTime;
 }
 
@@ -183,7 +187,11 @@ void calc_vel_right_wheel() {
   static unsigned long prevTime = 0;
   static int prevRightCount = 0;
 
-  int numOfTicks = (65535 + right_wheel_tick_count - prevRightCount) % 65535;
+  noInterrupts();
+  int16_t tickSnapshot = right_wheel_tick_count;
+  interrupts();
+
+  int numOfTicks = (65535 + tickSnapshot - prevRightCount) % 65535;
 
   if (numOfTicks > 10000) {
     numOfTicks = 0 - (65535 - numOfTicks);
@@ -193,12 +201,15 @@ void calc_vel_right_wheel() {
   if (currentTime > prevTime) {
     velRightWheel = (double)numOfTicks / TICKS_PER_METER / ((currentTime - prevTime) / 1000.0);
   }
-  prevRightCount = right_wheel_tick_count;
+  prevRightCount = tickSnapshot;
   prevTime = currentTime;
 }
 
 void processCmdVel(double linear_x, double angular_z) {
   lastCmdVelReceived = millis();
+
+  static double prevDiff = 0;
+  static double prevPrevDiff = 0;
 
   // Map linear velocity to PWM. Apply offset 'b' with correct sign.
   // Explicitly zero when linear_x == 0 — the >= case would give pwmReq = b = 52, which
@@ -223,9 +234,10 @@ void processCmdVel(double linear_x, double angular_z) {
       pwmLeftReq = -PWM_TURN;
       pwmRightReq = PWM_TURN;
     }
+    // Reset drift history so the next straight-line segment starts clean
+    prevDiff = 0;
+    prevPrevDiff = 0;
   } else {  // Go straight - apply drift correction
-    static double prevDiff = 0;
-    static double prevPrevDiff = 0;
     double currDifference = velLeftWheel - velRightWheel;
     double avgDifference = (prevDiff + prevPrevDiff + currDifference) / 3;
     prevPrevDiff = prevDiff;
