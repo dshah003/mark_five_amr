@@ -8,15 +8,16 @@ Launches sensor and actuation nodes on the robot:
 - IMU (ICM-20948 9-DOF sensor)
 - EKF filter (sensor fusion - odometry + IMU)
 - RealSense camera (with mode switching for laser/visual SLAM)
+- RTAB-Map SLAM (optional, runs locally to avoid WiFi bandwidth bottleneck)
 
-The workstation runs SLAM, Nav2, and RViz.
+The workstation runs Nav2 and RViz. When slam:=rtab, SLAM also runs here.
 
 Usage:
-  # Laser SLAM mode (424x240@15fps - default)
+  # Laser SLAM mode (workstation handles SLAM)
   ros2 launch mark_five_bot robot.launch.py
 
-  # Visual SLAM mode (640x480@30fps - for RTAB-Map)
-  ros2 launch mark_five_bot robot.launch.py camera_mode:=visual_slam
+  # Visual SLAM on Jetson (avoids sending raw RGB-D over WiFi)
+  ros2 launch mark_five_bot robot.launch.py camera_mode:=visual_slam slam:=rtab
 
   # Without camera
   ros2 launch mark_five_bot robot.launch.py camera:=false
@@ -29,7 +30,7 @@ from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
 from launch.conditions import IfCondition
 from launch.launch_description_sources import PythonLaunchDescriptionSource
-from launch.substitutions import LaunchConfiguration
+from launch.substitutions import LaunchConfiguration, PythonExpression
 from launch_ros.actions import Node
 from ament_index_python.packages import get_package_share_directory
 import os
@@ -60,6 +61,12 @@ def generate_launch_description():
         'imu',
         default_value='true',
         description='Launch ICM-20948 IMU sensor'
+    )
+
+    slam_arg = DeclareLaunchArgument(
+        'slam',
+        default_value='none',
+        description='SLAM to run on Jetson: none or rtab'
     )
 
     # Read URDF file
@@ -117,14 +124,26 @@ def generate_launch_description():
         }.items(),
     )
 
+    # RTAB-Map SLAM on Jetson (optional — avoids sending raw RGB-D over WiFi)
+    rtabmap_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            os.path.join(pkg_share, 'launch', 'rtabmap_slam.launch.py')
+        ),
+        condition=IfCondition(
+            PythonExpression(["'", LaunchConfiguration('slam'), "' == 'rtab'"])
+        ),
+    )
+
     return LaunchDescription([
         camera_arg,
         camera_mode_arg,
         imu_arg,
+        slam_arg,
         robot_state_publisher_node,
         serial_launch,
         odometry_launch,
         imu_launch,
         ekf_launch,
         camera_launch,
+        rtabmap_launch,
     ])

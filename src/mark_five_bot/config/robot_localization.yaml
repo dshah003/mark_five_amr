@@ -38,7 +38,7 @@ ekf_filter_node:
     imu0_config: [false, false, false,  # position (IMU doesn't provide position)
                   false, false, false,  # orientation (raw IMU doesn't provide orientation)
                   false, false, false,  # velocity (not from IMU)
-                  false, false, true,   # angular velocity (USE ONLY yaw rate/gyro for turns)
+                  false, false, false,  # angular velocity (DISABLED - gyro bias ~0.015 rad/s from motor vibration degrades odometry)
                   false, false, false]  # linear acceleration (DISABLED - too noisy, trust wheels instead)
 
     # IMU differential mode - use velocity instead of absolute measurements

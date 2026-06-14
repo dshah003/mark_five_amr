@@ -53,7 +53,7 @@ rtabmap:
 
     # ===== Visual Features =====
     Vis/FeatureType: "8"                    # 8=ORB (fast), 6=GFTT (accurate) - ORB recommended
-    Vis/MaxFeatures: "400"                  # Features per frame (400 good balance)
+    Vis/MaxFeatures: "300"                  # Reduced from 400 for Jetson Nano CPU budget
     Vis/MinInliers: "15"                    # Minimum inliers for valid transform
     Vis/InlierDistance: "0.1"               # Max reprojection error for inliers (10cm)
     Vis/EstimationType: "1"                 # 0=3D-3D, 1=3D-2D (PnP) - more robust for RGBD
@@ -62,11 +62,11 @@ rtabmap:
     Vis/CorNNDR: "0.8"                      # Feature matching ratio test threshold
 
     # ===== Memory Management =====
-    # Generous settings for high-end workstation (16GB RAM)
-    Mem/STMSize: "30"                       # Short-term memory size (recent nodes)
+    # Conservative settings for Jetson Nano (4GB RAM shared CPU/GPU)
+    Mem/STMSize: "20"                       # Reduced from 30 (fewer recent nodes in RAM)
     Mem/ImageKept: "false"                  # Don't store full images (saves RAM)
     Mem/BinDataKept: "true"                 # Keep binary features for loop closure
-    Mem/RawDescriptorsKept: "true"          # Keep raw descriptors for matching
+    Mem/RawDescriptorsKept: "false"         # Disabled - saves RAM on Jetson (was true for workstation)
     Mem/MapLabelsAdded: "false"             # Don't add semantic labels
     Mem/UseOdomFeatures: "false"            # Don't reuse odometry features
 
@@ -84,7 +84,7 @@ rtabmap:
     Rtabmap/LoopRatio: "0.0"                # Min ratio of inliers/features for loop
 
     # Visual loop closure parameters
-    Kp/MaxFeatures: "400"                   # Max features for bag-of-words matching
+    Kp/MaxFeatures: "300"                   # Match Vis/MaxFeatures for Jetson
     Kp/BadSignRatio: "0.5"                  # Ratio of bad/good features before rejecting
 
     # ===== Grid Mapping for Nav2 =====
