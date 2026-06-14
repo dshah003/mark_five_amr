@@ -108,11 +108,10 @@ int velToPwm(double vel) {
 void processCmdVel(double linear_x, double angular_z) {
   lastCmdVelReceived = millis();
 
-  // Differential-drive kinematics. linear_x is negated because RPWM drives
-  // both motors backward on this hardware (motors mounted with reversed polarity).
-  // Turns are unaffected — the angular signs cancel correctly.
-  double leftVel  = -linear_x - (WHEEL_BASE / 2.0) * angular_z;
-  double rightVel = -linear_x + (WHEEL_BASE / 2.0) * angular_z;
+  // Standard differential-drive kinematics.
+  // angular_z > 0 = CCW = turn left → left wheel backward, right wheel forward.
+  double leftVel  = linear_x - (WHEEL_BASE / 2.0) * angular_z;
+  double rightVel = linear_x + (WHEEL_BASE / 2.0) * angular_z;
 
   pwmLeftReq  = velToPwm(leftVel);
   pwmRightReq = velToPwm(rightVel);
