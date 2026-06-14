@@ -38,6 +38,8 @@
 // ── Tunable parameters ────────────────────────────────────────────────────────
 
 const double WHEEL_BASE = 0.36;   // meters, center-to-center of wheels
+// NOTE: ticks_per_meter in odometry.yaml must be recalibrated after reflashing.
+// Expected with A-only CHANGE (2x): ~2 × 538 ticks/rev ÷ 0.234m ≈ 4598 ticks/m
 
 // PWM = K_P * |vel_m_s| + b, then clamped to [PWM_MIN, PWM_MAX]
 const int K_P     = 278;
@@ -49,19 +51,6 @@ const int PWM_MAX = 100;
 
 volatile int16_t left_wheel_tick_count  = 0;
 volatile int16_t right_wheel_tick_count = 0;
-
-// Quadrature lookup table: index = (prev_state << 2) | curr_state
-// where state = (A_pin << 1) | B_pin
-// +1 = B-leads-A transition, -1 = A-leads-B transition, 0 = no change or invalid
-static const int8_t QUAD_TABLE[16] = {
-   0,  1, -1,  0,
-  -1,  0,  0,  1,
-   1,  0,  0, -1,
-   0, -1,  1,  0
-};
-
-volatile uint8_t right_prev_state = 0;
-volatile uint8_t left_prev_state  = 0;
 
 // ── Runtime state ─────────────────────────────────────────────────────────────
 
@@ -75,25 +64,33 @@ String  inputString    = "";
 boolean stringComplete = false;
 
 // ── Encoder ISRs ──────────────────────────────────────────────────────────────
-// Both A and B channels trigger on CHANGE. Direction comes from the quadrature
-// state transition, not from a point-in-time B read — eliminates timing races.
+// CHANGE on A channel only. When A changes, B has been stable for ~90° of
+// rotation (mid-phase), so direction reads are reliable with no timing races.
+// The B channel is not used as an interrupt source — its short pulses caused
+// missed edges and asymmetric counts on the right encoder.
 
 void right_wheel_tick() {
-  uint8_t state = (digitalRead(ENC_IN_RIGHT_A) << 1) | digitalRead(ENC_IN_RIGHT_B);
-  int8_t  dir   = QUAD_TABLE[(right_prev_state << 2) | state];
-  right_prev_state = state;
-  // A leads B during physical forward → A-leads-B transition = dir -1 → count--
-  if (dir < 0) right_wheel_tick_count = (right_wheel_tick_count == -32768) ? 32767  : right_wheel_tick_count - 1;
-  if (dir > 0) right_wheel_tick_count = (right_wheel_tick_count == 32767)  ? -32768 : right_wheel_tick_count + 1;
+  boolean a = digitalRead(ENC_IN_RIGHT_A);
+  boolean b = digitalRead(ENC_IN_RIGHT_B);
+  // A leads B during physical forward: A rising + B low, or A falling + B high
+  boolean forward = a ? !b : b;
+  if (forward) {
+    right_wheel_tick_count = (right_wheel_tick_count == -32768) ? 32767  : right_wheel_tick_count - 1;
+  } else {
+    right_wheel_tick_count = (right_wheel_tick_count == 32767)  ? -32768 : right_wheel_tick_count + 1;
+  }
 }
 
 void left_wheel_tick() {
-  uint8_t state = (digitalRead(ENC_IN_LEFT_A) << 1) | digitalRead(ENC_IN_LEFT_B);
-  int8_t  dir   = QUAD_TABLE[(left_prev_state << 2) | state];
-  left_prev_state = state;
-  // Left motor is physically inverted: B leads A during forward → dir +1 → count--
-  if (dir > 0) left_wheel_tick_count = (left_wheel_tick_count == -32768) ? 32767  : left_wheel_tick_count - 1;
-  if (dir < 0) left_wheel_tick_count = (left_wheel_tick_count == 32767)  ? -32768 : left_wheel_tick_count + 1;
+  boolean a = digitalRead(ENC_IN_LEFT_A);
+  boolean b = digitalRead(ENC_IN_LEFT_B);
+  // Left motor inverted — B leads A during physical forward: A rising + B high, or A falling + B low
+  boolean forward = a ? b : !b;
+  if (forward) {
+    left_wheel_tick_count = (left_wheel_tick_count == -32768) ? 32767  : left_wheel_tick_count - 1;
+  } else {
+    left_wheel_tick_count = (left_wheel_tick_count == 32767)  ? -32768 : left_wheel_tick_count + 1;
+  }
 }
 
 // ── Motor helpers ─────────────────────────────────────────────────────────────
@@ -185,15 +182,9 @@ void setup() {
   pinMode(ENC_IN_RIGHT_A, INPUT_PULLUP);
   pinMode(ENC_IN_RIGHT_B, INPUT_PULLUP);
 
-  // Seed initial state so first transition is decoded correctly
-  right_prev_state = (digitalRead(ENC_IN_RIGHT_A) << 1) | digitalRead(ENC_IN_RIGHT_B);
-  left_prev_state  = (digitalRead(ENC_IN_LEFT_A)  << 1) | digitalRead(ENC_IN_LEFT_B);
-
-  // CHANGE on both A and B — direction from state machine, not point-in-time B read
+  // A-channel CHANGE only — B read inside ISR, not used as interrupt source
   attachInterrupt(digitalPinToInterrupt(ENC_IN_RIGHT_A), right_wheel_tick, CHANGE);
-  attachInterrupt(digitalPinToInterrupt(ENC_IN_RIGHT_B), right_wheel_tick, CHANGE);
   attachInterrupt(digitalPinToInterrupt(ENC_IN_LEFT_A),  left_wheel_tick,  CHANGE);
-  attachInterrupt(digitalPinToInterrupt(ENC_IN_LEFT_B),  left_wheel_tick,  CHANGE);
 
   Serial.begin(SERIAL_BAUD);
   inputString.reserve(64);
