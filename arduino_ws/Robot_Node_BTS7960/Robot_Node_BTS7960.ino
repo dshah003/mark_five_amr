@@ -147,11 +147,11 @@ void publishTicks() {
   int16_t lt = left_wheel_tick_count;
   int16_t rt = right_wheel_tick_count;
   interrupts();
-  // rt/lt swapped here to match expected ROS odometry frame
+  // rt/lt swapped to match ROS odometry frame; negated so forward motion = positive ticks
   Serial.print("t,");
-  Serial.print(rt);
+  Serial.print(-rt);
   Serial.print(",");
-  Serial.println(lt);
+  Serial.println(-lt);
 }
 
 // ── Setup / Loop ──────────────────────────────────────────────────────────────
