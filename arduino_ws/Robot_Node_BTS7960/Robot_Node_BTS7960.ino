@@ -43,7 +43,7 @@ const double WHEEL_BASE = 0.36;   // meters, center-to-center of wheels
 const int K_P     = 278;
 const int b       = 52;
 const int PWM_MIN = 60;   // below this the motors stall — raise if needed
-const int PWM_MAX = 160;
+const int PWM_MAX = 100;
 
 // ── Encoder state (modified by ISRs) ─────────────────────────────────────────
 
@@ -108,10 +108,11 @@ int velToPwm(double vel) {
 void processCmdVel(double linear_x, double angular_z) {
   lastCmdVelReceived = millis();
 
-  // Standard differential-drive kinematics.
-  // angular_z > 0 = CCW = turn left → left wheel backward, right wheel forward.
-  double leftVel  = linear_x - (WHEEL_BASE / 2.0) * angular_z;
-  double rightVel = linear_x + (WHEEL_BASE / 2.0) * angular_z;
+  // Differential-drive kinematics. linear_x is negated because RPWM drives
+  // both motors backward on this hardware (motors mounted with reversed polarity).
+  // Turns are unaffected — the angular signs cancel correctly.
+  double leftVel  = -linear_x - (WHEEL_BASE / 2.0) * angular_z;
+  double rightVel = -linear_x + (WHEEL_BASE / 2.0) * angular_z;
 
   pwmLeftReq  = velToPwm(leftVel);
   pwmRightReq = velToPwm(rightVel);
