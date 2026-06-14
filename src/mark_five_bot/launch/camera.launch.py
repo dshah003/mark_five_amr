@@ -52,6 +52,8 @@ def generate_launch_description():
             'camera_name': 'camera',
             'camera_namespace': '',
             'initial_reset': 'true',
+            'rotation_filter.enable': 'true',
+            'rotation_filter.rotation': '180',
             'enable_color': 'true',
             'enable_depth': 'true',
             'enable_infra1': 'false',
