@@ -52,6 +52,7 @@ def generate_launch_description():
         launch_arguments={
             'camera_name': 'camera',
             'camera_namespace': '',
+            'initial_reset': 'true',
             'enable_color': 'true',
             'enable_depth': 'true',
             'enable_infra1': 'false',
@@ -60,12 +61,13 @@ def generate_launch_description():
             'pointcloud.enable': PythonExpression([
                 "'false' if '", LaunchConfiguration('mode'), "' == 'visual_slam' else 'true'"
             ]),
-            # Resolution: 640x480@30fps for visual_slam, 424x240@15fps for laser_scan
+            # Resolution: 640x480@15fps for visual_slam (30fps causes depth stream failure on Jetson Nano),
+            # 424x240@15fps for laser_scan
             'rgb_camera.color_profile': PythonExpression([
-                "'640x480x30' if '", LaunchConfiguration('mode'), "' == 'visual_slam' else '424x240x15'"
+                "'640x480x15' if '", LaunchConfiguration('mode'), "' == 'visual_slam' else '424x240x15'"
             ]),
             'depth_module.depth_profile': PythonExpression([
-                "'640x480x30' if '", LaunchConfiguration('mode'), "' == 'visual_slam' else '424x240x15'"
+                "'640x480x15' if '", LaunchConfiguration('mode'), "' == 'visual_slam' else '424x240x15'"
             ]),
             # Align depth: required for visual_slam, optional for laser_scan
             'align_depth.enable': 'true',  # Always enabled (needed for both modes)
