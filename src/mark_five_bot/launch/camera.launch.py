@@ -24,7 +24,6 @@ Usage:
 
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
-from launch.conditions import IfCondition
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration, PythonExpression
 from launch_ros.actions import Node
@@ -85,8 +84,8 @@ def generate_launch_description():
         }.items(),
     )
 
-    # Depth to laserscan converter (only enabled in laser_scan mode)
-    # In visual_slam mode, RTAB-Map uses RGB-D directly, /scan topic not needed
+    # Depth to laserscan converter (always enabled)
+    # Required in both modes: collision_monitor on workstation needs /scan regardless of SLAM mode
     depth_to_scan_node = Node(
         package='depthimage_to_laserscan',
         executable='depthimage_to_laserscan_node',
@@ -97,7 +96,6 @@ def generate_launch_description():
             'scan_height': 1,
             'range_min': 0.15,
             'range_max': 4.0,
-            # Scan time: 1/15fps for laser_scan mode
             'scan_time': 0.0667,
             'depth_scale': 0.001,
         }],
@@ -106,10 +104,6 @@ def generate_launch_description():
             ('depth_camera_info', '/camera/aligned_depth_to_color/camera_info'),
             ('scan', '/scan'),
         ],
-        # Only launch in laser_scan mode (not needed for visual_slam)
-        condition=IfCondition(
-            PythonExpression(["'", LaunchConfiguration('mode'), "' == 'laser_scan'"])
-        ),
     )
 
     return LaunchDescription([
