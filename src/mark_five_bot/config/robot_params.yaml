@@ -7,16 +7,15 @@ robot:
   # Distance between wheel centers (meters) - RÅSKOG platform, measured
   wheel_base: 0.36
 
-  # Wheel radius (meters) - measured circumference 230mm → r = 230/(2π) = 36.6mm
-  wheel_radius: 0.0366
+  # Wheel radius (meters) - measured circumference 234mm → r = 234/(2π) = 37.2mm
+  wheel_radius: 0.0372
 
-  # Encoder ticks per full wheel revolution
-  ticks_per_revolution: 540
+  # Encoder ticks per full wheel revolution — measured 2026-06-14
+  ticks_per_revolution: 538
 
-  # Calculated: ticks per meter of travel
-  # Formula: ticks_per_revolution / circumference = 540 / 0.23 = 2348
-  # Recalibrate with measured drive after any wheel change
-  ticks_per_meter: 2348.0
+  # Measured: ticks per meter of travel
+  # Left: 537.4/rev ÷ 0.234m = 2297 | Right: 538.0/rev ÷ 0.234m = 2299 | avg = 2298
+  ticks_per_meter: 2298.0
 
 # TF frame names
 frames:

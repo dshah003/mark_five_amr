@@ -50,6 +50,19 @@ const int PWM_MAX = 100;
 volatile int16_t left_wheel_tick_count  = 0;
 volatile int16_t right_wheel_tick_count = 0;
 
+// Quadrature lookup table: index = (prev_state << 2) | curr_state
+// where state = (A_pin << 1) | B_pin
+// +1 = B-leads-A transition, -1 = A-leads-B transition, 0 = no change or invalid
+static const int8_t QUAD_TABLE[16] = {
+   0,  1, -1,  0,
+  -1,  0,  0,  1,
+   1,  0,  0, -1,
+   0, -1,  1,  0
+};
+
+volatile uint8_t right_prev_state = 0;
+volatile uint8_t left_prev_state  = 0;
+
 // ── Runtime state ─────────────────────────────────────────────────────────────
 
 int pwmLeftReq  = 0;   // signed: positive = forward
@@ -62,24 +75,25 @@ String  inputString    = "";
 boolean stringComplete = false;
 
 // ── Encoder ISRs ──────────────────────────────────────────────────────────────
+// Both A and B channels trigger on CHANGE. Direction comes from the quadrature
+// state transition, not from a point-in-time B read — eliminates timing races.
 
 void right_wheel_tick() {
-  boolean forward = (digitalRead(ENC_IN_RIGHT_B) != LOW);
-  if (forward) {
-    right_wheel_tick_count = (right_wheel_tick_count == 32767) ? -32768 : right_wheel_tick_count + 1;
-  } else {
-    right_wheel_tick_count = (right_wheel_tick_count == -32768) ? 32767 : right_wheel_tick_count - 1;
-  }
+  uint8_t state = (digitalRead(ENC_IN_RIGHT_A) << 1) | digitalRead(ENC_IN_RIGHT_B);
+  int8_t  dir   = QUAD_TABLE[(right_prev_state << 2) | state];
+  right_prev_state = state;
+  // A leads B during physical forward → A-leads-B transition = dir -1 → count--
+  if (dir < 0) right_wheel_tick_count = (right_wheel_tick_count == -32768) ? 32767  : right_wheel_tick_count - 1;
+  if (dir > 0) right_wheel_tick_count = (right_wheel_tick_count == 32767)  ? -32768 : right_wheel_tick_count + 1;
 }
 
 void left_wheel_tick() {
-  // Left encoder direction is physically inverted (motor faces opposite way)
-  boolean forward = (digitalRead(ENC_IN_LEFT_B) == LOW);
-  if (forward) {
-    left_wheel_tick_count = (left_wheel_tick_count == 32767) ? -32768 : left_wheel_tick_count + 1;
-  } else {
-    left_wheel_tick_count = (left_wheel_tick_count == -32768) ? 32767 : left_wheel_tick_count - 1;
-  }
+  uint8_t state = (digitalRead(ENC_IN_LEFT_A) << 1) | digitalRead(ENC_IN_LEFT_B);
+  int8_t  dir   = QUAD_TABLE[(left_prev_state << 2) | state];
+  left_prev_state = state;
+  // Left motor is physically inverted: B leads A during forward → dir +1 → count--
+  if (dir > 0) left_wheel_tick_count = (left_wheel_tick_count == -32768) ? 32767  : left_wheel_tick_count - 1;
+  if (dir < 0) left_wheel_tick_count = (left_wheel_tick_count == 32767)  ? -32768 : left_wheel_tick_count + 1;
 }
 
 // ── Motor helpers ─────────────────────────────────────────────────────────────
@@ -171,8 +185,15 @@ void setup() {
   pinMode(ENC_IN_RIGHT_A, INPUT_PULLUP);
   pinMode(ENC_IN_RIGHT_B, INPUT_PULLUP);
 
-  attachInterrupt(digitalPinToInterrupt(ENC_IN_LEFT_A),  left_wheel_tick,  RISING);
-  attachInterrupt(digitalPinToInterrupt(ENC_IN_RIGHT_A), right_wheel_tick, RISING);
+  // Seed initial state so first transition is decoded correctly
+  right_prev_state = (digitalRead(ENC_IN_RIGHT_A) << 1) | digitalRead(ENC_IN_RIGHT_B);
+  left_prev_state  = (digitalRead(ENC_IN_LEFT_A)  << 1) | digitalRead(ENC_IN_LEFT_B);
+
+  // CHANGE on both A and B — direction from state machine, not point-in-time B read
+  attachInterrupt(digitalPinToInterrupt(ENC_IN_RIGHT_A), right_wheel_tick, CHANGE);
+  attachInterrupt(digitalPinToInterrupt(ENC_IN_RIGHT_B), right_wheel_tick, CHANGE);
+  attachInterrupt(digitalPinToInterrupt(ENC_IN_LEFT_A),  left_wheel_tick,  CHANGE);
+  attachInterrupt(digitalPinToInterrupt(ENC_IN_LEFT_B),  left_wheel_tick,  CHANGE);
 
   Serial.begin(SERIAL_BAUD);
   inputString.reserve(64);

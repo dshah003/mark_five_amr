@@ -6,11 +6,13 @@ odometry_node:
     wheel_base: 0.36          # Center-to-center drive wheel distance (meters) - RÅSKOG platform, measured
                               # Note: calibrate with rotation test and adjust if odometry drifts
 
-    # Per-wheel calibration (accounts for wheel asymmetry)
-    # Baseline: 540 ticks/rev ÷ 0.23m circumference = 2348 ticks/m — recalibrate with measured drive
-    ticks_per_meter_left: 2348.0
-    ticks_per_meter_right: 2348.0
-    ticks_per_meter: 2348.0         # Fallback/average value (used if per-wheel not specified)
+    # Per-wheel calibration — measured 2026-06-14
+    # Method: 12 forward rotations, rising-edge ISR, circumference = 234mm
+    # Left: 6449 ticks / 12 rev = 537.4 ticks/rev → 537.4 / 0.234 = 2297
+    # Right: 6456 ticks / 12 rev = 538.0 ticks/rev → 538.0 / 0.234 = 2299
+    ticks_per_meter_left: 2297.0
+    ticks_per_meter_right: 2299.0
+    ticks_per_meter: 2298.0         # Fallback/average value (used if per-wheel not specified)
 
     # TF frame IDs
     odom_frame: "odom"
