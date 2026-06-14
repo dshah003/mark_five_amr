@@ -138,9 +138,10 @@ ros2 launch mark_five_bot bringup.launch.py use_camera:=true use_nav:=true nav_m
 
 # Distributed mode - on Jetson
 ros2 launch mark_five_bot robot.launch.py
+ros2 launch mark_five_bot robot.launch.py camera_mode:=visual_slam
 
 # Distributed mode - on Workstation
-ros2 launch mark_five_bot workstation.launch.py teleop:=joy
+ros2 launch mark_five_bot workstation.launch.py slam_mode:=visual teleop:=keyboard
 ```
 
 ## Navigation
