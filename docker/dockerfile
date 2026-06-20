@@ -77,6 +77,9 @@ RUN pip install sparkfun-qwiic-icm20948 --break-system-packages
 # Jetson.GPIO is required for Blinka to access Jetson Nano's I2C pins
 RUN pip install Jetson.GPIO adafruit-circuitpython-pca9685 --break-system-packages
 
+# MCP server — lets Claude Code talk directly to this robot's ROS2 environment
+RUN pip install mcp --break-system-packages
+
 # Enable colored terminal prompt
 RUN sed -i 's/^#force_color_prompt=yes/force_color_prompt=yes/' ~/.bashrc
 

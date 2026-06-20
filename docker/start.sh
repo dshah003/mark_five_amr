@@ -61,6 +61,7 @@ docker run \
     -d \
     -v ${MARKY_ROOT}:/root/mark_five_amr:rw \
     -v ${BASH_HISTORY_FILE}:/root/.bash_history:rw \
+    -v $HOME/.ssh:/root/.ssh:ro \
     --env="QT_X11_NO_MITSHM=1" \
     --env="DISPLAY=$DISPLAY" \
     --volume="/tmp/.X11-unix:/tmp/.X11-unix:rw" \
