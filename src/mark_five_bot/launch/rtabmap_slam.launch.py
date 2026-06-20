@@ -94,6 +94,7 @@ def generate_launch_description():
         'subscribe_rgb': False,
         'subscribe_scan': False,  # Pure visual mode (no laser scan)
         'subscribe_rgbd': True,   # Subscribe to synchronized rgbd_image from rgbd_sync
+        'subscribe_scan': True,   # Fuse 2D laser scan for better occupancy grid accuracy
         'approx_sync': True,      # Critical for distributed mode
         'queue_size': 30,
         'qos': 1,
@@ -149,6 +150,9 @@ def generate_launch_description():
 
             # Synchronized RGB-D input from rgbd_sync
             ('rgbd_image', 'rgbd_image'),
+
+            # Laser scan input from depthimage_to_laserscan
+            ('scan', '/scan'),
 
             # Map output (for Nav2)
             ('grid_map', '/map'),
