@@ -24,7 +24,7 @@ rtabmap:
     # ===== Input Topics Configuration =====
     subscribe_rgb: false                    # Not subscribing to separate RGB
     subscribe_depth: false                  # Not subscribing to separate depth
-    subscribe_scan: false                   # Disable laser scan (pure visual mode)
+    subscribe_scan: true                    # Fuse laser scan from depthimage_to_laserscan
     subscribe_scan_cloud: false             # Disable scan point cloud
     subscribe_stereo: false                 # Not using stereo
     subscribe_rgbd: true                    # Subscribe to synchronized rgbd_image from rgbd_sync
@@ -53,7 +53,7 @@ rtabmap:
 
     # ===== Visual Features =====
     Vis/FeatureType: "8"                    # 8=ORB (fast), 6=GFTT (accurate) - ORB recommended
-    Vis/MaxFeatures: "300"                  # Reduced from 400 for Jetson Nano CPU budget
+    Vis/MaxFeatures: "500"                  # More features at 640x480 improves loop closure
     Vis/MinInliers: "15"                    # Minimum inliers for valid transform
     Vis/InlierDistance: "0.1"               # Max reprojection error for inliers (10cm)
     Vis/EstimationType: "1"                 # 0=3D-3D, 1=3D-2D (PnP) - more robust for RGBD
@@ -80,11 +80,11 @@ rtabmap:
     RGBD/LoopClosureReextractFeatures: "false"  # Don't re-extract (use stored features)
     Rtabmap/DetectionRate: "1.0"            # Loop closure detection frequency (1 Hz)
     Rtabmap/TimeThr: "0"                    # No time threshold (allow immediate loop closure)
-    Rtabmap/LoopThr: "0.11"                 # Loop closure hypothesis threshold (lower=stricter)
+    Rtabmap/LoopThr: "0.15"                 # Tighter threshold reduces false loop closures
     Rtabmap/LoopRatio: "0.0"                # Min ratio of inliers/features for loop
 
     # Visual loop closure parameters
-    Kp/MaxFeatures: "300"                   # Match Vis/MaxFeatures for Jetson
+    Kp/MaxFeatures: "500"                   # Match Vis/MaxFeatures
     Kp/BadSignRatio: "0.5"                  # Ratio of bad/good features before rejecting
 
     # ===== Grid Mapping for Nav2 =====

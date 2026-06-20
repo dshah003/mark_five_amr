@@ -13,14 +13,14 @@ camera:
     enable_infra2: false
     pointcloud.enable: false  # Disabled to reduce USB bandwidth
 
-    # Color stream settings (reduced for stability)
-    rgb_camera.color_profile: "424x240x15"
+    # 640x480 gives RTAB-Map enough features for reliable tracking and loop closure
+    rgb_camera.color_profile: "640x480x15"
 
-    # Depth stream settings (reduced for stability)
-    depth_module.depth_profile: "424x240x15"
+    # Depth stream settings
+    depth_module.depth_profile: "640x480x15"
 
-    # Align depth to color - disabled to reduce load
-    align_depth.enable: false
+    # Required for RTAB-Map rgbd_sync (subscribes to aligned_depth_to_color topic)
+    align_depth.enable: true
 
     # Depth filters for noise reduction
     decimation_filter.enable: true
