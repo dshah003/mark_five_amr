@@ -1,7 +1,7 @@
 ekf_filter_node:
   ros__parameters:
     # Core Settings
-    frequency: 30.0  # Reduced from 50Hz to balance performance and reliability
+    frequency: 10.0
     sensor_timeout: 0.2
     two_d_mode: true
 
