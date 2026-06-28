@@ -1,0 +1,10 @@
+<CycloneDDS>
+  <Domain>
+    <General>
+      <!-- Bind only to the 192.168.1.x WiFi interface, ignoring docker0/tailscale/etc. -->
+      <Interfaces>
+        <NetworkInterface address="192.168.1.0/24" multicast="true" />
+      </Interfaces>
+    </General>
+  </Domain>
+</CycloneDDS>
