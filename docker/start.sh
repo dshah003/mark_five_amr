@@ -26,6 +26,27 @@ fi
 
 echo "Starting docker container"
 
+# Auto-detect the network interface used to reach the local subnet router.
+# This picks wlan0/wlp8s0/eth0 correctly on both Jetson and workstation,
+# ignoring docker0, tailscale, loopback, etc.
+WIFI_IF=$(ip route get 192.168.1.1 2>/dev/null | grep -oP 'dev \K\S+' | head -1)
+if [ -z "${WIFI_IF}" ]; then
+    WIFI_IF=$(ip route show default | head -1 | grep -oP 'dev \K\S+')
+fi
+echo "Using network interface: ${WIFI_IF}"
+
+cat > ${MARKY_ROOT}/docker/cyclone_dds.xml << EOF
+<CycloneDDS>
+  <Domain>
+    <General>
+      <Interfaces>
+        <NetworkInterface name="${WIFI_IF}" multicast="true" />
+      </Interfaces>
+    </General>
+  </Domain>
+</CycloneDDS>
+EOF
+
 # Build video device arguments for RealSense camera
 VIDEO_DEVICES=""
 for dev in /dev/video*; do
