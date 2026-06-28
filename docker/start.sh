@@ -74,6 +74,7 @@ docker run \
     --env=ROS_AUTOMATIC_DISCOVERY_RANGE=SUBNET \
     --env=ROS_STATIC_PEERS="192.168.1.176;192.168.1.169" \
     --env=RMW_IMPLEMENTATION=rmw_cyclonedds_cpp \
+    --env=CYCLONEDDS_URI=/root/mark_five_amr/docker/cyclone_dds.xml \
     ${ARDUINO_DEV} \
     ${JOYSTICK_DEV} \
     -v /dev/bus/usb:/dev/bus/usb \
@@ -94,6 +95,7 @@ export ROS_DOMAIN_ID=5
 export ROS_AUTOMATIC_DISCOVERY_RANGE=SUBNET
 export ROS_STATIC_PEERS="192.168.1.176;192.168.1.169"
 export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
+export CYCLONEDDS_URI=/root/mark_five_amr/docker/cyclone_dds.xml
 
 # Source workspace if built
 if [ -f ~/mark_five_amr/install/setup.bash ]; then
