@@ -58,6 +58,12 @@ def generate_launch_description():
         description='SLAM sensor mode: laser (slam_toolbox), visual (RTAB-Map), or hybrid'
     )
 
+    delete_db_arg = DeclareLaunchArgument(
+        'delete_db_on_start',
+        default_value='false',
+        description='Delete RTAB-Map database on startup (start fresh map)'
+    )
+
     map_arg = DeclareLaunchArgument(
         'map',
         default_value='',
@@ -126,6 +132,7 @@ def generate_launch_description():
             'mode': LaunchConfiguration('nav_mode'),
             'slam_mode': LaunchConfiguration('slam_mode'),
             'map': LaunchConfiguration('map'),
+            'delete_db_on_start': LaunchConfiguration('delete_db_on_start'),
         }.items(),
     )
 
@@ -135,6 +142,7 @@ def generate_launch_description():
         use_nav_arg,
         nav_mode_arg,
         slam_mode_arg,
+        delete_db_arg,
         map_arg,
         robot_state_publisher_node,
         serial_launch,
