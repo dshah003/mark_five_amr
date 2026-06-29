@@ -88,7 +88,7 @@ rtabmap:
     Kp/BadSignRatio: "0.5"                  # Ratio of bad/good features before rejecting
 
     # ===== Grid Mapping for Nav2 =====
-    Grid/FromDepth: "true"                  # Generate grid from depth data
+    Grid/FromDepth: "false"                 # Use laser scan for grid (cleaner walls than raw depth projection)
     Grid/CellSize: "0.05"                   # 5cm cell size (match Nav2 costmap)
     Grid/RangeMax: "4.0"                    # Max range for obstacles (match camera)
     Grid/RangeMin: "0.15"                   # Min range

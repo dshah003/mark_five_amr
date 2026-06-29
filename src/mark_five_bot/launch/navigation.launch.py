@@ -87,6 +87,12 @@ def generate_launch_description():
         description='Launch waypoint mission manager'
     )
 
+    delete_db_arg = DeclareLaunchArgument(
+        'delete_db_on_start',
+        default_value='false',
+        description='Delete RTAB-Map database on startup (start fresh map)'
+    )
+
     # SLAM mode - Laser (slam_toolbox)
     slam_toolbox_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
@@ -118,7 +124,8 @@ def generate_launch_description():
         ),
         launch_arguments={
             'use_sim_time': LaunchConfiguration('use_sim_time'),
-            'localization': 'false',  # Mapping mode
+            'localization': 'false',
+            'delete_db_on_start': LaunchConfiguration('delete_db_on_start'),
         }.items(),
     )
 
@@ -241,6 +248,7 @@ def generate_launch_description():
         use_sim_time_arg,
         autostart_arg,
         use_mission_manager_arg,
+        delete_db_arg,
         slam_toolbox_launch,
         rtabmap_slam_launch,
         localization_launch,
