@@ -92,17 +92,17 @@ rtabmap:
     Grid/CellSize: "0.05"                   # 5cm cell size (match Nav2 costmap)
     Grid/RangeMax: "4.0"                    # Max range for obstacles (match camera)
     Grid/RangeMin: "0.15"                   # Min range
-    Grid/DepthDecimation: "4"               # Subsample depth for grid (saves CPU)
+    Grid/DepthDecimation: "2"               # Subsample depth for grid (4 was too aggressive, caused false obstacles)
     Grid/3D: "false"                        # 2D projection for Nav2 compatibility
     Grid/RayTracing: "true"                 # Ray tracing to clear free space
-    Grid/ClusterRadius: "0.1"               # Cluster obstacle cells (10cm)
+    Grid/ClusterRadius: "0.15"              # Cluster obstacle cells (larger = fewer isolated noise blobs)
     Grid/GroundIsObstacle: "false"          # Ground is not an obstacle
     Grid/MaxObstacleHeight: "0.5"           # Max obstacle height above base_footprint
-    Grid/MaxGroundHeight: "0.02"            # Max ground height (2cm tolerance)
-    Grid/MinGroundHeight: "-0.02"           # Min ground height
+    Grid/MaxGroundHeight: "0.05"            # Max ground height (5cm tolerance for uneven floor)
+    Grid/MinGroundHeight: "-0.05"           # Min ground height
     Grid/NormalsSegmentation: "true"        # Use normal estimation for ground segmentation
-    Grid/NoiseFilteringRadius: "0.05"       # Radius for noise filtering
-    Grid/NoiseFilteringMinNeighbors: "5"    # Min neighbors to keep point
+    Grid/NoiseFilteringRadius: "0.1"        # Larger radius catches more isolated noise points
+    Grid/NoiseFilteringMinNeighbors: "10"   # Require more neighbors to keep a point (was 5)
 
     # Ground plane detection
     Grid/NormalK: "20"                      # K-nearest neighbors for normal estimation
