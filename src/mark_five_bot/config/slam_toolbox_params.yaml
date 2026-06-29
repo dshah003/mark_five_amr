@@ -27,7 +27,7 @@ slam_toolbox:
 
     # Timing and transforms
     transform_publish_period: 0.02
-    map_update_interval: 5.0  # Slower updates reduce correction frequency (trust odometry)
+    map_update_interval: 2.0
     resolution: 0.05
     max_laser_range: 4.0
     minimum_time_interval: 0.2  # Increase interval to reduce scan processing rate
@@ -37,17 +37,17 @@ slam_toolbox:
     # Increase scan queue to prevent drops in distributed mode
     scan_queue_size: 20
 
-    # Scan matching - tuned for EKF-fused odometry (wheel + IMU gyro)
-    # With improved odometry, we trust odometry more and scan match less aggressively
+    # Scan matching - tuned for wheel-only odometry (IMU disabled in EKF)
+    # Encoder heading drifts badly during turns: scan match frequently and trust it over odometry
     use_scan_matching: true
     use_scan_barycenter: true
-    minimum_travel_distance: 0.15  # Increased - reduce correction frequency (trust odometry more)
-    minimum_travel_heading: 0.35  # Increased - fewer corrections on rotation (trust gyro)
-    scan_buffer_size: 10  # Reduced - less averaging needed with stable odometry
+    minimum_travel_distance: 0.05  # Update frequently (encoder distance is reliable)
+    minimum_travel_heading: 0.1   # ~6 deg - match often during turns (encoder heading is NOT reliable)
+    scan_buffer_size: 10
     scan_buffer_maximum_scan_distance: 4.0
-    link_match_minimum_response_fine: 0.2  # Increased - require better scan match confidence
-    link_scan_maximum_distance: 1.0  # Reduced - only match nearby features
-    loop_search_maximum_distance: 3.0  # Reduced - conservative loop closure search
+    link_match_minimum_response_fine: 0.1  # Accept weaker matches to stay locked during turns
+    link_scan_maximum_distance: 1.5  # Slightly wider search window
+    loop_search_maximum_distance: 3.0
     do_loop_closing: true
     loop_match_minimum_chain_size: 10  # Require more evidence for loop closure
     loop_match_maximum_variance_coarse: 2.0  # Stricter - reduce false loop closures
@@ -64,9 +64,9 @@ slam_toolbox:
     loop_search_space_resolution: 0.05
     loop_search_space_smear_deviation: 0.03
 
-    # Scan matcher parameters - trust odometry more with EKF fusion
-    distance_variance_penalty: 0.3  # Lower = trust odometry position more
-    angle_variance_penalty: 0.5  # Lower = trust IMU gyro angle more
+    # Scan matcher parameters - trust scan matching for heading (no IMU gyro in EKF)
+    distance_variance_penalty: 0.3  # Encoder distance is reliable, trust it
+    angle_variance_penalty: 1.5    # Encoder heading drifts on turns, trust scan matching instead
     fine_search_angle_offset: 0.00349
     coarse_search_angle_offset: 0.349
     coarse_angle_resolution: 0.0349
