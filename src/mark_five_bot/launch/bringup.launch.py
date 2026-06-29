@@ -52,6 +52,12 @@ def generate_launch_description():
         description='Navigation mode: slam or localization'
     )
 
+    slam_mode_arg = DeclareLaunchArgument(
+        'slam_mode',
+        default_value='visual',
+        description='SLAM sensor mode: laser (slam_toolbox), visual (RTAB-Map), or hybrid'
+    )
+
     map_arg = DeclareLaunchArgument(
         'map',
         default_value='',
@@ -118,6 +124,7 @@ def generate_launch_description():
         condition=IfCondition(LaunchConfiguration('use_nav')),
         launch_arguments={
             'mode': LaunchConfiguration('nav_mode'),
+            'slam_mode': LaunchConfiguration('slam_mode'),
             'map': LaunchConfiguration('map'),
         }.items(),
     )
@@ -127,6 +134,7 @@ def generate_launch_description():
         use_camera_arg,
         use_nav_arg,
         nav_mode_arg,
+        slam_mode_arg,
         map_arg,
         robot_state_publisher_node,
         serial_launch,
