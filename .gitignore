@@ -15,6 +15,7 @@ log/
 # Catkin custom files
 CATKIN_IGNORE
 docker/.docker_data/
+docker/cyclone_dds.xml
 docs/
 scripts/
 .claude/

@@ -1,9 +1,0 @@
-<CycloneDDS>
-  <Domain>
-    <General>
-      <Interfaces>
-        <NetworkInterface name="wlp8s0" multicast="true" />
-      </Interfaces>
-    </General>
-  </Domain>
-</CycloneDDS>
