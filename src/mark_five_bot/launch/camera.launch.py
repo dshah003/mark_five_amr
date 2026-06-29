@@ -86,6 +86,9 @@ def generate_launch_description():
         }.items(),
     )
 
+    # Camera config (source of truth for depthimage_to_laserscan params)
+    camera_config = os.path.join(pkg_share, 'config', 'camera.yaml')
+
     # Depth to laserscan converter (always enabled)
     # Required in both modes: collision_monitor on workstation needs /scan regardless of SLAM mode
     depth_to_scan_node = Node(
@@ -93,14 +96,10 @@ def generate_launch_description():
         executable='depthimage_to_laserscan_node',
         name='depthimage_to_laserscan',
         output='screen',
-        parameters=[{
-            'output_frame': 'camera_link',
-            'scan_height': 1,
-            'range_min': 0.15,
-            'range_max': 4.0,
-            'scan_time': 0.0667,
-            'depth_scale': 0.001,
-        }],
+        parameters=[
+            camera_config,           # scan_height, range_min/max, scan_time from camera.yaml
+            {'depth_scale': 0.001},  # not in camera.yaml
+        ],
         remappings=[
             ('depth', '/camera/aligned_depth_to_color/image_raw'),
             ('depth_camera_info', '/camera/aligned_depth_to_color/camera_info'),
