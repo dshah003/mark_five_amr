@@ -12,7 +12,7 @@ from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
 from launch.conditions import IfCondition
 from launch.launch_description_sources import PythonLaunchDescriptionSource
-from launch.substitutions import LaunchConfiguration, Command
+from launch.substitutions import LaunchConfiguration, Command, PythonExpression
 from launch_ros.actions import Node
 from launch_ros.parameter_descriptions import ParameterValue
 from ament_index_python.packages import get_package_share_directory
@@ -76,6 +76,12 @@ def generate_launch_description():
         description='Launch ICM-20948 IMU driver + complementary filter (gyro yaw rate for EKF)'
     )
 
+    use_lidar_arg = DeclareLaunchArgument(
+        'use_lidar',
+        default_value='true',
+        description='Launch LD19 lidar as the /scan source (camera depth scan moves to /scan_camera)'
+    )
+
     # Read URDF file
     with open(urdf_file, 'r') as f:
         robot_description = f.read()
@@ -128,12 +134,27 @@ def generate_launch_description():
         condition=IfCondition(LaunchConfiguration('use_teleop')),
     )
 
-    # Camera (conditional)
+    # LD19 lidar (conditional) — publishes /scan in frame base_laser (TF from URDF)
+    lidar_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            os.path.join(pkg_share, 'launch', 'lidar.launch.py')
+        ),
+        condition=IfCondition(LaunchConfiguration('use_lidar')),
+    )
+
+    # Camera (conditional). When the lidar owns /scan, the camera's
+    # depthimage_to_laserscan output moves to /scan_camera to avoid two
+    # sensors interleaving on one topic.
     camera_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             os.path.join(pkg_share, 'launch', 'camera.launch.py')
         ),
         condition=IfCondition(LaunchConfiguration('use_camera')),
+        launch_arguments={
+            'scan_topic': PythonExpression([
+                "'scan_camera' if '", LaunchConfiguration('use_lidar'), "' == 'true' else 'scan'"
+            ]),
+        }.items(),
     )
 
     # Navigation (conditional)
@@ -159,12 +180,14 @@ def generate_launch_description():
         delete_db_arg,
         map_arg,
         use_imu_arg,
+        use_lidar_arg,
         robot_state_publisher_node,
         serial_launch,
         odometry_launch,
         imu_launch,  # IMU driver + bias-correcting filter
         ekf_launch,  # Sensor fusion (odometry + IMU)
         teleop_launch,
+        lidar_launch,  # LD19 — primary /scan source
         camera_launch,
         navigation_launch,
     ])
