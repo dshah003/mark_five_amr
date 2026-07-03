@@ -1,9 +1,12 @@
 """
-Launch file for ICM20948 IMU driver
+Launch file for ICM20948 IMU driver + complementary filter
 
-Launches the icm20948_node for I2C communication with ICM-20948 9-DOF IMU.
-The IMU provides angular velocity, linear acceleration, and magnetometer data
-for sensor fusion with wheel odometry.
+Launches:
+  - icm20948_node: I2C driver publishing raw IMU data on /imu/data_raw
+  - complementary_filter_node (imu_tools): estimates gyro bias while the
+    robot is stationary and publishes bias-corrected data on /imu/data.
+    The EKF fuses yaw rate from /imu/data (raw gyro has ~0.015 rad/s
+    zero-rate bias that integrates to ~52 deg/min of phantom yaw).
 
 Hardware connection (Jetson Nano):
   ICM20948 VIN → Pin 1 (3.3V)
@@ -64,10 +67,31 @@ def generate_launch_description():
         }]
     )
 
+    # Complementary filter (imu_tools): subscribes /imu/data_raw, publishes /imu/data.
+    # do_bias_estimation learns the gyro zero-rate bias whenever the robot is
+    # stationary and subtracts it from the republished angular velocities —
+    # this is what makes the gyro usable for EKF yaw-rate fusion.
+    imu_filter_node = Node(
+        package='imu_complementary_filter',
+        executable='complementary_filter_node',
+        name='complementary_filter_node',
+        output='screen',
+        parameters=[{
+            'do_bias_estimation': True,
+            'do_adaptive_gain': True,
+            'use_mag': False,       # magnetometer useless indoors (motors, rebar)
+            'gain_acc': 0.01,
+            'bias_alpha': 0.01,
+            'publish_tf': False,    # TF comes from URDF via robot_state_publisher
+            'use_sim_time': LaunchConfiguration('use_sim_time')
+        }]
+    )
+
     return LaunchDescription([
         i2c_address_arg,
         frame_id_arg,
         pub_rate_arg,
         use_sim_time_arg,
-        imu_node
+        imu_node,
+        imu_filter_node
     ])

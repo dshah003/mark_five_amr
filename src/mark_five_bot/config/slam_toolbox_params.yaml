@@ -29,7 +29,7 @@ slam_toolbox:
     transform_publish_period: 0.02
     map_update_interval: 2.0
     resolution: 0.05
-    max_laser_range: 4.0
+    max_laser_range: 3.0  # D435 depth error grows quadratically; beyond ~3m it corrupts scan matching
     minimum_time_interval: 0.2  # Increase interval to reduce scan processing rate
     transform_timeout: 1.5  # Increased tolerance for distributed mode timing variance
     tf_buffer_duration: 60.0
@@ -37,14 +37,14 @@ slam_toolbox:
     # Increase scan queue to prevent drops in distributed mode
     scan_queue_size: 20
 
-    # Scan matching - tuned for wheel-only odometry (IMU disabled in EKF)
-    # Encoder heading drifts badly during turns: scan match frequently and trust it over odometry
+    # Scan matching - odometry heading is now gyro-backed (complementary filter
+    # + EKF vyaw fusion), so odometry priors during turns are trustworthy again
     use_scan_matching: true
     use_scan_barycenter: true
     minimum_travel_distance: 0.05  # Update frequently (encoder distance is reliable)
-    minimum_travel_heading: 0.1   # ~6 deg - match often during turns (encoder heading is NOT reliable)
+    minimum_travel_heading: 0.2   # ~11 deg - gyro heading holds between matches
     scan_buffer_size: 10
-    scan_buffer_maximum_scan_distance: 4.0
+    scan_buffer_maximum_scan_distance: 3.0  # match max_laser_range
     link_match_minimum_response_fine: 0.1  # Accept weaker matches to stay locked during turns
     link_scan_maximum_distance: 1.5  # Slightly wider search window
     loop_search_maximum_distance: 3.0
@@ -64,9 +64,11 @@ slam_toolbox:
     loop_search_space_resolution: 0.05
     loop_search_space_smear_deviation: 0.03
 
-    # Scan matcher parameters - trust scan matching for heading (no IMU gyro in EKF)
+    # Scan matcher parameters - with gyro-backed heading, weight odometry and
+    # scan matching more evenly (87-deg FOV scans give the matcher little to
+    # lock onto during turns, so the odometry prior must be able to win)
     distance_variance_penalty: 0.3  # Encoder distance is reliable, trust it
-    angle_variance_penalty: 1.5    # Encoder heading drifts on turns, trust scan matching instead
+    angle_variance_penalty: 1.0    # Gyro heading is decent; don't let weak narrow-FOV matches override it freely
     fine_search_angle_offset: 0.00349
     coarse_search_angle_offset: 0.349
     coarse_angle_resolution: 0.0349

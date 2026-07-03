@@ -61,6 +61,14 @@ if [ -e "/dev/ttyACM0" ]; then
     ARDUINO_DEV="--device /dev/ttyACM0"
 fi
 
+# Check for lidar device (LD19 USB-UART adapter enumerates as ttyUSB*)
+LIDAR_DEV=""
+for dev in /dev/ttyUSB*; do
+    if [ -e "$dev" ]; then
+        LIDAR_DEV="${LIDAR_DEV} --device ${dev}"
+    fi
+done
+
 # Check for joystick device
 JOYSTICK_DEV=""
 if [ -e "/dev/input/js0" ]; then
@@ -97,6 +105,7 @@ docker run \
     --env=RMW_IMPLEMENTATION=rmw_cyclonedds_cpp \
     --env=CYCLONEDDS_URI=/root/mark_five_amr/docker/cyclone_dds.xml \
     ${ARDUINO_DEV} \
+    ${LIDAR_DEV} \
     ${JOYSTICK_DEV} \
     -v /dev/bus/usb:/dev/bus/usb \
     ${VIDEO_DEVICES} \
