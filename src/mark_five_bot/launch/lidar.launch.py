@@ -8,7 +8,12 @@ the static_transform_publisher from the driver's bundled ld19.launch.py.
 
 Usage:
   ros2 launch mark_five_bot lidar.launch.py
-  ros2 launch mark_five_bot lidar.launch.py port:=/dev/ttyUSB1
+  ros2 launch mark_five_bot lidar.launch.py lidar_port:=/dev/ttyUSB1
+
+The argument is named lidar_port (not port) on purpose: launch configurations
+are global across included launch files, and serial.launch.py already owns
+'port' for the Arduino (/dev/ttyACM0) — reusing the name makes the lidar
+open the Arduino's port when both are included from bringup.
 """
 
 from launch import LaunchDescription
@@ -19,7 +24,7 @@ from launch_ros.actions import Node
 
 def generate_launch_description():
     port_arg = DeclareLaunchArgument(
-        'port',
+        'lidar_port',
         default_value='/dev/ttyUSB0',
         description='Serial port of the LD19 CP2102 USB-UART adapter'
     )
@@ -33,7 +38,7 @@ def generate_launch_description():
             {'product_name': 'LDLiDAR_LD19'},
             {'topic_name': 'scan'},
             {'frame_id': 'base_laser'},
-            {'port_name': LaunchConfiguration('port')},
+            {'port_name': LaunchConfiguration('lidar_port')},
             {'port_baudrate': 230400},
             {'laser_scan_dir': True},
             # Self-hit masking: at 22.5 cm the scan plane can clip the cart's own
