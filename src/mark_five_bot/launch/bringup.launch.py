@@ -70,6 +70,12 @@ def generate_launch_description():
         description='Full path to map yaml file (for localization mode)'
     )
 
+    use_imu_arg = DeclareLaunchArgument(
+        'use_imu',
+        default_value='true',
+        description='Launch ICM-20948 IMU driver + complementary filter (gyro yaw rate for EKF)'
+    )
+
     # Read URDF file
     with open(urdf_file, 'r') as f:
         robot_description = f.read()
@@ -97,6 +103,14 @@ def generate_launch_description():
         PythonLaunchDescriptionSource(
             os.path.join(pkg_share, 'launch', 'odometry.launch.py')
         ),
+    )
+
+    # IMU driver + complementary filter (bias-corrected gyro for EKF yaw rate)
+    imu_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            os.path.join(pkg_share, 'launch', 'imu.launch.py')
+        ),
+        condition=IfCondition(LaunchConfiguration('use_imu')),
     )
 
     # EKF for sensor fusion (fuses wheel odometry + IMU when available)
@@ -144,9 +158,11 @@ def generate_launch_description():
         slam_mode_arg,
         delete_db_arg,
         map_arg,
+        use_imu_arg,
         robot_state_publisher_node,
         serial_launch,
         odometry_launch,
+        imu_launch,  # IMU driver + bias-correcting filter
         ekf_launch,  # Sensor fusion (odometry + IMU)
         teleop_launch,
         camera_launch,
