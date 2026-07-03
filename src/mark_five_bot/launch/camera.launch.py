@@ -15,11 +15,14 @@ Topics published (all modes):
 - /camera/aligned_depth_to_color/image_raw : Aligned depth (visual_slam mode)
 
 Topics published (laser_scan mode only):
-- /scan                         : 2D laser scan (for navigation)
+- <scan_topic>                  : 2D laser scan from depth image (default /scan;
+                                  bringup remaps to /scan_camera when the LD19
+                                  lidar owns /scan)
 
 Usage:
   ros2 launch mark_five_bot camera.launch.py mode:=laser_scan   # Default
   ros2 launch mark_five_bot camera.launch.py mode:=visual_slam  # For RTAB-Map
+  ros2 launch mark_five_bot camera.launch.py scan_topic:=scan_camera
 """
 
 from launch import LaunchDescription
@@ -41,6 +44,12 @@ def generate_launch_description():
         'mode',
         default_value='laser_scan',
         description='Camera mode: laser_scan (424x240@15fps) or visual_slam (640x480@30fps)'
+    )
+
+    scan_topic_arg = DeclareLaunchArgument(
+        'scan_topic',
+        default_value='scan',
+        description='Output topic for depthimage_to_laserscan (use scan_camera when the lidar publishes /scan)'
     )
 
     # Include RealSense camera launch with mode-dependent parameters
@@ -103,12 +112,13 @@ def generate_launch_description():
         remappings=[
             ('depth', '/camera/aligned_depth_to_color/image_raw'),
             ('depth_camera_info', '/camera/aligned_depth_to_color/camera_info'),
-            ('scan', '/scan'),
+            ('scan', LaunchConfiguration('scan_topic')),
         ],
     )
 
     return LaunchDescription([
         mode_arg,
+        scan_topic_arg,
         realsense_launch,
         depth_to_scan_node,
     ])

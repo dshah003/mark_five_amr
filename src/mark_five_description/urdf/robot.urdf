@@ -666,4 +666,38 @@
     <origin xyz="0 0 0" rpy="-1.5708 0 -1.5708"/>
   </joint>
 
+  <!-- ==================== LDROBOT LD19 LIDAR ==================== -->
+  <!--
+    Mounted at the front of the cart, below the camera. Frame name must match
+    the ldlidar driver's frame_id (base_laser).
+
+    Height: scan plane 225mm from ground (tape measured) → 225 - 36.6 (base_link) = 188mm above cart_frame_link.
+    X: directly under the camera on the front rail = 0.120m (measure to the rotation axis to refine)
+    Yaw: 0 assumes the LD19 cable/connector exits toward the rear (+X = forward).
+         Verify against a known wall in RViz and correct the yaw here if rotated.
+  -->
+  <link name="base_laser">
+    <!-- LD19 body: Ø38.6mm × 34.8mm; link origin at the scan plane (near top of unit) -->
+    <visual>
+      <origin xyz="0 0 -0.012" rpy="0 0 0"/>
+      <geometry><cylinder radius="0.0193" length="0.0348"/></geometry>
+      <material name="lidar_body"><color rgba="0.2 0.2 0.25 1.0"/></material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 -0.012" rpy="0 0 0"/>
+      <geometry><cylinder radius="0.0193" length="0.0348"/></geometry>
+    </collision>
+    <inertial>
+      <mass value="0.045"/>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <inertia ixx="0.00001" ixy="0.0" ixz="0.0" iyy="0.00001" iyz="0.0" izz="0.00001"/>
+    </inertial>
+  </link>
+
+  <joint name="lidar_joint" type="fixed">
+    <parent link="cart_frame_link"/>
+    <child link="base_laser"/>
+    <origin xyz="0.120 0.0 0.188" rpy="0 0 0"/>
+  </joint>
+
 </robot>

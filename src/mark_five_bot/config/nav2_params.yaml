@@ -19,7 +19,7 @@ amcl:
     global_frame_id: "map"
     lambda_short: 0.1
     laser_likelihood_max_dist: 2.0
-    laser_max_range: 4.0
+    laser_max_range: 12.0  # LD19 rated range
     laser_min_range: 0.15
     laser_model_type: "likelihood_field"
     max_beams: 60
@@ -236,9 +236,9 @@ global_costmap:
           clearing: true
           marking: true
           data_type: "LaserScan"
-          raytrace_max_range: 4.0
+          raytrace_max_range: 10.0
           raytrace_min_range: 0.15
-          obstacle_max_range: 3.5
+          obstacle_max_range: 8.0  # LD19; keep below max range to limit far-field noise
           obstacle_min_range: 0.15
 
       inflation_layer:
