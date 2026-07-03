@@ -45,9 +45,9 @@ def generate_launch_description():
             # rear uprights. If fixed close-range points appear behind the robot,
             # set enable_angle_crop_func true and tune the interval (degrees,
             # 0 = lidar forward).
-            {'enable_angle_crop_func': False},
-            {'angle_crop_min': 135.0},
-            {'angle_crop_max': 225.0},
+            {'enable_angle_crop_func': True},
+            {'angle_crop_min': 120.0},
+            {'angle_crop_max': 240.0},
         ],
     )
 

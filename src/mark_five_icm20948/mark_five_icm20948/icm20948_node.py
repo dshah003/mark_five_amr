@@ -39,6 +39,7 @@ class ICM20948Node(Node):
 
         self.bus = SMBus(i2c_bus)
         self._init_imu()
+        self.gyro_bias = self._calibrate_gyro_bias()
 
         self.imu_pub = self.create_publisher(sensor_msgs.msg.Imu, '/imu/data_raw', 10)
         self.create_timer(1.0 / pub_rate, self._publish)
@@ -68,14 +69,61 @@ class ICM20948Node(Node):
         # Enable accel and gyro
         self.bus.write_byte_data(self.address, PWR_MGMT_2, 0x00)
 
-        # Bank 2: set full scale ranges
-        # Gyro ±2000 dps (16.4 LSB/dps): bits[2:1] = 11 -> 0x06
-        # Accel ±16g (2048 LSB/g):        bits[2:1] = 11 -> 0x06
+        # Bank 2: full scale + digital low-pass filter.
+        # FCHOICE (bit 0) must be 1 or the DLPF is bypassed and the gyro streams
+        # at ~12 kHz bandwidth — sample-to-sample jumps of 0.02–0.05 rad/s, which
+        # defeats imu_complementary_filter's steady-state detector (its bias
+        # estimator requires consecutive deltas < 0.01 rad/s) and leaves a
+        # residual bias that integrates into yaw drift.
+        # Gyro:  ±250 dps (131 LSB/dps), DLPF cfg 5 (11.6 Hz 3dB — plenty for a
+        #        robot turning ≤ ~60 dps, and matched to the 30 Hz publish rate)
+        #        -> (5 << 3) | (0b00 << 1) | 1 = 0x29
+        # Accel: ±4g (8192 LSB/g), DLPF cfg 5 (11.5 Hz)
+        #        -> (5 << 3) | (0b01 << 1) | 1 = 0x2B
         self._set_bank(2)
-        self.bus.write_byte_data(self.address, GYRO_CONFIG_1, 0x06)
-        self.bus.write_byte_data(self.address, ACCEL_CONFIG, 0x06)
+        self.bus.write_byte_data(self.address, GYRO_CONFIG_1, 0x29)
+        self.bus.write_byte_data(self.address, ACCEL_CONFIG, 0x2B)
 
         self._set_bank(0)
+
+    def _read_gyro_rads(self):
+        """Read one gyro sample, returned in rad/s (±250 dps: 131 LSB/dps)."""
+        data = self.bus.read_i2c_block_data(self.address, ACCEL_XOUT_H, 12)
+        _, _, _, gx, gy, gz = struct.unpack('>hhhhhh', bytes(data))
+        k = math.pi / (131.0 * 180.0)
+        return gx * k, gy * k, gz * k
+
+    def _calibrate_gyro_bias(self, n_samples=64, rate_hz=30.0):
+        """Average ~2 s of stationary samples to measure gyro zero-rate bias.
+
+        The robot must be stationary during bringup (it always is — motors are
+        idle until a teleop/Nav2 command arrives). The constant bias is
+        subtracted from every published sample; imu_complementary_filter then
+        only has to track the slow thermal drift on top.
+        """
+        self.get_logger().info(
+            f'Calibrating gyro bias ({n_samples / rate_hz:.1f}s) — keep robot stationary...'
+        )
+        sums = [0.0, 0.0, 0.0]
+        maxima = [0.0, 0.0, 0.0]
+        for _ in range(n_samples):
+            sample = self._read_gyro_rads()
+            for i in range(3):
+                sums[i] += sample[i]
+                maxima[i] = max(maxima[i], abs(sample[i]))
+            time.sleep(1.0 / rate_hz)
+        bias = [s / n_samples for s in sums]
+        # ±250 dps + 11.6 Hz DLPF: stationary samples should sit well under
+        # 0.05 rad/s. Larger excursions mean the robot moved mid-calibration.
+        if any(m > 0.05 for m in maxima):
+            self.get_logger().warn(
+                f'Gyro moved during calibration (peak {max(maxima):.3f} rad/s) — '
+                'bias estimate may be poor; restart the node with the robot still'
+            )
+        self.get_logger().info(
+            f'Gyro bias: x={bias[0]:+.5f} y={bias[1]:+.5f} z={bias[2]:+.5f} rad/s'
+        )
+        return bias
 
     def _publish(self):
         try:
@@ -90,15 +138,16 @@ class ICM20948Node(Node):
         msg.header.stamp = self.get_clock().now().to_msg()
         msg.header.frame_id = self.frame_id
 
-        # ±16g full scale: 2048 LSB/g
-        msg.linear_acceleration.x = ax * 9.81 / 2048.0
-        msg.linear_acceleration.y = ay * 9.81 / 2048.0
-        msg.linear_acceleration.z = az * 9.81 / 2048.0
+        # ±4g full scale: 8192 LSB/g
+        msg.linear_acceleration.x = ax * 9.81 / 8192.0
+        msg.linear_acceleration.y = ay * 9.81 / 8192.0
+        msg.linear_acceleration.z = az * 9.81 / 8192.0
 
-        # ±2000 dps full scale: 16.4 LSB/dps
-        msg.angular_velocity.x = gx * math.pi / (16.4 * 180.0)
-        msg.angular_velocity.y = gy * math.pi / (16.4 * 180.0)
-        msg.angular_velocity.z = gz * math.pi / (16.4 * 180.0)
+        # ±250 dps full scale: 131 LSB/dps, startup bias removed
+        k = math.pi / (131.0 * 180.0)
+        msg.angular_velocity.x = gx * k - self.gyro_bias[0]
+        msg.angular_velocity.y = gy * k - self.gyro_bias[1]
+        msg.angular_velocity.z = gz * k - self.gyro_bias[2]
 
         # No orientation estimate from this driver
         msg.orientation_covariance[0] = -1.0
