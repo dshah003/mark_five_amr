@@ -41,13 +41,15 @@ def generate_launch_description():
             {'port_name': LaunchConfiguration('lidar_port')},
             {'port_baudrate': 230400},
             {'laser_scan_dir': True},
-            # Self-hit masking: at 22.5 cm the scan plane can clip the cart's own
-            # rear uprights. If fixed close-range points appear behind the robot,
-            # set enable_angle_crop_func true and tune the interval (degrees,
-            # 0 = lidar forward).
+            # Self-hit masking: at 22.5 cm the scan plane clips the cart's own
+            # front-center tube pair (measured 2026-07-04: left tube at
+            # 106-109 deg, r=0.07 m; right tube mirrored ~251-254 deg). The old
+            # 110-250 window missed both by ~1 deg — those in-footprint points
+            # made the collision monitor compute collision-time 0 and freeze
+            # the robot completely. 100-260 covers them with ~6 deg margin.
             {'enable_angle_crop_func': True},
-            {'angle_crop_min': 110.0},
-            {'angle_crop_max': 250.0},
+            {'angle_crop_min': 100.0},
+            {'angle_crop_max': 260.0},
         ],
     )
 
