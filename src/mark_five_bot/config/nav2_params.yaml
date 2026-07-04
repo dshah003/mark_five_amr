@@ -378,7 +378,13 @@ collision_monitor:
     FootprintApproach:
       type: "polygon"
       action_type: "approach"
-      footprint_topic: "/local_costmap/published_footprint"
+      # Explicit TRUE-BODY polygon, not the padded costmap footprint
+      # (footprint_topic). Padding belongs in planning; here it means a wall
+      # 1mm past the wheel face reads as "already in collision" → collision
+      # time 0 → all motion (including reverse escape) frozen. Learned the
+      # hard way in a doorway 2026-07-04. Extents: lidar nose 0.264 → 0.265
+      # front; caster swing 0.235 → 0.245 rear; wheel faces ±0.195.
+      points: "[[0.265, 0.195], [0.265, -0.195], [-0.245, -0.195], [-0.245, 0.195]]"
       # 1.2s at 0.15 m/s projected 18cm ahead and froze the robot in
       # doorways (jambs enter the swept footprint). 0.5s ≈ 7.5cm — still
       # stops before contact, but allows threading tight gaps.
