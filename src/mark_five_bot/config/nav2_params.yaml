@@ -181,10 +181,12 @@ local_costmap:
       # Rectangular footprint (was circular robot_radius: 0.24 = worst-case
       # diagonal corner). Circular model forced 480mm of clearance to drive
       # straight through a doorway when the cart is only 390mm wide (wheels
-      # at ±195mm Y), blocking marginal door gaps. Real half-extents: ±125mm
-      # X (cart depth, +5mm pad for camera/lidar overhang), ±195mm Y (wheels),
-      # +5mm safety pad each way.
-      footprint: "[[0.13, 0.20], [0.13, -0.20], [-0.13, -0.20], [-0.13, 0.20]]"
+      # at ±195mm Y), blocking marginal door gaps.
+      # Half-extents CORRECTED 2026-07-04 (previous ±0.13 X came from the
+      # stale 250mm depth measurement — dangerously small): X = tube frame
+      # ±0.225 + caster swing to 0.235, lidar puck nose to ~0.27 → ±0.275
+      # with pad. Y = wheels ±0.195 + 5mm pad → ±0.20.
+      footprint: "[[0.275, 0.20], [0.275, -0.20], [-0.275, -0.20], [-0.275, 0.20]]"
       plugins: ["obstacle_layer", "inflation_layer"]
 
       obstacle_layer:
@@ -219,7 +221,7 @@ global_costmap:
       use_sim_time: false
       transform_tolerance: 0.5  # Increased for distributed mode
       # Rectangular footprint — see local_costmap comment above for rationale/dims.
-      footprint: "[[0.13, 0.20], [0.13, -0.20], [-0.13, -0.20], [-0.13, 0.20]]"
+      footprint: "[[0.275, 0.20], [0.275, -0.20], [-0.275, -0.20], [-0.275, 0.20]]"
       resolution: 0.05
       track_unknown_space: true
       # Rolling window for SLAM mode (map grows dynamically)

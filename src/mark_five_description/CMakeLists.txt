@@ -25,6 +25,11 @@ install(DIRECTORY
   DESTINATION share/${PROJECT_NAME}
 )
 
+install(DIRECTORY
+  meshes
+  DESTINATION share/${PROJECT_NAME}
+)
+
 # Install RViz config files
 install(DIRECTORY
   rviz
