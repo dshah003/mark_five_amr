@@ -22,3 +22,7 @@ scripts/
 CLAUDE.md
 debug_images/src/mark_five_arm/stl/
 __pycache__/
+debug_images/
+*.jpg
+*.png
+*.jpeg
