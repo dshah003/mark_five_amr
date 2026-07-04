@@ -46,8 +46,8 @@ def generate_launch_description():
             # set enable_angle_crop_func true and tune the interval (degrees,
             # 0 = lidar forward).
             {'enable_angle_crop_func': True},
-            {'angle_crop_min': 120.0},
-            {'angle_crop_max': 240.0},
+            {'angle_crop_min': 110.0},
+            {'angle_crop_max': 250.0},
         ],
     )
 
