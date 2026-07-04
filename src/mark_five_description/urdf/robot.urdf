@@ -4,20 +4,24 @@
   <!--
     Mark Five AMR - IKEA RÅSKOG Cart Platform
 
-    Platform: IKEA RÅSKOG utility cart (350mm × 250mm base, ~880mm tall, 3-tier wire frame)
+    Platform: IKEA RÅSKOG utility cart (300mm × 420mm base, ~880mm tall, 3-tier wire frame)
     Drive:    2x center-mounted 70mm wheels, differential drive (Sabertooth 2x12 + encoders)
     Support:  4x passive corner casters (~20mm radius)
 
-    Key dimensions:
+    Key dimensions (reconciled 2026-07-04 against RÅSKOG CAD mesh + tape measure):
       Wheel diameter:  ~73mm (circumference 230mm measured → radius 36.6mm)
       Wheel base:      360mm center-to-center (left/right)
-      Cart footprint:  350mm (Y, left/right) × 250mm (X, front/back)
-      Shelf heights from ground:  135mm (bottom, measured), 380mm (middle, estimated), 640mm (top, estimated)
-      Total height:    ~880mm (top of handle)
+      Cart footprint:  basket body 420mm (X) × 300mm (Y) — measured.
+        Tube frame is the outermost rigid part: 450mm (X) × 356mm (Y)
+        (front/rear rail outer faces at x≈±0.225–0.233); caster swing
+        reaches ~469mm (x≈±0.235). Camera/lidar mount on the SHORT front
+        face, wheels run along the LONG 420mm sides.
+      Basket floor heights from ground:  127mm (measured 135), 402mm, 677mm (per CAD mesh)
+      Total height:    766mm (top basket rim; earlier ~880mm estimate was wrong)
 
     Coordinate System (REP 103):
-      X: Forward (along 250mm cart depth, away from handle)
-      Y: Left    (along 350mm cart width)
+      X: Forward (along 420mm cart depth, away from handle)
+      Y: Left    (along 300mm cart width)
       Z: Up
       base_footprint: on ground, center between drive wheels
       base_link:      at drive wheel axle height (36.6mm above ground)
@@ -205,7 +209,7 @@
   <!-- ==================== CORNER CASTERS ==================== -->
   <!-- 4 passive casters, ~20mm radius, at cart corners -->
   <!-- Caster center Z relative to base_link: 20mm - 35mm = -15mm  -->
-  <!-- Cart corners at (±0.110, ±0.155) — slightly inset from outer rail -->
+  <!-- Cart corners at (±0.195, ±0.130) — slightly inset from outer rail -->
 
   <link name="caster_fl">
     <visual>
@@ -226,7 +230,7 @@
   <joint name="caster_fl_joint" type="fixed">
     <parent link="base_link"/>
     <child link="caster_fl"/>
-    <origin xyz="0.110 0.155 -0.0166" rpy="0 0 0"/>
+    <origin xyz="0.195 0.130 -0.0166" rpy="0 0 0"/>
   </joint>
 
   <link name="caster_fr">
@@ -248,7 +252,7 @@
   <joint name="caster_fr_joint" type="fixed">
     <parent link="base_link"/>
     <child link="caster_fr"/>
-    <origin xyz="0.110 -0.155 -0.0166" rpy="0 0 0"/>
+    <origin xyz="0.195 -0.130 -0.0166" rpy="0 0 0"/>
   </joint>
 
   <link name="caster_rl">
@@ -270,7 +274,7 @@
   <joint name="caster_rl_joint" type="fixed">
     <parent link="base_link"/>
     <child link="caster_rl"/>
-    <origin xyz="-0.110 0.155 -0.0166" rpy="0 0 0"/>
+    <origin xyz="-0.195 0.130 -0.0166" rpy="0 0 0"/>
   </joint>
 
   <link name="caster_rr">
@@ -292,156 +296,42 @@
   <joint name="caster_rr_joint" type="fixed">
     <parent link="base_link"/>
     <child link="caster_rr"/>
-    <origin xyz="-0.110 -0.155 -0.0166" rpy="0 0 0"/>
+    <origin xyz="-0.195 -0.130 -0.0166" rpy="0 0 0"/>
   </joint>
 
   <!-- ==================== RÅSKOG CART FRAME ==================== -->
   <!--
-    All visual geometry for the cart body lives in cart_frame_link.
+    Cart body visual is an STL mesh converted from a RÅSKOG STEP model
+    (cad/raskog-storage-cart-1.snapshot.4, regenerate with FreeCAD if needed).
 
-    Heights relative to base_link (base_link is 35mm above ground):
-      Uprights:     center at Z=+0.405m  (span: ground → 880mm, length 0.880m)
-      Bottom shelf: Z=+0.030m  (65mm from ground)
-      Middle shelf: Z=+0.345m  (380mm from ground)
-      Top shelf:    Z=+0.605m  (640mm from ground)
-      Handle rail:  Z=+0.845m  (880mm from ground)
+    Mesh convention: millimeters (hence scale 0.001), Z-up, XY-centered on the
+    cart, Z=0 at the floor (bottom of the stock casters). cart_frame_link sits
+    at base_link (36.6mm above ground), so the mesh is offset by -0.0366.
 
-    Upright positions (inset slightly from cart outer edge):
-      (±0.110, ±0.160) from center
+    Mesh landmarks (from ground): basket floors at 127 / 402 / 677mm,
+    top rim (= total height) at 766mm. Matches the measured bottom shelf
+    (135mm) within 8mm; the old hand-modeled height of 880mm was wrong.
+    Includes the stock corner casters; the cart is front-back symmetric.
   -->
 
   <link name="cart_frame_link">
 
-    <!-- === 4 corner vertical uprights (~16mm steel rod) === -->
-    <visual>  <!-- front-left -->
-      <origin xyz="0.110 0.160 0.405" rpy="0 0 0"/>
-      <geometry><cylinder radius="0.008" length="0.880"/></geometry>
-      <material name="steel_chrome"><color rgba="0.80 0.80 0.82 1.0"/></material>
-    </visual>
-    <visual>  <!-- front-right -->
-      <origin xyz="0.110 -0.160 0.405" rpy="0 0 0"/>
-      <geometry><cylinder radius="0.008" length="0.880"/></geometry>
-      <material name="steel_chrome"><color rgba="0.80 0.80 0.82 1.0"/></material>
-    </visual>
-    <visual>  <!-- rear-left -->
-      <origin xyz="-0.110 0.160 0.405" rpy="0 0 0"/>
-      <geometry><cylinder radius="0.008" length="0.880"/></geometry>
-      <material name="steel_chrome"><color rgba="0.80 0.80 0.82 1.0"/></material>
-    </visual>
-    <visual>  <!-- rear-right -->
-      <origin xyz="-0.110 -0.160 0.405" rpy="0 0 0"/>
-      <geometry><cylinder radius="0.008" length="0.880"/></geometry>
-      <material name="steel_chrome"><color rgba="0.80 0.80 0.82 1.0"/></material>
-    </visual>
-
-    <!-- === Bottom shelf basket (135mm from ground, measured) === -->
     <visual>
-      <origin xyz="0 0 0.100" rpy="0 0 0"/>
-      <geometry><box size="0.230 0.330 0.003"/></geometry>
-      <material name="shelf_white"><color rgba="0.95 0.95 0.95 0.85"/></material>
-    </visual>
-    <!-- Bottom shelf perimeter wire -->
-    <visual>
-      <origin xyz="0.115 0 0.103" rpy="0 0 0"/>
-      <geometry><box size="0.003 0.330 0.006"/></geometry>
-      <material name="steel_chrome"><color rgba="0.80 0.80 0.82 1.0"/></material>
-    </visual>
-    <visual>
-      <origin xyz="-0.115 0 0.103" rpy="0 0 0"/>
-      <geometry><box size="0.003 0.330 0.006"/></geometry>
-      <material name="steel_chrome"><color rgba="0.80 0.80 0.82 1.0"/></material>
-    </visual>
-    <visual>
-      <origin xyz="0 0.165 0.103" rpy="0 0 0"/>
-      <geometry><box size="0.230 0.003 0.006"/></geometry>
-      <material name="steel_chrome"><color rgba="0.80 0.80 0.82 1.0"/></material>
-    </visual>
-    <visual>
-      <origin xyz="0 -0.165 0.103" rpy="0 0 0"/>
-      <geometry><box size="0.230 0.003 0.006"/></geometry>
-      <material name="steel_chrome"><color rgba="0.80 0.80 0.82 1.0"/></material>
-    </visual>
-
-    <!-- === Middle shelf basket (380mm from ground) === -->
-    <visual>
-      <origin xyz="0 0 0.345" rpy="0 0 0"/>
-      <geometry><box size="0.230 0.330 0.003"/></geometry>
-      <material name="shelf_white"><color rgba="0.95 0.95 0.95 0.85"/></material>
-    </visual>
-    <!-- Middle shelf perimeter wire -->
-    <visual>
-      <origin xyz="0.115 0 0.348" rpy="0 0 0"/>
-      <geometry><box size="0.003 0.330 0.006"/></geometry>
-      <material name="steel_chrome"><color rgba="0.80 0.80 0.82 1.0"/></material>
-    </visual>
-    <visual>
-      <origin xyz="-0.115 0 0.348" rpy="0 0 0"/>
-      <geometry><box size="0.003 0.330 0.006"/></geometry>
-      <material name="steel_chrome"><color rgba="0.80 0.80 0.82 1.0"/></material>
-    </visual>
-    <visual>
-      <origin xyz="0 0.165 0.348" rpy="0 0 0"/>
-      <geometry><box size="0.230 0.003 0.006"/></geometry>
-      <material name="steel_chrome"><color rgba="0.80 0.80 0.82 1.0"/></material>
-    </visual>
-    <visual>
-      <origin xyz="0 -0.165 0.348" rpy="0 0 0"/>
-      <geometry><box size="0.230 0.003 0.006"/></geometry>
-      <material name="steel_chrome"><color rgba="0.80 0.80 0.82 1.0"/></material>
-    </visual>
-
-    <!-- === Top shelf basket (640mm from ground) === -->
-    <visual>
-      <origin xyz="0 0 0.605" rpy="0 0 0"/>
-      <geometry><box size="0.230 0.330 0.003"/></geometry>
-      <material name="shelf_white"><color rgba="0.95 0.95 0.95 0.85"/></material>
-    </visual>
-    <!-- Top shelf perimeter wire -->
-    <visual>
-      <origin xyz="0.115 0 0.608" rpy="0 0 0"/>
-      <geometry><box size="0.003 0.330 0.006"/></geometry>
-      <material name="steel_chrome"><color rgba="0.80 0.80 0.82 1.0"/></material>
-    </visual>
-    <visual>
-      <origin xyz="-0.115 0 0.608" rpy="0 0 0"/>
-      <geometry><box size="0.003 0.330 0.006"/></geometry>
-      <material name="steel_chrome"><color rgba="0.80 0.80 0.82 1.0"/></material>
-    </visual>
-    <visual>
-      <origin xyz="0 0.165 0.608" rpy="0 0 0"/>
-      <geometry><box size="0.230 0.003 0.006"/></geometry>
-      <material name="steel_chrome"><color rgba="0.80 0.80 0.82 1.0"/></material>
-    </visual>
-    <visual>
-      <origin xyz="0 -0.165 0.608" rpy="0 0 0"/>
-      <geometry><box size="0.230 0.003 0.006"/></geometry>
-      <material name="steel_chrome"><color rgba="0.80 0.80 0.82 1.0"/></material>
-    </visual>
-
-    <!-- === Handle rail at top (880mm from ground = 845mm above base_link) === -->
-    <!-- Horizontal rail along Y axis -->
-    <visual>
-      <origin xyz="-0.110 0 0.845" rpy="0 0 0"/>
-      <geometry><cylinder radius="0.008" length="0.330"/></geometry>
-      <material name="steel_chrome"><color rgba="0.80 0.80 0.82 1.0"/></material>
-    </visual>
-    <!-- Handle curves (simplified as short cylinders) -->
-    <visual>
-      <origin xyz="-0.095 0.155 0.835" rpy="0 0.785 0"/>
-      <geometry><cylinder radius="0.008" length="0.022"/></geometry>
-      <material name="steel_chrome"><color rgba="0.80 0.80 0.82 1.0"/></material>
-    </visual>
-    <visual>
-      <origin xyz="-0.095 -0.155 0.835" rpy="0 0.785 0"/>
-      <geometry><cylinder radius="0.008" length="0.022"/></geometry>
-      <material name="steel_chrome"><color rgba="0.80 0.80 0.82 1.0"/></material>
+      <origin xyz="0 0 -0.0366" rpy="0 0 0"/>
+      <geometry>
+        <mesh filename="package://mark_five_description/meshes/raskog_cart.stl" scale="0.001 0.001 0.001"/>
+      </geometry>
+      <material name="cart_black"><color rgba="0.15 0.15 0.16 1.0"/></material>
     </visual>
 
     <!-- === Bounding box collision (whole cart body) === -->
+    <!-- Tube-frame outer envelope (measurements reconciled with CAD mesh
+         2026-07-04): 450 x 356mm, 766mm tall. Box bottom at ground
+         (z = -0.0366 rel base_link), so center z = 0.766/2 - 0.0366. -->
     <collision>
-      <origin xyz="0 0 0.405" rpy="0 0 0"/>
+      <origin xyz="0 0 0.347" rpy="0 0 0"/>
       <geometry>
-        <box size="0.250 0.350 0.880"/>
+        <box size="0.450 0.356 0.766"/>
       </geometry>
     </collision>
 
@@ -574,7 +464,8 @@
       Bottom shelf floor from ground: 135mm (measured)
       Bottom shelf surface above cart_frame_link: 135mm - 35mm + 1.5mm = 101.5mm
       Z: shelf surface (0.1015m) + 50mm above shelf floor = 0.152m
-      X: front wall at x=+0.115m, inset 19mm → 0.096m
+      X: basket front wall at x=+0.210m (420mm basket body), inset 19mm → 0.191m
+         (wall position reconciled 2026-07-04 against CAD mesh, see header)
       Y: 0.0 (centered)
 
     Connection (Jetson Nano I2C Bus 1):
@@ -608,7 +499,7 @@
   <joint name="imu_joint" type="fixed">
     <parent link="cart_frame_link"/>
     <child link="imu_link"/>
-    <origin xyz="0.096 0.0 0.152" rpy="0 0 0"/>
+    <origin xyz="0.191 0.0 0.152" rpy="0 0 0"/>
   </joint>
 
   <!-- ==================== INTEL REALSENSE D435 CAMERA ==================== -->
@@ -617,26 +508,31 @@
 
     Height: 389mm from ground (tape measured) → 389 - 35 (base_link) = 354mm above cart_frame_link.
 
-    X: front rail at x=0.115m + ~5mm camera body protrusion = 0.120m
+    X: clamped to the front-center vertical tube pair, whose front face is at
+       x=0.233 (CAD mesh, confirmed by photo 2026-07-04). Tube face → front
+       glass measured 28mm (2026-07-04) → link origin AT the glass plane:
+       x = 0.233 + 0.028 = 0.261. Optical frames coincide with camera_link,
+       so the origin is the depth optical center; body visuals are offset
+       -12mm so the rendered glass lines up.
     Y: 0.0 (centered on rail)
     Z: 0.354m above cart_frame_link
     RPY: 0 0 0 (horizontal, facing +X / forward)
   -->
   <link name="camera_link">
-    <!-- D435 body: 90mm wide × 25mm tall × 25mm deep -->
+    <!-- D435 body: 90mm wide × 25mm tall × 25mm deep; link origin at glass plane -->
     <visual>
-      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <origin xyz="-0.012 0 0" rpy="0 0 0"/>
       <geometry><box size="0.025 0.090 0.025"/></geometry>
       <material name="camera_body"><color rgba="0.15 0.15 0.15 1.0"/></material>
     </visual>
     <!-- Front glass / lens array -->
     <visual>
-      <origin xyz="0.013 0 0" rpy="0 0 0"/>
+      <origin xyz="0.0005 0 0" rpy="0 0 0"/>
       <geometry><box size="0.001 0.086 0.020"/></geometry>
       <material name="camera_lens"><color rgba="0.05 0.05 0.08 1.0"/></material>
     </visual>
     <collision>
-      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <origin xyz="-0.012 0 0" rpy="0 0 0"/>
       <geometry><box size="0.025 0.090 0.025"/></geometry>
     </collision>
     <inertial>
@@ -649,7 +545,7 @@
   <joint name="camera_joint" type="fixed">
     <parent link="cart_frame_link"/>
     <child link="camera_link"/>
-    <origin xyz="0.120 0.0 0.354" rpy="0 0 0"/>
+    <origin xyz="0.261 0.0 0.354" rpy="0 0 0"/>
   </joint>
 
   <link name="camera_depth_optical_frame"/>
@@ -672,7 +568,9 @@
     the ldlidar driver's frame_id (base_laser).
 
     Height: scan plane 225mm from ground (tape measured) → 225 - 36.6 (base_link) = 188mm above cart_frame_link.
-    X: directly under the camera on the front rail = 0.120m (measure to the rotation axis to refine)
+    X: clamped to the front-center vertical tube pair (front face x=0.233 per
+       CAD mesh + photo). Tube face → puck front edge measured D=31mm
+       (2026-07-04) → rotation axis x = 0.233 + 0.031 - 0.0193 = 0.245.
     Yaw: 0 assumes the LD19 cable/connector exits toward the rear (+X = forward).
          Verify against a known wall in RViz and correct the yaw here if rotated.
   -->
@@ -697,7 +595,7 @@
   <joint name="lidar_joint" type="fixed">
     <parent link="cart_frame_link"/>
     <child link="base_laser"/>
-    <origin xyz="0.120 0.0 0.188" rpy="0 0 0"/>
+    <origin xyz="0.245 0.0 0.188" rpy="0 0 0"/>
   </joint>
 
 </robot>
