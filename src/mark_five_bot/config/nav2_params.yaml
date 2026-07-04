@@ -178,7 +178,13 @@ local_costmap:
       width: 2
       height: 2
       resolution: 0.02
-      robot_radius: 0.24  # Wheels at ±195mm in Y, cart ±125mm in X → corner radius 232mm → 240mm safe
+      # Rectangular footprint (was circular robot_radius: 0.24 = worst-case
+      # diagonal corner). Circular model forced 480mm of clearance to drive
+      # straight through a doorway when the cart is only 390mm wide (wheels
+      # at ±195mm Y), blocking marginal door gaps. Real half-extents: ±125mm
+      # X (cart depth, +5mm pad for camera/lidar overhang), ±195mm Y (wheels),
+      # +5mm safety pad each way.
+      footprint: "[[0.13, 0.20], [0.13, -0.20], [-0.13, -0.20], [-0.13, 0.20]]"
       plugins: ["obstacle_layer", "inflation_layer"]
 
       obstacle_layer:
@@ -212,7 +218,8 @@ global_costmap:
       robot_base_frame: base_footprint
       use_sim_time: false
       transform_tolerance: 0.5  # Increased for distributed mode
-      robot_radius: 0.24  # Wheels at ±195mm in Y, cart ±125mm in X → corner radius 232mm → 240mm safe
+      # Rectangular footprint — see local_costmap comment above for rationale/dims.
+      footprint: "[[0.13, 0.20], [0.13, -0.20], [-0.13, -0.20], [-0.13, 0.20]]"
       resolution: 0.05
       track_unknown_space: true
       # Rolling window for SLAM mode (map grows dynamically)
