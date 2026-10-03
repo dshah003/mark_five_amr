@@ -44,6 +44,32 @@ amcl:
     z_short: 0.05
     scan_topic: scan
 
+    # Seed a pose at startup so localization mode can come up unattended
+    # (added 2026-09-29 for the agent layer; see mark_five_agents/docs/Notes.md).
+    #
+    # Without this, AMCL waits for a 2D Pose Estimate click in RViz. No initial
+    # pose means no map->odom, which means the global costmap never gets a
+    # transform, lifecycle_manager_navigation times out mid-activation, and
+    # velocity_smoother + collision_monitor are left inactive -- the failure
+    # documented in PROGRESS.md (2026-07-06) where teleop went silently dead.
+    #
+    # The pose below is the dock: where the robot is powered on. It MUST match
+    # `dock` in mark_five_agents/config/places.yaml. If the robot starts
+    # somewhere else, override it with the nav MCP server's set_initial_pose
+    # tool (or an RViz click) -- a seeded pose that is wrong is recoverable via
+    # relocalize, but a missing one stalls the whole stack.
+    set_initial_pose: true
+    initial_pose:
+      x: 0.0
+      y: 0.0
+      z: 0.0
+      yaw: 0.0
+    # NOTE: recovery_alpha_slow/fast are left at 0.0 above (adaptive particle
+    # recovery off) deliberately. Turning them on would let AMCL re-scatter by
+    # itself, but it also permits pose jumps in a stack that currently localizes
+    # correctly. Recovery is instead explicit and agent-triggered, via the nav
+    # MCP server's relocalize tool.
+
 bt_navigator:
   ros__parameters:
     use_sim_time: false
