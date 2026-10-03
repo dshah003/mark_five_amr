@@ -48,8 +48,8 @@ def generate_launch_description():
             # made the collision monitor compute collision-time 0 and freeze
             # the robot completely. 100-260 covers them with ~6 deg margin.
             {'enable_angle_crop_func': True},
-            {'angle_crop_min': 100.0},
-            {'angle_crop_max': 260.0},
+            {'angle_crop_min': 95.0},
+            {'angle_crop_max': 265.0},
         ],
     )
 
