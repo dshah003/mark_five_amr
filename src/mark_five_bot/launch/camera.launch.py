@@ -62,7 +62,7 @@ def generate_launch_description():
             'camera_namespace': '',
             'initial_reset': 'true',
             'rotation_filter.enable': 'true',
-            'rotation_filter.rotation': '180',
+            'rotation_filter.rotation': '180.0',  # float -- '180' fails the driver's type check ("Could not set param") and the camera stays upside down
             'enable_color': 'true',
             'enable_depth': 'true',
             'enable_infra1': 'false',
