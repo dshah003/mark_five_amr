@@ -63,6 +63,9 @@ def generate_launch_description():
             'i2c_address': LaunchConfiguration('i2c_address'),
             'frame_id': LaunchConfiguration('frame_id'),
             'pub_rate': LaunchConfiguration('pub_rate'),
+            # Measured 2026-10-24: 360 deg in-place spins vs scan-to-scan truth,
+            # gyro read 374.0/380.8 (CCW) and 374.6/386.2 (CW) -> x1.018 / x1.031.
+            'gyro_z_scale': 1.025,
             'use_sim_time': LaunchConfiguration('use_sim_time')
         }]
     )

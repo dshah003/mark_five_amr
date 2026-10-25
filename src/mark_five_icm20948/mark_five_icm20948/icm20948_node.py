@@ -31,15 +31,21 @@ class ICM20948Node(Node):
         self.declare_parameter('i2c_bus', 1)
         self.declare_parameter('frame_id', 'imu_link')
         self.declare_parameter('pub_rate', 30)
+        # Yaw-rate scale correction for this chip's sensitivity error (datasheet
+        # tolerance is a few %). 1.0 = nominal 131 LSB/dps. Calibrate with an
+        # in-place spin against a scan-matched truth -- see imu.launch.py.
+        self.declare_parameter('gyro_z_scale', 1.0)
 
         self.address = self.get_parameter('i2c_address').get_parameter_value().integer_value
         i2c_bus     = self.get_parameter('i2c_bus').get_parameter_value().integer_value
         self.frame_id = self.get_parameter('frame_id').get_parameter_value().string_value
         pub_rate    = self.get_parameter('pub_rate').get_parameter_value().integer_value
+        self.gyro_z_scale = self.get_parameter('gyro_z_scale').get_parameter_value().double_value
 
         self.bus = SMBus(i2c_bus)
         self._init_imu()
         self.gyro_bias = self._calibrate_gyro_bias()
+        self.get_logger().info(f'gyro_z_scale = {self.gyro_z_scale:.4f}')
 
         self.imu_pub = self.create_publisher(sensor_msgs.msg.Imu, '/imu/data_raw', 10)
         self.create_timer(1.0 / pub_rate, self._publish)
@@ -147,7 +153,7 @@ class ICM20948Node(Node):
         k = math.pi / (131.0 * 180.0)
         msg.angular_velocity.x = gx * k - self.gyro_bias[0]
         msg.angular_velocity.y = gy * k - self.gyro_bias[1]
-        msg.angular_velocity.z = gz * k - self.gyro_bias[2]
+        msg.angular_velocity.z = (gz * k - self.gyro_bias[2]) * self.gyro_z_scale
 
         # No orientation estimate from this driver
         msg.orientation_covariance[0] = -1.0
