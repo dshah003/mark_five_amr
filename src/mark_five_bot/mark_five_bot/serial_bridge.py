@@ -15,7 +15,9 @@ ROS2 Topics:
     /left_ticks  (std_msgs/Int16)
     /right_ticks (std_msgs/Int16)
   Subscribers:
-    /cmd_vel_safe (geometry_msgs/Twist)
+    <cmd_vel_topic> (geometry_msgs/Twist) -- default /cmd_vel_safe; bringup sets
+        /cmd_vel_gated when the mark_five_safety watchdog is launched
+        (use_safety:=true), so the watchdog is the last hop before the motors.
 """
 
 import rclpy
@@ -34,23 +36,27 @@ class SerialBridge(Node):
         self.declare_parameter('port', '/dev/ttyACM0')
         self.declare_parameter('baud', 115200)
         self.declare_parameter('timeout', 0.1)
+        self.declare_parameter('cmd_vel_topic', '/cmd_vel_safe')
 
         # Get parameters
         port = self.get_parameter('port').value
         baud = self.get_parameter('baud').value
         timeout = self.get_parameter('timeout').value
+        cmd_vel_topic = self.get_parameter('cmd_vel_topic').value
 
         # Publishers for encoder ticks
         self.left_ticks_pub = self.create_publisher(Int16, 'left_ticks', 10)
         self.right_ticks_pub = self.create_publisher(Int16, 'right_ticks', 10)
 
-        # Subscriber for velocity commands (smoothed + collision-checked)
+        # Subscriber for velocity commands (smoothed + collision-checked, and
+        # gated by the safety watchdog when cmd_vel_topic is /cmd_vel_gated)
         self.cmd_vel_sub = self.create_subscription(
             Twist,
-            'cmd_vel_safe',
+            cmd_vel_topic,
             self.cmd_vel_callback,
             10
         )
+        self.get_logger().info(f'Listening for velocity commands on {cmd_vel_topic}')
 
         # Serial connection
         self.serial_port = None
@@ -84,20 +90,23 @@ class SerialBridge(Node):
 
     def serial_read_loop(self):
         """Read and parse serial data from Arduino."""
+        # readline() blocks for up to `timeout`. Do not poll in_waiting here: the
+        # old `if in_waiting > 0` loop never blocked, burned a full Nano core and
+        # starved AMCL (2026-10-03). No serial_lock either -- pyserial reads and
+        # writes are independent, and holding the lock through a blocking read
+        # would delay cmd_vel writes by up to `timeout`.
         while self.running and self.serial_port is not None:
             try:
-                if self.serial_port.in_waiting > 0:
-                    with self.serial_lock:
-                        line = self.serial_port.readline().decode('utf-8').strip()
-
-                    if line.startswith('t,'):
-                        self.parse_ticks(line)
-
+                raw = self.serial_port.readline()
             except serial.SerialException as e:
                 self.get_logger().error(f'Serial read error: {e}')
                 break
-            except UnicodeDecodeError:
-                pass  # Ignore decode errors
+
+            if not raw:
+                continue  # timeout, no data
+            line = raw.decode('utf-8', errors='ignore').strip()
+            if line.startswith('t,'):
+                self.parse_ticks(line)
 
     def parse_ticks(self, line: str):
         """Parse tick message and publish to ROS2 topics."""

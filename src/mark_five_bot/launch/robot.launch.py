@@ -4,6 +4,7 @@ Robot Launch File (for Jetson Nano in distributed mode)
 Launches sensor and actuation nodes on the robot:
 - robot_state_publisher (URDF TF)
 - serial_bridge (Arduino communication for motors)
+- safety_watchdog (mark_five_safety, use_safety:=true by default) -> /cmd_vel_gated
 - odometry (encoder-based odometry with per-wheel calibration)
 - IMU (ICM-20948 9-DOF sensor)
 - EKF filter (sensor fusion - odometry + IMU)
@@ -24,6 +25,9 @@ Usage:
 
   # Without IMU
   ros2 launch mark_five_bot robot.launch.py imu:=false
+
+  # Without the safety watchdog (serial_bridge listens to /cmd_vel_safe directly)
+  ros2 launch mark_five_bot robot.launch.py use_safety:=false
 """
 
 from launch import LaunchDescription
@@ -31,7 +35,9 @@ from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
 from launch.conditions import IfCondition
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration, PythonExpression
+from launch.substitutions import PathJoinSubstitution
 from launch_ros.actions import Node
+from launch_ros.substitutions import FindPackageShare
 from ament_index_python.packages import get_package_share_directory
 import os
 
@@ -69,6 +75,13 @@ def generate_launch_description():
         description='SLAM to run on Jetson: none or rtab'
     )
 
+    use_safety_arg = DeclareLaunchArgument(
+        'use_safety',
+        default_value='true',
+        description='Launch the mark_five_safety watchdog (S2 heartbeat + S4 velocity caps) '
+                    'between /cmd_vel_safe and serial_bridge (/cmd_vel_gated)'
+    )
+
     # Read URDF file
     with open(urdf_file, 'r') as f:
         robot_description = f.read()
@@ -84,11 +97,29 @@ def generate_launch_description():
         }],
     )
 
+    # Safety watchdog (mark_five_safety): last hop before the motors.
+    #   /cmd_vel_safe -> safety_watchdog -> /cmd_vel_gated -> serial_bridge
+    # use_safety:=false skips it and points serial_bridge back at /cmd_vel_safe,
+    # so serial_bridge never listens to a topic nobody publishes. The path is a
+    # lazy substitution, so use_safety:=false works even if mark_five_safety
+    # isn't built.
+    safety_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            PathJoinSubstitution([FindPackageShare('mark_five_safety'), 'launch', 'safety.launch.py'])
+        ),
+        condition=IfCondition(LaunchConfiguration('use_safety')),
+    )
+    serial_cmd_vel_topic = PythonExpression([
+        "'/cmd_vel_gated' if '", LaunchConfiguration('use_safety'),
+        "'.lower() in ('true', '1') else '/cmd_vel_safe'"
+    ])
+
     # Serial communication with Arduino
     serial_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             os.path.join(pkg_share, 'launch', 'serial.launch.py')
         ),
+        launch_arguments={'serial_cmd_vel_topic': serial_cmd_vel_topic}.items(),
     )
 
     # Odometry
@@ -139,7 +170,9 @@ def generate_launch_description():
         camera_mode_arg,
         imu_arg,
         slam_arg,
+        use_safety_arg,
         robot_state_publisher_node,
+        safety_launch,
         serial_launch,
         odometry_launch,
         imu_launch,

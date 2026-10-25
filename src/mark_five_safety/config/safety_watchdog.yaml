@@ -1,0 +1,23 @@
+# Mark Five safety watchdog (PLAN §7, S2 + S4). Runs on the Jetson.
+# These caps are deliberately NOT read from nav2_params.yaml: the watchdog
+# re-checks the final command independently, so raising Nav2's limits must not
+# silently raise the safety cap. test_config_consistency.py fails if these
+# exceed velocity_smoother.max_velocity.
+safety_watchdog:
+  ros__parameters:
+    input_topic: /cmd_vel_safe
+    output_topic: /cmd_vel_gated
+    heartbeat_topic: /agent/heartbeat
+    max_linear_velocity: 0.20     # m/s   (velocity_smoother max_velocity[0])
+    max_angular_velocity: 1.0     # rad/s (velocity_smoother max_velocity[2])
+    heartbeat_timeout: 1.0        # s, armed + silent longer than this -> TRIPPED
+    input_timeout: 0.5            # s, one zero after a nonzero command goes stale
+    check_rate: 20.0              # Hz, heartbeat/staleness check
+    state_publish_rate: 1.0       # Hz, /safety/state refresh (also published on change)
+    cancel_actions:               # cancel-all on trip; missing servers are skipped
+      - /navigate_to_pose
+      - /navigate_through_poses
+      - /follow_waypoints
+      - /spin
+      - /backup
+      - /drive_on_heading
